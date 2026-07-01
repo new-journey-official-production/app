@@ -1,0 +1,168 @@
+{
+  "theme": "Light & Dark Mode",
+  "archetype": "Swiss & High-Contrast (Archetype 4) + Apple-Inspired Minimalism",
+  "domain": "3D Printing & Additive Manufacturing Management Platform",
+  "mood": "Premium SaaS, Industrial Precision, Craftsmanship, Reliable, High-Tech",
+  "colors": {
+    "light": {
+      "background": "bg-zinc-50",
+      "surface": "bg-white",
+      "surface_glass": "bg-white/70 backdrop-blur-xl",
+      "border": "border-zinc-200",
+      "text_primary": "text-zinc-950",
+      "text_secondary": "text-zinc-500",
+      "accent": "bg-orange-600",
+      "accent_hover": "bg-orange-700",
+      "accent_text": "text-orange-600",
+      "success": "text-emerald-600 bg-emerald-50",
+      "warning": "text-amber-600 bg-amber-50",
+      "error": "text-red-600 bg-red-50"
+    },
+    "dark": {
+      "background": "bg-zinc-950",
+      "surface": "bg-zinc-900",
+      "surface_glass": "bg-zinc-900/70 backdrop-blur-xl",
+      "border": "border-zinc-800",
+      "text_primary": "text-zinc-50",
+      "text_secondary": "text-zinc-400",
+      "accent": "bg-orange-500",
+      "accent_hover": "bg-orange-600",
+      "accent_text": "text-orange-500",
+      "success": "text-emerald-400 bg-emerald-950",
+      "warning": "text-amber-400 bg-amber-950",
+      "error": "text-red-400 bg-red-950"
+    }
+  },
+  "typography": {
+    "headings": {
+      "font": "font-['Outfit',_sans-serif]",
+      "weight": "font-semibold to font-bold",
+      "tracking": "tracking-tight",
+      "usage": "H1-H4, large stats, promotional banners"
+    },
+    "body": {
+      "font": "font-['Manrope',_sans-serif]",
+      "weight": "font-normal to font-medium",
+      "tracking": "tracking-normal",
+      "usage": "Paragraphs, labels, descriptions, general text"
+    },
+    "mono": {
+      "font": "font-['JetBrains_Mono',_monospace]",
+      "weight": "font-medium",
+      "tracking": "tracking-normal",
+      "usage": "Data points, KPI numbers, order IDs, technical specs (dimensions, print time, temperature)"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-tight",
+      "h3": "text-xl sm:text-2xl tracking-tight",
+      "h4": "text-lg sm:text-xl",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm",
+      "tiny_label": "text-xs uppercase tracking-[0.2em]"
+    }
+  },
+  "spacing_and_layout": {
+    "storefront": {
+      "section_padding": "py-24 sm:py-32",
+      "gap": "gap-8 sm:gap-12",
+      "container": "container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl",
+      "grid": "grid-cols-1 md:grid-cols-12",
+      "card_radius": "rounded-2xl or rounded-3xl",
+      "shadow": "shadow-xl shadow-zinc-900/5 dark:shadow-black/40"
+    },
+    "dashboard": {
+      "section_padding": "p-6 sm:p-8",
+      "gap": "gap-4 sm:gap-6",
+      "grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+      "card_radius": "rounded-xl",
+      "card_border": "border border-border/40",
+      "shadow": "shadow-sm"
+    }
+  },
+  "component_patterns": {
+    "storefront_hero": "Immersive 3D layout. Huge typography (Outfit), text-zinc-950 dark:text-white. Glassmorphism nav header (z-50). Hero image uses backdrop blur or subtle dark gradient overlay (bg-black/30 max) if text contrast is needed.",
+    "buttons": "Apple-like pill or slightly rounded. Primary: bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900. Accent Action (Print/Buy): bg-orange-600 hover:bg-orange-700 text-white. Subtle transform hover: -translate-y-0.5.",
+    "cards_storefront": "Bento-style layout. High padding (p-8). Use glassmorphism if overlapping visuals.",
+    "cards_dashboard": "Flat, dense. 'Control Room Grid'. 1px borders, no heavy shadows. KPIs use JetBrains Mono for numbers. Strict alignment.",
+    "status_badges": "Pill-shaped (rounded-full), px-2.5 py-0.5, text-xs font-semibold uppercase tracking-wider. Colors map to specific statuses (e.g., Printing = Amber, Completed = Emerald)."
+  },
+  "design_rules": {
+    "optical_alignment": true,
+    "hover_states": "All interactive elements must explicitly define hover text and bg colors with smooth transition (duration-200 ease-out).",
+    "accessibility": "Minimum 4.5:1 contrast. Use data-testid on all interactive elements. Visible focus rings (focus:ring-2 focus:ring-orange-500 focus:ring-offset-2).",
+    "animations": "Framer motion for page transitions (fade & slide up). Staggered list entrances. Hover scaling (scale-105) on product cards."
+  },
+  "iconography": {
+    "library": "lucide-react",
+    "style": "Clean, minimal stroke-width-1.5, matching text color."
+  },
+  "media": {
+    "hero_backgrounds": [
+      {
+        "category": "hero",
+        "url": "https://images.unsplash.com/photo-1638959492386-f9a68d55c374?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHw0fHwzZCUyMHByaW50ZXIlMjBhY3Rpb24lMjBjbG9zZSUyMHVwfGVufDB8fHx8MTc4MjkyMjE4OHww&ixlib=rb-4.1.0&q=85",
+        "description": "3D printer in action close up, industrial precision."
+      },
+      {
+        "category": "hero_alternate",
+        "url": "https://images.unsplash.com/photo-1642969164999-979483e21601?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHwxfHwzZCUyMHByaW50ZXIlMjBhY3Rpb24lMjBjbG9zZSUyMHVwfGVufDB8fHx8MTc4MjkyMjE4OHww&ixlib=rb-4.1.0&q=85",
+        "description": "3D printer with blue LED light, high tech mood."
+      }
+    ],
+    "abstract_objects": [
+      {
+        "category": "abstract_showcase",
+        "url": "https://images.unsplash.com/photo-1616427030011-214e41469f40?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTN8MHwxfHNlYXJjaHwxfHwzZCUyMHByaW50ZWQlMjBvYmplY3QlMjBhYnN0cmFjdHxlbnwwfHx8fDE3ODI5MjIxODh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "White diamond abstract 3D object on black."
+      },
+      {
+        "category": "abstract_showcase",
+        "url": "https://images.unsplash.com/photo-1703221561813-cdaa308cf9e7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTN8MHwxfHNlYXJjaHwzfHwzZCUyMHByaW50ZWQlMjBvYmplY3QlMjBhYnN0cmFjdHxlbnwwfHx8fDE3ODI5MjIxODh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Purple 3D printed vase with organic ridges."
+      }
+    ],
+    "testimonials": [
+      {
+        "category": "user_avatar",
+        "url": "https://images.unsplash.com/photo-1758599543147-86dc1512bd5b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwyfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbCUyMHBvcnRyYWl0JTIwbW9kZXJufGVufDB8fHx8MTc4MjkyMjIxN3ww&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "category": "user_avatar",
+        "url": "https://images.unsplash.com/photo-1780733058439-b8952315e59c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbCUyMHBvcnRyYWl0JTIwbW9kZXJufGVufDB8fHx8MTc4MjkyMjIxN3ww&ixlib=rb-4.1.0&q=85"
+      }
+    ],
+    "manufacturing_details": [
+      {
+        "category": "hardware_detail",
+        "url": "https://images.unsplash.com/photo-1633504110842-7618144066fd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwyfHxtYW51ZmFjdHVyaW5nJTIwdG9vbHMlMjBlcXVpcG1lbnQlMjBjbG9zZSUyMHVwfGVufDB8fHx8MTc4MjkyMjIxN3ww&ixlib=rb-4.1.0&q=85"
+      }
+    ]
+  },
+  "business_logic": {
+    "product_categories": [
+      "Kitchen", "Home Utility", "Office", "Education", "Farming", "Decoration", 
+      "Religious", "Automotive", "Mobile Accessories", "Gaming", "Gifts", 
+      "Custom Prints", "Accessories"
+    ],
+    "order_statuses": [
+      "Placed", "Payment Received", "Accepted", "Printing Scheduled", 
+      "Printing Started", "Quality Inspection", "Packed", "Shipped", 
+      "Out For Delivery", "Delivered", "Completed"
+    ],
+    "printer_statuses": [
+      "Idle", "Printing", "Paused", "Maintenance", "Offline"
+    ],
+    "materials": [
+      "PLA", "PETG", "ABS", "TPU", "Resin"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Build standard Shadcn UI components but heavily customize cards to match 'Apple-inspired minimal' aesthetics.",
+    "For storefront: Use generous padding (py-24), large text (Outfit font), and glassmorphism (backdrop-blur-xl bg-white/70) for headers and overlapping overlays.",
+    "For dashboard: Implement 'Control Room Grid' - dense, 1px borders, subtle radius, highly legible JetBrains Mono font for metrics and statuses.",
+    "Create a unified layout wrapper that switches themes (Light/Dark) contextually.",
+    "Order timelines must visually represent the 10-step flow.",
+    "Ensure all interactive elements have data-testid for testing."
+  ]
+}
