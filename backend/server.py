@@ -1253,9 +1253,9 @@ async def seed_data():
                 "is_active": True,
                 "seo_title": p["name"],
                 "seo_description": p.get("short_description", ""),
-                "rating_avg": round(4 + (hash(p["name"]) % 10) / 10, 1),
-                "rating_count": (hash(p["name"]) % 40) + 5,
-                "orders_count": (hash(p["name"]) % 60) + 3,
+                "rating_avg": 0,
+                "rating_count": 0,
+                "orders_count": 0,
                 "created_at": now_iso(),
                 "updated_at": now_iso(),
             }
