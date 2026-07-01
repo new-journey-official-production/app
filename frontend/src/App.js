@@ -48,6 +48,8 @@ const AdminReviews = lazy(() => import("@/pages/admin/Reviews"));
 const AdminBlog = lazy(() => import("@/pages/admin/Blog"));
 const AdminCoupons = lazy(() => import("@/pages/admin/Coupons"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/Analytics"));
+const AdminMedia = lazy(() => import("@/pages/admin/Media"));
+const AdminActivityLogs = lazy(() => import("@/pages/admin/ActivityLogs"));
 const AdminSettings = lazy(() => import("@/pages/admin/Settings"));
 
 function PageLoader() {
@@ -117,6 +119,8 @@ export default function App() {
                   <Route path="/admin/blog" element={<AdminBlog />} />
                   <Route path="/admin/coupons" element={<AdminCoupons />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/media" element={<AdminMedia />} />
+                  <Route path="/admin/activity" element={<AdminActivityLogs />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                 </Route>
 

@@ -1,0 +1,46 @@
+{
+  "summary": "Iteration 2 backend testing — all 3 new P2 features fully verified. Added /app/backend/tests/test_p2_features.py with 19 new pytest cases covering: (1) Product CSV export (admin only, correct headers, pipe-joined list fields), (2) Product CSV import (create+update+missing-name errors, pipe-split into color_variants/images/tags, non-CSV rejection, customer 403), (3) Media library (upload w/ allowed & rejected content types, 3MB size cap, list without base64 `data` field, public serve returning correct image bytes+Content-Type, delete, customer 403), (4) Activity logs (auto-recorded actions for product.create/update/delete, media.upload/delete, products.import, review.moderate; filter by action; customer 403; unauth 401). Combined suite = 54/54 pytest cases green (35 regression + 19 new).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/admin/media/{id}", "issue": "Endpoint is intentionally public per spec (so <img> tags load without auth), but there is no signed URL / obfuscation — anyone with a media UUID can retrieve raw image bytes forever. UUIDs are unguessable enough for MVP; long-term consider signed short-lived URLs or per-media ACL."},
+      {"endpoint": "POST /api/admin/products/import", "issue": "Silently coerces bad numeric values (e.g., price='abc') to 0 / None via bare `except:` in _coerce(); no row-level error is emitted for malformed numbers — an operator uploading a broken CSV will get 'created/updated' success while data is wrong. Consider returning parse warnings in errors[]."},
+      {"endpoint": "POST /api/admin/products/import", "issue": "_coerce uses bare `except:` clauses — should be `except (ValueError, TypeError)` at minimum; bare except swallows KeyboardInterrupt/SystemExit."},
+      {"endpoint": "POST /api/admin/media/upload", "issue": "content_type check trusts the client-supplied MIME on the multipart part. A malicious client can label a .exe as image/png and it will be stored + served with Content-Type: image/png. Add magic-byte sniffing (python-magic or imghdr) for defense-in-depth."},
+      {"endpoint": "GET /api/admin/activity-logs", "issue": "No pagination cursor / offset — hard-caps at limit=1000 and sorts on created_at (no index). Add index db.activity_logs.created_at desc; add `skip`/`before` params for pagination."},
+      {"endpoint": "log_activity()", "issue": "Fire-and-forget without try/except — if activity_logs insert fails (Mongo hiccup) the outer admin action (product delete etc.) will raise 500 to the user even though the primary op already committed. Wrap in try/except and log a warning."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_p2_features.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/pytest/pytest_p2_results.xml"
+  ],
+  "action_items": [
+    "Wrap log_activity() in try/except so activity-log write failures don't 500 the outer admin action.",
+    "Return parse warnings from CSV import when numeric fields fail to coerce (currently silently becomes 0/None).",
+    "Add MongoDB index on activity_logs.created_at (descending) to keep sort fast as logs grow.",
+    "Consider magic-byte MIME sniffing for /admin/media/upload — content_type currently trusted from client.",
+    "Replace bare `except:` in _coerce() with typed exceptions."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now 1501 lines. The three new P2 modules (activity logs, media, bulk import/export) should each move into their own router module (routers/media.py, routers/activity.py, routers/bulk.py). Same recommendation as iteration_1.",
+    "Media stored as base64 in Mongo is fine for MVP but the entire doc (including `data`) is fetched on GET /admin/media/{id} — the list endpoint properly projects `data: 0` but the serve path pulls the full doc. Acceptable.",
+    "CSV import does NOT validate against ProductIn Pydantic model — it constructs the payload dict directly and inserts. If ProductIn later gets required fields (e.g., non-empty description), imports will diverge from admin POST /products. Consider building a ProductIn and re-serializing via .model_dump().",
+    "log_activity is called AFTER the DB write completes — meaning a failed activity log leaves an inconsistent audit trail. This is normal, but callers should never let a log failure roll back the primary op.",
+    "products.import log records only aggregate counts (created/updated/errors count) — the actual row-level errors are returned to the caller but NOT persisted anywhere. If an admin wants to audit what went wrong 2 days later they can't.",
+    "GET /api/admin/media/{id} sets Cache-Control: public, max-age=31536000 — but if an admin deletes and a new image is uploaded with same UUID (astronomically unlikely with uuid4) or if any CDN sits in front, stale images could be served. Acceptable trade-off."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_p2_features.py (new)"
+  ],
+  "success_rate": {"backend": "100% (54/54)", "frontend": "not tested (skipped per request)"},
+  "test_credentials": "admin@printforge.com / Admin@12345, customer@printforge.com / Customer@12345",
+  "seed_data_creation": "None persisted. All test-created products (TEST_ImportedItem, TEST_LogProduct, TEST_LogImport) and media items are deleted at end of each test. Verified product count returns to 17 after full suite run.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "P2 suite lives in /app/backend/tests/test_p2_features.py (19 cases across TestProductCSVExport, TestProductCSVImport, TestMediaLibrary, TestActivityLogs, TestRegressionSanity). Full regression = /app/backend/tests/backend_test.py (35 cases). Both run under pytest.ini `-n 2 --dist loadscope`. Product endpoints are at /api/products (NOT /api/admin/products) — only export/import are under /admin/products/*. GET /api/products/{slug} returns {product, reviews, related} wrapper (not a bare product). Review endpoints: GET /api/reviews (admin), PATCH /api/reviews/{rid} — moderate payload uses `approved` (bool), not `is_approved`. Media serve GET /api/admin/media/{id} is intentionally public. All new + existing tests currently 100% green.",
+  "rca of the issue": "No bugs surfaced during testing — everything in the P2 spec worked on first pass once the test scaffolding was aligned with actual URL shapes (product routes live at /api/products not /api/admin/products; GET /api/products/{slug} wraps in {product: ...})."
+}

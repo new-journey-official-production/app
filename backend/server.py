@@ -14,10 +14,14 @@ import bcrypt
 import jwt
 import logging
 import secrets
+import base64
+import csv
+import io
+import json
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Any, Dict, Literal
 
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, Query, status
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, Query, status, UploadFile, File
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr, ConfigDict, field_validator
@@ -460,8 +464,8 @@ async def get_product(slug: str):
     return {"product": p, "reviews": reviews, "related": related}
 
 
-@api.post("/products", dependencies=[Depends(require_admin)])
-async def create_product(payload: ProductIn):
+@api.post("/products")
+async def create_product(payload: ProductIn, user=Depends(require_admin)):
     data = payload.model_dump()
     data["id"] = new_id()
     data["slug"] = data.get("slug") or slugify(data["name"])
@@ -473,23 +477,27 @@ async def create_product(payload: ProductIn):
     data["created_at"] = now_iso()
     data["updated_at"] = now_iso()
     await db.products.insert_one(data)
+    await log_activity(user, "product.create", data["id"], {"name": data["name"]})
     data.pop("_id", None)
     return data
 
 
-@api.patch("/products/{pid}", dependencies=[Depends(require_admin)])
-async def update_product(pid: str, payload: Dict[str, Any]):
+@api.patch("/products/{pid}")
+async def update_product(pid: str, payload: Dict[str, Any], user=Depends(require_admin)):
     payload["updated_at"] = now_iso()
     await db.products.update_one({"id": pid}, {"$set": payload})
     p = await db.products.find_one({"id": pid}, {"_id": 0})
     if not p:
         raise HTTPException(404, "Not found")
+    await log_activity(user, "product.update", pid, {"name": p.get("name")})
     return p
 
 
-@api.delete("/products/{pid}", dependencies=[Depends(require_admin)])
-async def delete_product(pid: str):
+@api.delete("/products/{pid}")
+async def delete_product(pid: str, user=Depends(require_admin)):
+    p = await db.products.find_one({"id": pid}, {"_id": 0})
     await db.products.delete_one({"id": pid})
+    await log_activity(user, "product.delete", pid, {"name": p.get("name") if p else None})
     return {"ok": True}
 
 
@@ -527,9 +535,10 @@ async def admin_list_reviews():
     return await db.reviews.find({}, {"_id": 0}).sort("created_at", -1).limit(200).to_list(200)
 
 
-@api.patch("/reviews/{rid}", dependencies=[Depends(require_admin)])
-async def moderate_review(rid: str, payload: Dict[str, Any]):
+@api.patch("/reviews/{rid}")
+async def moderate_review(rid: str, payload: Dict[str, Any], user=Depends(require_admin)):
     await db.reviews.update_one({"id": rid}, {"$set": payload})
+    await log_activity(user, "review.moderate", rid, payload)
     return {"ok": True}
 
 
@@ -800,14 +809,15 @@ async def admin_orders(status_: Optional[str] = Query(None, alias="status"), q: 
     return await db.orders.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
 
 
-@api.patch("/admin/orders/{oid}/status", dependencies=[Depends(require_admin)])
-async def admin_update_status(oid: str, payload: Dict[str, Any]):
+@api.patch("/admin/orders/{oid}/status")
+async def admin_update_status(oid: str, payload: Dict[str, Any], user=Depends(require_admin)):
     if payload.get("status") not in ORDER_STATUSES:
         raise HTTPException(400, "Invalid status")
     order = await _advance_status(oid, payload["status"], payload.get("note", ""))
     if payload["status"] == "cancelled":
         for it in order["items"]:
             await db.products.update_one({"id": it["product_id"]}, {"$inc": {"stock": it["quantity"]}})
+    await log_activity(user, "order.status", oid, {"order_no": order.get("order_no"), "status": payload["status"]})
     return order
 
 
@@ -1107,6 +1117,197 @@ async def analytics_summary():
         "low_stock": low_stock,
         "recent_orders": all_orders[:8] if all_orders else [],
     }
+
+
+# ---------------------------------------------------------------------------
+# Activity logs
+# ---------------------------------------------------------------------------
+async def log_activity(user: Dict[str, Any], action: str, target: str, meta: Optional[Dict[str, Any]] = None) -> None:
+    """Record an admin action to activity_logs."""
+    if not user:
+        return
+    await db.activity_logs.insert_one({
+        "id": new_id(),
+        "user_id": user.get("id"),
+        "user_email": user.get("email"),
+        "user_name": user.get("name"),
+        "action": action,
+        "target": target,
+        "meta": meta or {},
+        "created_at": now_iso(),
+    })
+
+
+@api.get("/admin/activity-logs", dependencies=[Depends(require_admin)])
+async def list_activity_logs(limit: int = Query(200, le=1000), action: Optional[str] = None):
+    q: Dict[str, Any] = {}
+    if action:
+        q["action"] = action
+    logs = await db.activity_logs.find(q, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return logs
+
+
+# ---------------------------------------------------------------------------
+# Media library (base64 stored in MongoDB — easy to swap for object storage later)
+# ---------------------------------------------------------------------------
+MAX_MEDIA_BYTES = 3 * 1024 * 1024  # 3 MB per image
+ALLOWED_MEDIA_TYPES = {"image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"}
+
+
+@api.get("/admin/media", dependencies=[Depends(require_admin)])
+async def list_media(limit: int = 200):
+    items = await db.media.find({}, {"_id": 0, "data": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return items
+
+
+@api.get("/admin/media/{mid}")
+async def get_media(mid: str):
+    m = await db.media.find_one({"id": mid}, {"_id": 0})
+    if not m:
+        raise HTTPException(404, "Not found")
+    return Response(
+        content=base64.b64decode(m["data"]),
+        media_type=m["content_type"],
+        headers={"Cache-Control": "public, max-age=31536000"},
+    )
+
+
+@api.post("/admin/media/upload")
+async def upload_media(file: UploadFile = File(...), user=Depends(require_admin)):
+    if file.content_type not in ALLOWED_MEDIA_TYPES:
+        raise HTTPException(400, f"Unsupported type: {file.content_type}")
+    data = await file.read()
+    if len(data) > MAX_MEDIA_BYTES:
+        raise HTTPException(400, f"File too large (max {MAX_MEDIA_BYTES // 1024 // 1024} MB)")
+    mid = new_id()
+    doc = {
+        "id": mid,
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "size": len(data),
+        "data": base64.b64encode(data).decode(),
+        "created_at": now_iso(),
+        "uploaded_by": user["email"],
+    }
+    await db.media.insert_one(doc)
+    await log_activity(user, "media.upload", mid, {"filename": file.filename, "size": len(data)})
+    return {"id": mid, "url": f"/api/admin/media/{mid}", "filename": file.filename, "size": len(data), "content_type": file.content_type}
+
+
+@api.delete("/admin/media/{mid}")
+async def delete_media(mid: str, user=Depends(require_admin)):
+    await db.media.delete_one({"id": mid})
+    await log_activity(user, "media.delete", mid)
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Bulk product import / export
+# ---------------------------------------------------------------------------
+PRODUCT_CSV_FIELDS = [
+    "name", "slug", "category_slug", "material", "price", "discount_price",
+    "stock", "weight_g", "dimensions", "print_time_hours",
+    "color_variants", "images", "tags", "featured", "is_active",
+    "short_description", "description", "seo_title", "seo_description",
+]
+
+
+@api.get("/admin/products/export", dependencies=[Depends(require_admin)])
+async def export_products():
+    products = await db.products.find({}, {"_id": 0}).to_list(5000)
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=PRODUCT_CSV_FIELDS, extrasaction="ignore")
+    writer.writeheader()
+    for p in products:
+        row = {k: p.get(k) for k in PRODUCT_CSV_FIELDS}
+        # serialize list fields
+        for k in ("color_variants", "images", "tags"):
+            v = row.get(k)
+            if isinstance(v, list):
+                row[k] = "|".join(str(x) for x in v)
+        writer.writerow(row)
+    csv_bytes = buf.getvalue().encode()
+    filename = f"printforge-products-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M')}.csv"
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def _coerce(v: str, kind: str) -> Any:
+    if v is None or v == "":
+        return None
+    if kind == "int":
+        try: return int(float(v))
+        except: return 0
+    if kind == "float":
+        try: return float(v)
+        except: return None
+    if kind == "bool":
+        return str(v).strip().lower() in ("1", "true", "yes", "y")
+    if kind == "list":
+        return [x.strip() for x in str(v).split("|") if x.strip()]
+    return str(v).strip()
+
+
+@api.post("/admin/products/import")
+async def import_products(file: UploadFile = File(...), user=Depends(require_admin)):
+    if not (file.filename or "").lower().endswith(".csv"):
+        raise HTTPException(400, "CSV file required")
+    raw = (await file.read()).decode("utf-8-sig", errors="replace")
+    reader = csv.DictReader(io.StringIO(raw))
+    created, updated, errors = 0, 0, []
+    for i, row in enumerate(reader, start=2):
+        try:
+            name = (row.get("name") or "").strip()
+            if not name:
+                errors.append({"row": i, "error": "missing name"})
+                continue
+            slug = (row.get("slug") or "").strip() or slugify(name)
+            existing = await db.products.find_one({"slug": slug})
+            payload = {
+                "name": name,
+                "slug": slug,
+                "category_slug": (row.get("category_slug") or "accessories").strip(),
+                "material": (row.get("material") or "PLA").strip(),
+                "price": _coerce(row.get("price"), "float") or 0,
+                "discount_price": _coerce(row.get("discount_price"), "float"),
+                "stock": _coerce(row.get("stock"), "int") or 0,
+                "weight_g": _coerce(row.get("weight_g"), "float"),
+                "dimensions": row.get("dimensions") or None,
+                "print_time_hours": _coerce(row.get("print_time_hours"), "float"),
+                "color_variants": _coerce(row.get("color_variants"), "list") or [],
+                "images": _coerce(row.get("images"), "list") or [],
+                "tags": _coerce(row.get("tags"), "list") or [],
+                "featured": _coerce(row.get("featured"), "bool"),
+                "is_active": _coerce(row.get("is_active"), "bool") if row.get("is_active") not in (None, "") else True,
+                "short_description": row.get("short_description") or "",
+                "description": row.get("description") or "",
+                "seo_title": row.get("seo_title") or name,
+                "seo_description": row.get("seo_description") or "",
+                "updated_at": now_iso(),
+            }
+            if existing:
+                await db.products.update_one({"id": existing["id"]}, {"$set": payload})
+                updated += 1
+            else:
+                payload.update({
+                    "id": new_id(),
+                    "rating_avg": 0, "rating_count": 0, "orders_count": 0,
+                    "created_at": now_iso(),
+                })
+                await db.products.insert_one(payload)
+                created += 1
+        except Exception as ex:
+            errors.append({"row": i, "error": str(ex)})
+    await log_activity(user, "products.import", "csv", {"created": created, "updated": updated, "errors": len(errors)})
+    return {"created": created, "updated": updated, "errors": errors}
+
+
+# Wrap key admin actions with activity logging (thin, non-invasive) — see log_activity() calls inline in create/update/delete handlers.
+
+
 
 
 # ---------------------------------------------------------------------------

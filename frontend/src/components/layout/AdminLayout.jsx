@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingBag, Users, Ticket, Star, BookOpen, Tag, BarChart3, Boxes, Printer, Settings as SettingsIcon, Sun, Moon, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Users, Ticket, Star, BookOpen, Tag, BarChart3, Boxes, Printer, Settings as SettingsIcon, Sun, Moon, LogOut, Image as ImageIcon, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,10 @@ const LINKS = [
   { to: "/admin/support", label: "Support", icon: Ticket },
   { to: "/admin/reviews", label: "Reviews", icon: Star },
   { to: "/admin/blog", label: "Blog", icon: BookOpen },
+  { to: "/admin/media", label: "Media", icon: ImageIcon },
   { to: "/admin/coupons", label: "Coupons", icon: Tag },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/admin/activity", label: "Activity", icon: Activity },
   { to: "/admin/settings", label: "Settings", icon: SettingsIcon },
 ];
 
