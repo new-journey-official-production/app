@@ -1,0 +1,41 @@
+{
+  "summary": "First-run backend regression for PrintForge. 35/35 pytest cases green across auth (register/login/me/logout/refresh/forgot+reset), categories (13 seeded), products (17 seeded, search/filter/detail/admin CRUD), addresses, cart->order with WELCOME10 coupon (mocked payment auto-advances placed -> payment_received), admin order status flow with timeline + customer notification dispatch, cancel-restores-stock, wishlist, reviews, support tickets (admin reply triggers email log), inventory + low-stock detection, printers CRUD, blog (3 seeded), analytics summary, auth enforcement (401/403), contact + newsletter, password reset via mocked email token.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/products", "issue": "Seed sets rating_count/rating_avg to fake hash-derived values, but POST /api/reviews recomputes rating_count from db.reviews (actual count) — so after the first real review a product's rating_count DROPS from ~30 to 1. Consistency bug: either seed real review docs or keep initial counts and increment on new reviews."},
+      {"endpoint": "PATCH /api/admin/orders/{oid}", "issue": "Accepts arbitrary payload without Pydantic validation (Dict[str, Any]); same for PATCH products/inventory/printers/blog/tickets/addresses. Not a functional break, but no field-level validation and no forbidden-key protection (relies on manual allow-list only in orders endpoint)."},
+      {"endpoint": "GET /api/admin/analytics/summary", "issue": "Loads up to 5000 orders into memory and does Python-side aggregation — fine for MVP but will not scale. Consider Mongo aggregation pipelines."},
+      {"endpoint": "cookies", "issue": "set_auth_cookies uses secure=False and samesite='lax'. Cross-site cookie flows from a different origin (production https) may need secure=True + samesite='none' for the frontend on a different domain. Works for same-origin ingress."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Decide desired behavior for product rating_count after first review — either seed matching db.reviews or change recompute to increment instead of overwrite.",
+    "Add Pydantic models for PATCH endpoints (products, inventory, printers, blog, tickets, addresses, admin orders) instead of Dict[str, Any] to prevent unintended field writes.",
+    "For production: revisit cookie flags (secure=True, samesite='none') if frontend and backend end up on different domains."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 1300 lines — recommend splitting into modules (auth, products, orders, inventory, admin, analytics, seeding) for maintainability.",
+    "CORS is `allow_origins=['*']` combined with `allow_credentials=True` — Starlette will silently ignore credentials with wildcard. Set an explicit origins list in production.",
+    "Passing raw payload dict directly into `$set` on PATCH endpoints allows a client to write arbitrary fields (e.g., role escalation is guarded by require_admin but not by field-level allow-listing on user-facing address/ticket updates).",
+    "compute_order_totals: GST 18% is computed on (subtotal - discount) which is correct, but shipping is added after GST — fine, just document.",
+    "seed_data creates unique indexes on every startup — safe due to idempotent create_index, but consider guarding with try/except for duplicate-key on rerun.",
+    "No pagination metadata beyond `total` on /api/products; add `page`, `limit` in the response for cleaner client-side pagination.",
+    "All endpoints exclude `_id` correctly via projections and doc.pop — good MongoDB hygiene."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "not tested (skipped per request)"},
+  "test_credentials": "admin@printforge.com / Admin@12345, customer@printforge.com / Customer@12345",
+  "seed_data_creation": "Backend seeds on startup: 13 categories, 17 products, 3 blog posts, 2 coupons (WELCOME10, FREESHIP), 4 printers, 8 inventory rows, admin + demo customer users. All working.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression lives in /app/backend/tests/backend_test.py (pytest-xdist with -n 2 --dist loadscope per /app/backend/pytest.ini). Session-scoped fixtures reuse admin/customer logins. Order flow relies on class-scoped `_state` dict — keep TestOrderFlow's tests in one class so xdist loadscope pins them to the same worker. Frontend was intentionally skipped; run when instructed.",
+  "rca of the issue": "Only real bug surfaced is the rating_count regression after first review (seed vs. recompute mismatch). Repro: GET /api/products -> pick any product's rating_count (~5-45), POST /api/reviews as customer, re-fetch -> rating_count = 1. Fix: either backfill db.reviews to match seed counts on startup OR change POST /api/reviews to `$inc: {rating_count: 1}` and update avg with a weighted formula."
+}
