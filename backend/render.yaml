@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: newjourney-api
+    runtime: dotnet
+    plan: free
+    buildCommand: dotnet publish PrintForge.Api/PrintForge.Api.csproj -c Release -o out
+    startCommand: cd out && ./PrintForge.Api
+    envVars:
+      - key: MongoUrl
+        sync: false
+      - key: DbName
+        sync: false
+      - key: JwtSecret
+        sync: false
+      - key: CorsOrigins
+        sync: false
+      - key: AdminEmail
+        sync: false
+      - key: AdminPassword
+        sync: false
+      - key: DemoCustomerEmail
+        sync: false
+      - key: DemoCustomerPassword
+        sync: false

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PrintForge.Repositories\PrintForge.Repositories.csproj" />
+    <ProjectReference Include="..\PrintForge.Models\PrintForge.Models.csproj" />
+    <ProjectReference Include="..\PrintForge.Constants\PrintForge.Constants.csproj" />
+    <ProjectReference Include="..\PrintForge.Infrastructure\PrintForge.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

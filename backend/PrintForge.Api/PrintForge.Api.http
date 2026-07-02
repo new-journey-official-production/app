@@ -1,0 +1,6 @@
+@PrintForge.Api_HostAddress = http://localhost:5102
+
+GET {{PrintForge.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

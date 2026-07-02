@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="PrintForge.Api/PrintForge.Api.csproj" />
+  <Project Path="PrintForge.Constants/PrintForge.Constants.csproj" />
+  <Project Path="PrintForge.Infrastructure/PrintForge.Infrastructure.csproj" />
+  <Project Path="PrintForge.Models/PrintForge.Models.csproj" />
+  <Project Path="PrintForge.Repositories/PrintForge.Repositories.csproj" />
+  <Project Path="PrintForge.Services/PrintForge.Services.csproj" />
+</Solution>
