@@ -10,6 +10,11 @@ using PrintForge.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Render injects PORT; bind Kestrel so health checks and traffic reach the container.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 builder.Services.Configure<AppSettings>(builder.Configuration);
 builder.Services.AddPrintForgeInfrastructure();
 builder.Services.AddPrintForgeServices();

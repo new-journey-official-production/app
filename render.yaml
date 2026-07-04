@@ -1,8 +1,9 @@
-# Prefer app/render.yaml at repo root for Blueprint sync. This file mirrors the same service for reference.
+# Render Blueprint — repo root (app/). Sync via Dashboard → Blueprints, or deploy manually with rootDir=backend.
 services:
   - type: web
     name: newjourney-api
     runtime: docker
+    rootDir: backend
     dockerfilePath: ./Dockerfile
     plan: free
     healthCheckPath: /api/health
