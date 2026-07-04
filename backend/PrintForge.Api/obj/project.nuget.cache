@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "3a746GbjCWc=",
+  "dgSpecHash": "/TZlCMUrzSs=",
   "success": true,
-  "projectFilePath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Api\\PrintForge.Api.csproj",
+  "projectFilePath": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Api\\PrintForge.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget\\bcrypt.net-next\\4.2.0\\bcrypt.net-next.4.2.0.nupkg.sha512",
     "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget\\dapper\\2.1.66\\dapper.2.1.66.nupkg.sha512",

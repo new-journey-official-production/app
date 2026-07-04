@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj": {}
+    "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj": {}
   },
   "projects": {
-    "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj": {
+    "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj",
+        "projectUniqueName": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj",
         "projectName": "PrintForge.Constants",
-        "projectPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj",
+        "projectPath": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj",
         "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget",
-        "outputPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\obj\\",
+        "outputPath": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\tarea\\AppData\\Roaming\\NuGet\\NuGet.Config"

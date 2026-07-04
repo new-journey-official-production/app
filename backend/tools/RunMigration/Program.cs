@@ -2,12 +2,12 @@ using Npgsql;
 
 var migrationPath = Path.GetFullPath(Path.Combine(
     AppContext.BaseDirectory,
-    "..", "..", "..", "..", "..", "..", "supabase", "migrations", "20260704100000_app_schema.sql"));
+    "..", "..", "..", "..", "..", "..", "supabase", "migrations", "20260705000000_master_schema.sql"));
 
 if (!File.Exists(migrationPath))
 {
     migrationPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),
-        "..", "..", "..", "supabase", "migrations", "20260704100000_app_schema.sql"));
+        "..", "..", "..", "supabase", "migrations", "20260705000000_master_schema.sql"));
 }
 
 var connStr = args.Length > 0

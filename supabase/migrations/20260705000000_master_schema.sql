@@ -1,6 +1,75 @@
--- New Journey application schema (Supabase Postgres)
--- Run after 20260702000000_rbac_schema.sql
+﻿-- New Journey — master schema (RBAC + app tables + module registry)
+-- Idempotent: safe on fresh DB after reset_database.sql
 
+create extension if not exists "pgcrypto";
+
+-- Migration tracking (API startup)
+create table if not exists schema_migrations (
+  id text primary key,
+  applied_at timestamptz not null default now()
+);
+
+-- RBAC / tenant
+create table if not exists tenants (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text unique not null,
+  metadata jsonb default '{}',
+  created_at timestamptz default now()
+);
+
+insert into tenants (id, name, slug) values
+  ('00000000-0000-0000-0000-000000000001', 'New Journey Default', 'default')
+on conflict (slug) do nothing;
+
+create table if not exists modules (
+  module_id text primary key,
+  name text not null,
+  description text,
+  metadata jsonb default '{}'
+);
+
+create table if not exists roles (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants(id),
+  name text not null,
+  slug text not null,
+  description text,
+  metadata jsonb default '{}',
+  created_at timestamptz default now(),
+  unique(tenant_id, slug)
+);
+
+create table if not exists role_permissions (
+  id uuid primary key default gen_random_uuid(),
+  role_id uuid not null references roles(id) on delete cascade,
+  module_id text not null references modules(module_id),
+  permission_bits int not null default 0,
+  unique(role_id, module_id)
+);
+
+create table if not exists user_permissions (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  module_id text not null references modules(module_id),
+  permission_bits int not null default 0,
+  metadata jsonb default '{}',
+  unique(user_id, module_id)
+);
+
+create table if not exists disabled_modules (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants(id),
+  location_id text not null default 'default',
+  module_id text not null references modules(module_id),
+  unique(tenant_id, location_id, module_id)
+);
+
+alter table roles enable row level security;
+alter table role_permissions enable row level security;
+alter table user_permissions enable row level security;
+
+-- App tables (empty at deploy — catalog filled via admin panel)
 create table if not exists users (
   id text primary key,
   email text not null unique,
@@ -264,5 +333,31 @@ create table if not exists contact_messages (
   created_at timestamptz not null default now()
 );
 
--- Align RBAC user_permissions.user_id with text app user ids
-alter table user_permissions alter column user_id type text using user_id::text;
+-- Module registry (sync with packages/constants/modules.json)
+insert into modules (module_id, name, description, metadata) values
+  ('/admin', 'Dashboard', 'Admin dashboard', '{"group":"admin"}'),
+  ('/admin/products', 'Products', 'Product catalog management', '{"group":"admin"}'),
+  ('/admin/orders', 'Orders', 'Order management', '{"group":"admin"}'),
+  ('/admin/inventory', 'Inventory', 'Inventory management', '{"group":"admin"}'),
+  ('/admin/printers', 'Printers', 'Printer fleet management', '{"group":"admin"}'),
+  ('/admin/customers', 'Customers', 'Customer management', '{"group":"admin"}'),
+  ('/admin/support', 'Support', 'Support ticket management', '{"group":"admin"}'),
+  ('/admin/reviews', 'Reviews', 'Review moderation', '{"group":"admin"}'),
+  ('/admin/blog', 'Blog', 'Blog management', '{"group":"admin"}'),
+  ('/admin/coupons', 'Coupons', 'Coupon management', '{"group":"admin"}'),
+  ('/admin/analytics', 'Analytics', 'Analytics dashboard', '{"group":"admin"}'),
+  ('/admin/media', 'Media', 'Media library', '{"group":"admin"}'),
+  ('/admin/activity', 'Activity Logs', 'Admin activity audit', '{"group":"admin"}'),
+  ('/admin/settings', 'Settings', 'System settings', '{"group":"admin"}'),
+  ('/admin/roles', 'Roles', 'Role management', '{"group":"admin"}'),
+  ('/admin/users', 'Users', 'User permission management', '{"group":"admin"}'),
+  ('/account', 'Account', 'Customer account dashboard', '{"group":"customer"}'),
+  ('/account/orders', 'My Orders', 'Customer order history', '{"group":"customer"}'),
+  ('/account/wishlist', 'Wishlist', 'Customer wishlist', '{"group":"customer"}'),
+  ('/account/profile', 'Profile', 'Customer profile', '{"group":"customer"}'),
+  ('/account/support', 'Customer Support', 'Customer support tickets', '{"group":"customer"}'),
+  ('/checkout', 'Checkout', 'Place orders', '{"group":"customer"}'),
+  ('/', 'Storefront', 'Public storefront', '{"group":"public"}'),
+  ('/products', 'Catalog', 'Product catalog browsing', '{"group":"public"}')
+on conflict (module_id) do nothing;
+

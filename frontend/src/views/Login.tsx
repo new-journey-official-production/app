@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { BRAND_EMAIL_ADMIN, BRAND_EMAIL_CUSTOMER } from "@/lib/brand";
 
 export default function Login() {
   const { login } = useAuth();
@@ -46,11 +45,6 @@ export default function Login() {
             No account? <Link to="/register" className="font-semibold hover:text-orange-600" data-testid="login-register-link">Create one</Link>
           </div>
         </form>
-        <div className="mt-4 rounded-lg border border-dashed border-border p-4 text-xs text-muted-foreground text-center">
-          <div className="font-semibold text-foreground mb-1">Demo accounts</div>
-          <div>Admin: {BRAND_EMAIL_ADMIN} / Admin@12345</div>
-          <div>Customer: {BRAND_EMAIL_CUSTOMER} / Customer@12345</div>
-        </div>
       </div>
     </div>
   );
