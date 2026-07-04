@@ -32,7 +32,7 @@ public sealed partial class DatabaseMigrationRunner(PostgresDb db, ILogger<Datab
             }
 
             logger.LogInformation("Applying database migration: {MigrationId}", migration.Id);
-            await ExecuteBatchAsync(conn, migration.Sql, cancellationToken);
+            await ExecuteBatchAsync(conn, migration.Sql, cancellationToken, migration.Id);
             await MarkAppliedAsync(conn, migration.Id, cancellationToken);
             logger.LogInformation("Applied database migration: {MigrationId}", migration.Id);
         }
@@ -89,10 +89,11 @@ public sealed partial class DatabaseMigrationRunner(PostgresDb db, ILogger<Datab
         await cmd.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task ExecuteBatchAsync(
+    private async Task ExecuteBatchAsync(
         NpgsqlConnection conn,
         string sql,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? migrationId = null)
     {
         await using var tx = await conn.BeginTransactionAsync(cancellationToken);
         try
@@ -100,7 +101,18 @@ public sealed partial class DatabaseMigrationRunner(PostgresDb db, ILogger<Datab
             foreach (var statement in SplitSqlStatements(sql))
             {
                 await using var cmd = new NpgsqlCommand(statement, conn, tx);
-                await cmd.ExecuteNonQueryAsync(cancellationToken);
+                try
+                {
+                    await cmd.ExecuteNonQueryAsync(cancellationToken);
+                }
+                catch (PostgresException ex) when (IsAlreadyExistsError(ex))
+                {
+                    // Safe when a migration was partially applied manually in Supabase SQL editor.
+                    logger.LogWarning(
+                        "Migration {MigrationId}: skipped existing object — {Message}",
+                        migrationId ?? "bootstrap",
+                        ex.MessageText);
+                }
             }
 
             await tx.CommitAsync(cancellationToken);
@@ -111,6 +123,12 @@ public sealed partial class DatabaseMigrationRunner(PostgresDb db, ILogger<Datab
             throw;
         }
     }
+
+    /// <summary>Postgres errors that mean the DDL object is already present from a prior partial run.</summary>
+    private static bool IsAlreadyExistsError(PostgresException ex) =>
+        ex.SqlState is PostgresErrorCodes.DuplicateObject
+            or PostgresErrorCodes.DuplicateTable
+            or PostgresErrorCodes.DuplicateColumn;
 
     /// <summary>Splits DDL scripts on semicolons while skipping line comments.</summary>
     internal static IEnumerable<string> SplitSqlStatements(string sql)

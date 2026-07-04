@@ -63,5 +63,5 @@ alter table roles enable row level security;
 alter table role_permissions enable row level security;
 alter table user_permissions enable row level security;
 
-create policy "tenant_roles" on roles
+create policy if not exists "tenant_roles" on roles
   using (tenant_id::text = coalesce(auth.jwt() ->> 'tenant_id', '00000000-0000-0000-0000-000000000001'));
