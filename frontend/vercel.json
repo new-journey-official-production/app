@@ -3,6 +3,11 @@
   "outputDirectory": "build",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": "create-react-app",
+  "env": {
+    "REACT_APP_BACKEND_URL": "https://newjourney-api.onrender.com",
+    "REACT_APP_SUPABASE_URL": "https://zxjzapfhpzyewrclmhcj.supabase.co",
+    "REACT_APP_SUPABASE_ANON_KEY": "sb_publishable_P4wmisIOQvMvtD1J3VXYjg_GgOX94_d"
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

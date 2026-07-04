@@ -2,9 +2,9 @@
 import axios, { type AxiosError } from "axios";
 import { getCurrentLocationId, getCurrentModuleId } from "../../../storage/CPStorage";
 import type { ApiResponse, ValidationErrorDetail } from "@/types";
+import { API_BASE } from "@/config/env";
 
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5102";
-export const API_BASE = `${BASE_URL}/api`;
+export { API_BASE };
 
 const xhr = axios.create({
   baseURL: API_BASE,

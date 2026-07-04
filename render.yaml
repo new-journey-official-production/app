@@ -20,10 +20,6 @@ services:
         sync: false
       - key: AdminPassword
         sync: false
-      - key: DemoCustomerEmail
-        sync: false
-      - key: DemoCustomerPassword
-        sync: false
       - key: SupabaseUrl
         sync: false
       - key: SupabasePublishableKey
