@@ -25,9 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\supabase\migrations\20260702000000_rbac_schema.sql" Link="Migrations\20260702000000_rbac_schema.sql" />
-    <EmbeddedResource Include="..\..\supabase\migrations\20260704100000_app_schema.sql" Link="Migrations\20260704100000_app_schema.sql" />
-    <EmbeddedResource Include="..\..\supabase\seed\modules.sql" Link="Migrations\20260704100001_modules_seed.sql" />
+    <EmbeddedResource Include="Database\Migrations\*.sql" />
   </ItemGroup>
 
 </Project>

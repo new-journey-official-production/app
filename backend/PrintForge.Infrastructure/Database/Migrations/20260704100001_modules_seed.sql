@@ -1,0 +1,27 @@
+-- Seed New Journey module registry (sync with packages/constants/modules.json)
+insert into modules (module_id, name, description, metadata) values
+  ('/admin', 'Dashboard', 'Admin dashboard', '{"group":"admin"}'),
+  ('/admin/products', 'Products', 'Product catalog management', '{"group":"admin"}'),
+  ('/admin/orders', 'Orders', 'Order management', '{"group":"admin"}'),
+  ('/admin/inventory', 'Inventory', 'Inventory management', '{"group":"admin"}'),
+  ('/admin/printers', 'Printers', 'Printer fleet management', '{"group":"admin"}'),
+  ('/admin/customers', 'Customers', 'Customer management', '{"group":"admin"}'),
+  ('/admin/support', 'Support', 'Support ticket management', '{"group":"admin"}'),
+  ('/admin/reviews', 'Reviews', 'Review moderation', '{"group":"admin"}'),
+  ('/admin/blog', 'Blog', 'Blog management', '{"group":"admin"}'),
+  ('/admin/coupons', 'Coupons', 'Coupon management', '{"group":"admin"}'),
+  ('/admin/analytics', 'Analytics', 'Analytics dashboard', '{"group":"admin"}'),
+  ('/admin/media', 'Media', 'Media library', '{"group":"admin"}'),
+  ('/admin/activity', 'Activity Logs', 'Admin activity audit', '{"group":"admin"}'),
+  ('/admin/settings', 'Settings', 'System settings', '{"group":"admin"}'),
+  ('/admin/roles', 'Roles', 'Role management', '{"group":"admin"}'),
+  ('/admin/users', 'Users', 'User permission management', '{"group":"admin"}'),
+  ('/account', 'Account', 'Customer account dashboard', '{"group":"customer"}'),
+  ('/account/orders', 'My Orders', 'Customer order history', '{"group":"customer"}'),
+  ('/account/wishlist', 'Wishlist', 'Customer wishlist', '{"group":"customer"}'),
+  ('/account/profile', 'Profile', 'Customer profile', '{"group":"customer"}'),
+  ('/account/support', 'Customer Support', 'Customer support tickets', '{"group":"customer"}'),
+  ('/checkout', 'Checkout', 'Place orders', '{"group":"customer"}'),
+  ('/', 'Storefront', 'Public storefront', '{"group":"public"}'),
+  ('/products', 'Catalog', 'Product catalog browsing', '{"group":"public"}')
+on conflict (module_id) do nothing;
