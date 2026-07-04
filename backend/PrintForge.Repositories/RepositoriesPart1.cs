@@ -1,231 +1,588 @@
-using MongoDB.Driver;
+using Dapper;
 using PrintForge.Infrastructure.Database;
 using PrintForge.Models.Entities;
 using PrintForge.Repositories.Interfaces;
 
 namespace PrintForge.Repositories;
 
-public class UserRepository(MongoDbContext db) : IUserRepository
+/// <summary>Data access for users in Postgres.</summary>
+public class UserRepository(PostgresDb db) : IUserRepository
 {
-    public async Task<User?> FindByIdAsync(string id) =>
-        await db.Users.Find(Builders<User>.Filter.Eq(u => u.Id, id)).FirstOrDefaultAsync();
+    public async Task<User?> FindByIdAsync(string id)
+    {
+        const string sql = """
+            select
+              id, email, password_hash, name, phone, role, role_id, avatar_url, email_verified,
+              created_at::text as created_at
+            from users
+            where id = @id
+            limit 1;
+            """;
 
-    public async Task<User?> FindByEmailAsync(string email) =>
-        await db.Users.Find(Builders<User>.Filter.Eq(u => u.Email, email)).FirstOrDefaultAsync();
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<User>(sql, new { id });
+    }
 
-    public async Task InsertAsync(User user) => await db.Users.InsertOneAsync(user);
+    public async Task<User?> FindByEmailAsync(string email)
+    {
+        const string sql = """
+            select
+              id, email, password_hash, name, phone, role, role_id, avatar_url, email_verified,
+              created_at::text as created_at
+            from users
+            where email = @email
+            limit 1;
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<User>(sql, new { email });
+    }
+
+    public async Task InsertAsync(User user)
+    {
+        const string sql = """
+            insert into users (
+              id, email, password_hash, name, phone, role, role_id, avatar_url, email_verified, created_at
+            ) values (
+              @Id, @Email, @PasswordHash, @Name, @Phone, @Role, @RoleId, @AvatarUrl, @EmailVerified, @CreatedAt
+            );
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, user);
+    }
 
     public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
     {
-        var filter = Builders<User>.Filter.Eq(u => u.Id, id);
-        var update = Builders<User>.Update.Combine(
-            updates.Select(kv => Builders<User>.Update.Set(kv.Key, kv.Value)));
-        await db.Users.UpdateOneAsync(filter, update);
+        if (updates.Count == 0) return;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, dynamicParams) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update users set {setClause} where id = @id;";
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, dynamicParams);
     }
 
-    public async Task<List<User>> FindCustomersAsync(int limit = 1000) =>
-        await db.Users.Find(Builders<User>.Filter.Eq(u => u.Role, "customer"))
-            .Limit(limit).ToListAsync();
+    public async Task<List<User>> FindCustomersAsync(int limit = 1000)
+    {
+        const string sql = """
+            select
+              id, email, password_hash, name, phone, role, role_id, avatar_url, email_verified,
+              created_at::text as created_at
+            from users
+            where role = 'customer'
+            limit @limit;
+            """;
 
-    public async Task<List<User>> FindAllForAdminAsync(int limit = 500) =>
-        await db.Users.Find(FilterDefinition<User>.Empty)
-            .SortByDescending(u => u.CreatedAt)
-            .Limit(limit)
-            .ToListAsync();
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<User>(sql, new { limit });
+        return items.ToList();
+    }
 
-    public async Task UpdateManyByRoleAsync(string role, string roleId) =>
-        await db.Users.UpdateManyAsync(
-            Builders<User>.Filter.Eq(u => u.Role, role) & Builders<User>.Filter.Exists(u => u.RoleId, false),
-            Builders<User>.Update.Set(u => u.RoleId, roleId));
+    public async Task<List<User>> FindAllForAdminAsync(int limit = 500)
+    {
+        const string sql = """
+            select
+              id, email, password_hash, name, phone, role, role_id, avatar_url, email_verified,
+              created_at::text as created_at
+            from users
+            order by created_at desc
+            limit @limit;
+            """;
 
-    public async Task<long> CountCustomersAsync() =>
-        await db.Users.CountDocumentsAsync(Builders<User>.Filter.Eq(u => u.Role, "customer"));
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<User>(sql, new { limit });
+        return items.ToList();
+    }
+
+    public async Task UpdateManyByRoleAsync(string role, string roleId)
+    {
+        const string sql = """
+            UPDATE users
+            SET role_id = @roleId
+            WHERE role = @role AND role_id IS NULL;
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, new { role, roleId });
+    }
+
+    public async Task<long> CountCustomersAsync()
+    {
+        const string sql = "select count(*)::bigint from users where role = 'customer';";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.ExecuteScalarAsync<long>(sql);
+    }
 }
 
-public class CategoryRepository(MongoDbContext db) : ICategoryRepository
+/// <summary>Data access for categories in Postgres.</summary>
+public class CategoryRepository(PostgresDb db) : ICategoryRepository
 {
-    public async Task<List<Category>> ListAsync() =>
-        await db.Categories.Find(FilterDefinition<Category>.Empty).SortBy(c => c.Name).ToListAsync();
+    public async Task<List<Category>> ListAsync()
+    {
+        const string sql = """
+            select id, name, slug, icon, image
+            from categories
+            order by name;
+            """;
 
-    public async Task<long> CountAsync() =>
-        await db.Categories.CountDocumentsAsync(FilterDefinition<Category>.Empty);
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Category>(sql);
+        return items.ToList();
+    }
 
-    public async Task InsertManyAsync(IEnumerable<Category> categories) =>
-        await db.Categories.InsertManyAsync(categories);
+    public async Task<long> CountAsync()
+    {
+        const string sql = "select count(*)::bigint from categories;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.ExecuteScalarAsync<long>(sql);
+    }
+
+    public async Task InsertManyAsync(IEnumerable<Category> categories)
+    {
+        const string sql = """
+            insert into categories (id, name, slug, icon, image)
+            values (@Id, @Name, @Slug, @Icon, @Image);
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, categories);
+    }
 }
 
-public class ProductRepository(MongoDbContext db) : IProductRepository
+/// <summary>Data access for products in Postgres.</summary>
+public class ProductRepository(PostgresDb db) : IProductRepository
 {
+    private const string ProductSelect = """
+        select
+          id, name, slug, description, short_description, category_slug, price, discount_price, stock,
+          material, weight_g, dimensions, print_time_hours, color_variants, images, tags, featured, is_active,
+          seo_title, seo_description, rating_avg, rating_count, orders_count,
+          created_at::text as created_at, updated_at::text as updated_at
+        from products
+        """;
+
     public async Task<(List<Product> Items, long Total)> ListAsync(ProductQuery q)
     {
-        var filter = Builders<Product>.Filter.Empty;
-        if (q.ActiveOnly) filter &= Builders<Product>.Filter.Eq(p => p.IsActive, true);
-        if (!string.IsNullOrEmpty(q.Category)) filter &= Builders<Product>.Filter.Eq(p => p.CategorySlug, q.Category);
-        if (!string.IsNullOrEmpty(q.Material)) filter &= Builders<Product>.Filter.Eq(p => p.Material, q.Material);
-        if (q.Featured.HasValue) filter &= Builders<Product>.Filter.Eq(p => p.Featured, q.Featured.Value);
-        if (!string.IsNullOrEmpty(q.Query))
-        {
-            var regex = new MongoDB.Bson.BsonRegularExpression(q.Query, "i");
-            filter &= Builders<Product>.Filter.Or(
-                Builders<Product>.Filter.Regex(p => p.Name, regex),
-                Builders<Product>.Filter.Regex(p => p.Description, regex),
-                Builders<Product>.Filter.AnyEq(p => p.Tags, q.Query.ToLowerInvariant()));
-        }
-        if (q.MinPrice.HasValue) filter &= Builders<Product>.Filter.Gte(p => p.Price, q.MinPrice.Value);
-        if (q.MaxPrice.HasValue) filter &= Builders<Product>.Filter.Lte(p => p.Price, q.MaxPrice.Value);
+        var whereClauses = new List<string>();
+        var parameters = new DynamicParameters();
 
-        var total = await db.Products.CountDocumentsAsync(filter);
-        var find = db.Products.Find(filter);
-        find = q.Sort switch
+        if (q.ActiveOnly) whereClauses.Add("is_active = true");
+        if (!string.IsNullOrWhiteSpace(q.Category))
         {
-            "price_asc" => find.SortBy(p => p.Price),
-            "price_desc" => find.SortByDescending(p => p.Price),
-            "rating" => find.SortByDescending(p => p.RatingAvg),
-            "popular" => find.SortByDescending(p => p.OrdersCount),
-            "newest" => find.SortByDescending(p => p.CreatedAt),
-            _ => find.SortByDescending(p => p.CreatedAt)
+            whereClauses.Add("category_slug = @category");
+            parameters.Add("category", q.Category);
+        }
+
+        if (!string.IsNullOrWhiteSpace(q.Material))
+        {
+            whereClauses.Add("material = @material");
+            parameters.Add("material", q.Material);
+        }
+
+        if (q.Featured.HasValue)
+        {
+            whereClauses.Add("featured = @featured");
+            parameters.Add("featured", q.Featured.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(q.Query))
+        {
+            // Matches Mongo behavior: case-insensitive name/description and exact lowercase tag hit.
+            whereClauses.Add("""
+                (
+                  name ilike @queryPattern
+                  or description ilike @queryPattern
+                  or exists (
+                    select 1
+                    from jsonb_array_elements_text(tags) as tag(value)
+                    where lower(tag.value) = @queryTag
+                  )
+                )
+                """);
+            parameters.Add("queryPattern", $"%{q.Query}%");
+            parameters.Add("queryTag", q.Query.ToLowerInvariant());
+        }
+
+        if (q.MinPrice.HasValue)
+        {
+            whereClauses.Add("price >= @minPrice");
+            parameters.Add("minPrice", q.MinPrice.Value);
+        }
+
+        if (q.MaxPrice.HasValue)
+        {
+            whereClauses.Add("price <= @maxPrice");
+            parameters.Add("maxPrice", q.MaxPrice.Value);
+        }
+
+        var whereSql = whereClauses.Count > 0 ? $" where {string.Join(" and ", whereClauses)}" : string.Empty;
+        var orderBySql = q.Sort switch
+        {
+            "price_asc" => "price asc",
+            "price_desc" => "price desc",
+            "rating" => "rating_avg desc",
+            "popular" => "orders_count desc",
+            "newest" => "created_at desc",
+            _ => "created_at desc",
         };
-        var items = await find.Skip(q.Skip).Limit(q.Limit).ToListAsync();
+
+        const string countPrefix = "select count(*)::bigint from products";
+        var countSql = $"{countPrefix}{whereSql};";
+        var listSql = $"{ProductSelect}{whereSql} order by {orderBySql} offset @skip limit @limit;";
+        parameters.Add("skip", q.Skip);
+        parameters.Add("limit", q.Limit);
+
+        await using var connection = await db.OpenConnectionAsync();
+        var total = await connection.ExecuteScalarAsync<long>(countSql, parameters);
+        var items = (await connection.QueryAsync<Product>(listSql, parameters)).ToList();
         return (items, total);
     }
 
-    public async Task<Product?> FindBySlugOrIdAsync(string slugOrId) =>
-        await db.Products.Find(Builders<Product>.Filter.Or(
-            Builders<Product>.Filter.Eq(p => p.Slug, slugOrId),
-            Builders<Product>.Filter.Eq(p => p.Id, slugOrId))).FirstOrDefaultAsync();
+    public async Task<Product?> FindBySlugOrIdAsync(string slugOrId)
+    {
+        var sql = $"{ProductSelect} where slug = @slugOrId or id = @slugOrId limit 1;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<Product>(sql, new { slugOrId });
+    }
 
-    public async Task<Product?> FindByIdAsync(string id) =>
-        await db.Products.Find(Builders<Product>.Filter.Eq(p => p.Id, id)).FirstOrDefaultAsync();
+    public async Task<Product?> FindByIdAsync(string id)
+    {
+        var sql = $"{ProductSelect} where id = @id limit 1;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<Product>(sql, new { id });
+    }
 
-    public async Task<Product?> FindBySlugAsync(string slug) =>
-        await db.Products.Find(Builders<Product>.Filter.Eq(p => p.Slug, slug)).FirstOrDefaultAsync();
+    public async Task<Product?> FindBySlugAsync(string slug)
+    {
+        var sql = $"{ProductSelect} where slug = @slug limit 1;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<Product>(sql, new { slug });
+    }
 
-    public async Task InsertAsync(Product product) => await db.Products.InsertOneAsync(product);
+    public async Task InsertAsync(Product product)
+    {
+        const string sql = """
+            insert into products (
+              id, name, slug, description, short_description, category_slug, price, discount_price, stock,
+              material, weight_g, dimensions, print_time_hours, color_variants, images, tags, featured, is_active,
+              seo_title, seo_description, rating_avg, rating_count, orders_count, created_at, updated_at
+            ) values (
+              @Id, @Name, @Slug, @Description, @ShortDescription, @CategorySlug, @Price, @DiscountPrice, @Stock,
+              @Material, @WeightG, @Dimensions, @PrintTimeHours, @ColorVariants, @Images, @Tags, @Featured, @IsActive,
+              @SeoTitle, @SeoDescription, @RatingAvg, @RatingCount, @OrdersCount, @CreatedAt, @UpdatedAt
+            );
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, product);
+    }
 
     public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
     {
-        var filter = Builders<Product>.Filter.Eq(p => p.Id, id);
-        var update = Builders<Product>.Update.Combine(
-            updates.Select(kv => Builders<Product>.Update.Set(kv.Key, kv.Value)));
-        await db.Products.UpdateOneAsync(filter, update);
+        if (updates.Count == 0) return;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, dynamicParams) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update products set {setClause} where id = @id;";
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, dynamicParams);
     }
 
-    public async Task DeleteAsync(string id) =>
-        await db.Products.DeleteOneAsync(Builders<Product>.Filter.Eq(p => p.Id, id));
+    public async Task DeleteAsync(string id)
+    {
+        const string sql = "delete from products where id = @id;";
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, new { id });
+    }
 
-    public async Task<List<Product>> FindByIdsAsync(IEnumerable<string> ids) =>
-        await db.Products.Find(Builders<Product>.Filter.In(p => p.Id, ids)).ToListAsync();
+    public async Task<List<Product>> FindByIdsAsync(IEnumerable<string> ids)
+    {
+        var idArray = ids.Distinct().ToArray();
+        if (idArray.Length == 0) return [];
 
-    public async Task<List<Product>> FindRelatedAsync(string categorySlug, string excludeId, int limit = 6) =>
-        await db.Products.Find(
-            Builders<Product>.Filter.Eq(p => p.CategorySlug, categorySlug) &
-            Builders<Product>.Filter.Ne(p => p.Id, excludeId) &
-            Builders<Product>.Filter.Eq(p => p.IsActive, true)).Limit(limit).ToListAsync();
+        var sql = $"{ProductSelect} where id = any(@ids);";
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Product>(sql, new { ids = idArray });
+        return items.ToList();
+    }
 
-    public async Task<List<Product>> ListAllAsync(int limit = 5000) =>
-        await db.Products.Find(FilterDefinition<Product>.Empty).Limit(limit).ToListAsync();
+    public async Task<List<Product>> FindRelatedAsync(string categorySlug, string excludeId, int limit = 6)
+    {
+        var sql = $"{ProductSelect} where category_slug = @categorySlug and id <> @excludeId and is_active = true limit @limit;";
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Product>(sql, new { categorySlug, excludeId, limit });
+        return items.ToList();
+    }
 
-    public async Task IncrementStockAsync(string productId, int delta, int orderDelta = 0) =>
-        await db.Products.UpdateOneAsync(
-            Builders<Product>.Filter.Eq(p => p.Id, productId),
-            Builders<Product>.Update.Inc(p => p.Stock, delta).Inc(p => p.OrdersCount, orderDelta));
+    public async Task<List<Product>> ListAllAsync(int limit = 5000)
+    {
+        var sql = $"{ProductSelect} limit @limit;";
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Product>(sql, new { limit });
+        return items.ToList();
+    }
+
+    public async Task IncrementStockAsync(string productId, int delta, int orderDelta = 0)
+    {
+        const string sql = """
+            UPDATE products
+            SET stock = stock + @delta, orders_count = orders_count + @orderDelta
+            WHERE id = @id;
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, new { id = productId, delta, orderDelta });
+    }
 }
 
-public class ReviewRepository(MongoDbContext db) : IReviewRepository
+/// <summary>Data access for reviews in Postgres.</summary>
+public class ReviewRepository(PostgresDb db) : IReviewRepository
 {
-    public async Task InsertAsync(Review review) => await db.Reviews.InsertOneAsync(review);
+    private const string ReviewSelect = """
+        select id, product_id, user_id, user_name, rating, title, comment, approved, created_at::text as created_at
+        from reviews
+        """;
+
+    public async Task InsertAsync(Review review)
+    {
+        const string sql = """
+            insert into reviews (
+              id, product_id, user_id, user_name, rating, title, comment, approved, created_at
+            ) values (
+              @Id, @ProductId, @UserId, @UserName, @Rating, @Title, @Comment, @Approved, @CreatedAt
+            );
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, review);
+    }
 
     public async Task<List<Review>> FindByProductAsync(string productId, bool approvedOnly = true)
     {
-        var filter = Builders<Review>.Filter.Eq(r => r.ProductId, productId);
-        if (approvedOnly) filter &= Builders<Review>.Filter.Eq(r => r.Approved, true);
-        return await db.Reviews.Find(filter).SortByDescending(r => r.CreatedAt).Limit(50).ToListAsync();
+        var whereSql = approvedOnly
+            ? " where product_id = @productId and approved = true"
+            : " where product_id = @productId";
+        var sql = $"{ReviewSelect}{whereSql} order by created_at desc limit 50;";
+
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Review>(sql, new { productId });
+        return items.ToList();
     }
 
-    public async Task<List<Review>> ListAllAsync(int limit = 200) =>
-        await db.Reviews.Find(FilterDefinition<Review>.Empty).SortByDescending(r => r.CreatedAt).Limit(limit).ToListAsync();
+    public async Task<List<Review>> ListAllAsync(int limit = 200)
+    {
+        var sql = $"{ReviewSelect} order by created_at desc limit @limit;";
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Review>(sql, new { limit });
+        return items.ToList();
+    }
 
     public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
     {
-        var filter = Builders<Review>.Filter.Eq(r => r.Id, id);
-        var update = Builders<Review>.Update.Combine(
-            updates.Select(kv => Builders<Review>.Update.Set(kv.Key, kv.Value)));
-        await db.Reviews.UpdateOneAsync(filter, update);
+        if (updates.Count == 0) return;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, dynamicParams) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update reviews set {setClause} where id = @id;";
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, dynamicParams);
     }
 
-    public async Task<List<Review>> FindApprovedByProductAsync(string productId) =>
-        await db.Reviews.Find(
-            Builders<Review>.Filter.Eq(r => r.ProductId, productId) &
-            Builders<Review>.Filter.Eq(r => r.Approved, true)).ToListAsync();
+    public async Task<List<Review>> FindApprovedByProductAsync(string productId)
+    {
+        var sql = $"{ReviewSelect} where product_id = @productId and approved = true;";
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Review>(sql, new { productId });
+        return items.ToList();
+    }
 }
 
-public class WishlistRepository(MongoDbContext db) : IWishlistRepository
+/// <summary>Data access for wishlist items in Postgres.</summary>
+public class WishlistRepository(PostgresDb db) : IWishlistRepository
 {
-    public async Task<List<WishlistItem>> FindByUserAsync(string userId) =>
-        await db.Wishlist.Find(Builders<WishlistItem>.Filter.Eq(w => w.UserId, userId)).ToListAsync();
+    public async Task<List<WishlistItem>> FindByUserAsync(string userId)
+    {
+        const string sql = """
+            select id, user_id, product_id, created_at::text as created_at
+            from wishlist
+            where user_id = @userId;
+            """;
 
-    public async Task<bool> ExistsAsync(string userId, string productId) =>
-        await db.Wishlist.Find(
-            Builders<WishlistItem>.Filter.Eq(w => w.UserId, userId) &
-            Builders<WishlistItem>.Filter.Eq(w => w.ProductId, productId)).AnyAsync();
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<WishlistItem>(sql, new { userId });
+        return items.ToList();
+    }
 
-    public async Task InsertAsync(WishlistItem item) => await db.Wishlist.InsertOneAsync(item);
+    public async Task<bool> ExistsAsync(string userId, string productId)
+    {
+        const string sql = """
+            select exists(
+                select 1 from wishlist where user_id = @userId and product_id = @productId
+            );
+            """;
 
-    public async Task DeleteAsync(string userId, string productId) =>
-        await db.Wishlist.DeleteOneAsync(
-            Builders<WishlistItem>.Filter.Eq(w => w.UserId, userId) &
-            Builders<WishlistItem>.Filter.Eq(w => w.ProductId, productId));
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.ExecuteScalarAsync<bool>(sql, new { userId, productId });
+    }
+
+    public async Task InsertAsync(WishlistItem item)
+    {
+        const string sql = """
+            insert into wishlist (id, user_id, product_id, created_at)
+            values (@Id, @UserId, @ProductId, @CreatedAt);
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, item);
+    }
+
+    public async Task DeleteAsync(string userId, string productId)
+    {
+        const string sql = "delete from wishlist where user_id = @userId and product_id = @productId;";
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, new { userId, productId });
+    }
 }
 
-public class AddressRepository(MongoDbContext db) : IAddressRepository
+/// <summary>Data access for user addresses in Postgres.</summary>
+public class AddressRepository(PostgresDb db) : IAddressRepository
 {
-    public async Task<List<Address>> FindByUserAsync(string userId) =>
-        await db.Addresses.Find(Builders<Address>.Filter.Eq(a => a.UserId, userId)).Limit(50).ToListAsync();
+    private const string AddressSelect = """
+        select
+          id, user_id, label, full_name, phone, line1, line2, city, state, postal_code, country, is_default,
+          created_at::text as created_at
+        from addresses
+        """;
 
-    public async Task<Address?> FindByIdAndUserAsync(string id, string userId) =>
-        await db.Addresses.Find(
-            Builders<Address>.Filter.Eq(a => a.Id, id) &
-            Builders<Address>.Filter.Eq(a => a.UserId, userId)).FirstOrDefaultAsync();
+    public async Task<List<Address>> FindByUserAsync(string userId)
+    {
+        var sql = $"{AddressSelect} where user_id = @userId limit 50;";
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Address>(sql, new { userId });
+        return items.ToList();
+    }
 
-    public async Task InsertAsync(Address address) => await db.Addresses.InsertOneAsync(address);
+    public async Task<Address?> FindByIdAndUserAsync(string id, string userId)
+    {
+        var sql = $"{AddressSelect} where id = @id and user_id = @userId limit 1;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<Address>(sql, new { id, userId });
+    }
+
+    public async Task InsertAsync(Address address)
+    {
+        const string sql = """
+            insert into addresses (
+              id, user_id, label, full_name, phone, line1, line2, city, state, postal_code, country, is_default, created_at
+            ) values (
+              @Id, @UserId, @Label, @FullName, @Phone, @Line1, @Line2, @City, @State, @PostalCode, @Country, @IsDefault, @CreatedAt
+            );
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, address);
+    }
 
     public async Task UpdateAsync(string id, string userId, Dictionary<string, object?> updates)
     {
-        var filter = Builders<Address>.Filter.Eq(a => a.Id, id) & Builders<Address>.Filter.Eq(a => a.UserId, userId);
-        var update = Builders<Address>.Update.Combine(
-            updates.Select(kv => Builders<Address>.Update.Set(kv.Key, kv.Value)));
-        await db.Addresses.UpdateOneAsync(filter, update);
+        if (updates.Count == 0) return;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        parameters.Add("userId", userId);
+        var (setClause, dynamicParams) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update addresses set {setClause} where id = @id and user_id = @userId;";
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, dynamicParams);
     }
 
-    public async Task ClearDefaultAsync(string userId) =>
-        await db.Addresses.UpdateManyAsync(
-            Builders<Address>.Filter.Eq(a => a.UserId, userId),
-            Builders<Address>.Update.Set(a => a.IsDefault, false));
+    public async Task ClearDefaultAsync(string userId)
+    {
+        const string sql = "update addresses set is_default = false where user_id = @userId;";
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, new { userId });
+    }
 
-    public async Task DeleteAsync(string id, string userId) =>
-        await db.Addresses.DeleteOneAsync(
-            Builders<Address>.Filter.Eq(a => a.Id, id) &
-            Builders<Address>.Filter.Eq(a => a.UserId, userId));
+    public async Task DeleteAsync(string id, string userId)
+    {
+        const string sql = "delete from addresses where id = @id and user_id = @userId;";
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, new { id, userId });
+    }
 }
 
-public class CouponRepository(MongoDbContext db) : ICouponRepository
+/// <summary>Data access for coupons in Postgres.</summary>
+public class CouponRepository(PostgresDb db) : ICouponRepository
 {
-    public async Task<Coupon?> FindByCodeAsync(string code) =>
-        await db.Coupons.Find(
-            Builders<Coupon>.Filter.Eq(c => c.Code, code.ToUpperInvariant()) &
-            Builders<Coupon>.Filter.Eq(c => c.IsActive, true)).FirstOrDefaultAsync();
+    private const string CouponSelect = """
+        select
+          id, code, kind, value, min_order, max_discount, is_active, expires_at::text as expires_at,
+          created_at::text as created_at
+        from coupons
+        """;
 
-    public async Task<List<Coupon>> ListAsync() =>
-        await db.Coupons.Find(FilterDefinition<Coupon>.Empty).SortBy(c => c.Code).Limit(200).ToListAsync();
+    public async Task<Coupon?> FindByCodeAsync(string code)
+    {
+        var sql = $"{CouponSelect} where code = @code and is_active = true limit 1;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<Coupon>(sql, new { code = code.ToUpperInvariant() });
+    }
 
-    public async Task InsertAsync(Coupon coupon) => await db.Coupons.InsertOneAsync(coupon);
+    public async Task<List<Coupon>> ListAsync()
+    {
+        var sql = $"{CouponSelect} order by code limit 200;";
+        await using var connection = await db.OpenConnectionAsync();
+        var items = await connection.QueryAsync<Coupon>(sql);
+        return items.ToList();
+    }
 
-    public async Task DeleteAsync(string id) =>
-        await db.Coupons.DeleteOneAsync(Builders<Coupon>.Filter.Eq(c => c.Id, id));
+    public async Task InsertAsync(Coupon coupon)
+    {
+        const string sql = """
+            insert into coupons (
+              id, code, kind, value, min_order, max_discount, is_active, expires_at, created_at
+            ) values (
+              @Id, @Code, @Kind, @Value, @MinOrder, @MaxDiscount, @IsActive, @ExpiresAt, @CreatedAt
+            );
+            """;
 
-    public async Task<long> CountAsync() =>
-        await db.Coupons.CountDocumentsAsync(FilterDefinition<Coupon>.Empty);
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, coupon);
+    }
 
-    public async Task InsertManyAsync(IEnumerable<Coupon> coupons) =>
-        await db.Coupons.InsertManyAsync(coupons);
+    public async Task DeleteAsync(string id)
+    {
+        const string sql = "delete from coupons where id = @id;";
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, new { id });
+    }
+
+    public async Task<long> CountAsync()
+    {
+        const string sql = "select count(*)::bigint from coupons;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.ExecuteScalarAsync<long>(sql);
+    }
+
+    public async Task InsertManyAsync(IEnumerable<Coupon> coupons)
+    {
+        const string sql = """
+            insert into coupons (
+              id, code, kind, value, min_order, max_discount, is_active, expires_at, created_at
+            ) values (
+              @Id, @Code, @Kind, @Value, @MinOrder, @MaxDiscount, @IsActive, @ExpiresAt, @CreatedAt
+            );
+            """;
+
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, coupons);
+    }
 }

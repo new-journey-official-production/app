@@ -1,11 +1,7 @@
-using MongoDB.Bson.Serialization.Attributes;
-
 namespace PrintForge.Models.Entities;
 
-[BsonIgnoreExtraElements]
 public class User
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Email { get; set; } = string.Empty;
@@ -19,10 +15,8 @@ public class User
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Category
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
@@ -31,10 +25,8 @@ public class Category
     public string Image { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Product
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
@@ -63,10 +55,8 @@ public class Product
     public string UpdatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Review
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string ProductId { get; set; } = string.Empty;
@@ -79,10 +69,8 @@ public class Review
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class WishlistItem
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string UserId { get; set; } = string.Empty;
@@ -90,10 +78,8 @@ public class WishlistItem
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Address
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string UserId { get; set; } = string.Empty;
@@ -110,10 +96,8 @@ public class Address
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Coupon
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Code { get; set; } = string.Empty;
@@ -126,7 +110,6 @@ public class Coupon
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class OrderItem
 {
     public string ProductId { get; set; } = string.Empty;
@@ -138,7 +121,6 @@ public class OrderItem
     public string? Variant { get; set; }
 }
 
-[BsonIgnoreExtraElements]
 public class OrderTimelineEntry
 {
     public string Status { get; set; } = string.Empty;
@@ -146,10 +128,8 @@ public class OrderTimelineEntry
     public string Note { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Order
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string OrderNo { get; set; } = string.Empty;
@@ -173,10 +153,8 @@ public class Order
     public string UpdatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class InventoryItem
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
@@ -192,10 +170,8 @@ public class InventoryItem
     public string UpdatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Printer
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
@@ -208,7 +184,6 @@ public class Printer
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class TicketMessage
 {
     public string From { get; set; } = string.Empty;
@@ -216,10 +191,8 @@ public class TicketMessage
     public string At { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Ticket
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string UserId { get; set; } = string.Empty;
@@ -233,10 +206,8 @@ public class Ticket
     public string UpdatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Notification
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string UserId { get; set; } = string.Empty;
@@ -248,10 +219,8 @@ public class Notification
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class BlogPost
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Title { get; set; } = string.Empty;
@@ -265,10 +234,8 @@ public class BlogPost
     public string UpdatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class MediaItem
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Filename { get; set; } = string.Empty;
@@ -279,10 +246,8 @@ public class MediaItem
     public string UploadedBy { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class ActivityLog
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string? UserId { get; set; }
@@ -294,10 +259,8 @@ public class ActivityLog
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class Payment
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string OrderId { get; set; } = string.Empty;
@@ -308,10 +271,8 @@ public class Payment
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class PasswordReset
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Token { get; set; } = string.Empty;
@@ -321,10 +282,8 @@ public class PasswordReset
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class ModuleEntity
 {
-    [BsonElement("id")]
     public string? Id { get; set; }
 
     public string ModuleId { get; set; } = string.Empty;
@@ -333,10 +292,8 @@ public class ModuleEntity
     public Dictionary<string, object?> Metadata { get; set; } = [];
 }
 
-[BsonIgnoreExtraElements]
 public class Role
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
@@ -347,7 +304,6 @@ public class Role
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class RolePermission
 {
     public string RoleId { get; set; } = string.Empty;
@@ -355,10 +311,8 @@ public class RolePermission
     public int PermissionBits { get; set; }
 }
 
-[BsonIgnoreExtraElements]
 public class UserPermission
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string UserId { get; set; } = string.Empty;
@@ -367,10 +321,8 @@ public class UserPermission
     public Dictionary<string, object?> Metadata { get; set; } = [];
 }
 
-[BsonIgnoreExtraElements]
 public class EmailLog
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string To { get; set; } = string.Empty;
@@ -380,20 +332,16 @@ public class EmailLog
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class NewsletterSubscriber
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Email { get; set; } = string.Empty;
     public string CreatedAt { get; set; } = string.Empty;
 }
 
-[BsonIgnoreExtraElements]
 public class ContactMessage
 {
-    [BsonElement("id")]
     public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;

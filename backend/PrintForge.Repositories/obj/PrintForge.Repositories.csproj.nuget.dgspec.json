@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\PrintForge.Repositories.csproj": {}
+    "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\PrintForge.Repositories.csproj": {}
   },
   "projects": {
     "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj": {
@@ -10,7 +10,7 @@
         "projectUniqueName": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj",
         "projectName": "PrintForge.Constants",
         "projectPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\PrintForge.Constants.csproj",
-        "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\95756f0ab86de3c3268177527acc584a\\nuget",
+        "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget",
         "outputPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Constants\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
@@ -337,14 +337,14 @@
         }
       }
     },
-    "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj": {
+    "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj",
         "projectName": "PrintForge.Infrastructure",
-        "projectPath": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\95756f0ab86de3c3268177527acc584a\\nuget",
-        "outputPath": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\obj\\",
+        "projectPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget",
+        "outputPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\tarea\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -388,6 +388,10 @@
               "target": "Package",
               "version": "[4.2.0, )"
             },
+            "Dapper": {
+              "target": "Package",
+              "version": "[2.1.66, )"
+            },
             "Microsoft.AspNetCore.Http.Abstractions": {
               "target": "Package",
               "version": "[2.3.11, )"
@@ -400,13 +404,17 @@
               "target": "Package",
               "version": "[10.0.0, )"
             },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            },
             "Microsoft.Extensions.Options": {
               "target": "Package",
               "version": "[10.0.0, )"
             },
-            "MongoDB.Driver": {
+            "Npgsql": {
               "target": "Package",
-              "version": "[3.9.0, )"
+              "version": "[10.0.0, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
@@ -713,7 +721,7 @@
         "projectUniqueName": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\PrintForge.Models.csproj",
         "projectName": "PrintForge.Models",
         "projectPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\PrintForge.Models.csproj",
-        "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\95756f0ab86de3c3268177527acc584a\\nuget",
+        "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget",
         "outputPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
@@ -746,12 +754,6 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
-          "dependencies": {
-            "MongoDB.Bson": {
-              "target": "Package",
-              "version": "[3.9.0, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",
@@ -1046,14 +1048,14 @@
         }
       }
     },
-    "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\PrintForge.Repositories.csproj": {
+    "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\PrintForge.Repositories.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\PrintForge.Repositories.csproj",
+        "projectUniqueName": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\PrintForge.Repositories.csproj",
         "projectName": "PrintForge.Repositories",
-        "projectPath": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\PrintForge.Repositories.csproj",
-        "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\95756f0ab86de3c3268177527acc584a\\nuget",
-        "outputPath": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\obj\\",
+        "projectPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\PrintForge.Repositories.csproj",
+        "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget",
+        "outputPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Repositories\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\tarea\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -1068,8 +1070,8 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj": {
-                "projectPath": "c:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj"
+              "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Infrastructure\\PrintForge.Infrastructure.csproj"
               },
               "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\PrintForge.Models.csproj": {
                 "projectPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\PrintForge.Models.csproj"
@@ -1092,6 +1094,12 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
+          "dependencies": {
+            "Dapper": {
+              "target": "Package",
+              "version": "[2.1.66, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

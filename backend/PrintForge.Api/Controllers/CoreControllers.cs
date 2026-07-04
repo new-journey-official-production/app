@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PrintForge.Api.Authorization;
+using PrintForge.Infrastructure.Supabase;
 using PrintForge.Models;
 using PrintForge.Models.DTOs;
 using PrintForge.Models.Entities;
@@ -10,13 +11,27 @@ namespace PrintForge.Api.Controllers;
 
 [ApiController]
 [Route("api")]
-public class HealthController : ControllerBase
+public class HealthController(SupabaseHealthService supabaseHealth) : ControllerBase
 {
     [HttpGet("")]
     public IActionResult Root() => Ok(new { name = "New Journey API", version = "1.0.0", status = "ok" });
 
     [HttpGet("health")]
-    public IActionResult Health() => Ok(new { ok = true, time = IdHelper.NowIso() });
+    public async Task<IActionResult> Health(CancellationToken cancellationToken)
+    {
+        var supabase = await supabaseHealth.CheckAsync(cancellationToken);
+        return Ok(new
+        {
+            ok = true,
+            time = IdHelper.NowIso(),
+            supabase = new
+            {
+                ok = supabase.Ok,
+                error = supabase.Error,
+                sample_module_count = supabase.SampleModuleCount,
+            },
+        });
+    }
 }
 
 [ApiController]

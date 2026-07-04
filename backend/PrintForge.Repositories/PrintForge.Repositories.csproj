@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PrintForge.Models\PrintForge.Models.csproj" />
     <ProjectReference Include="..\PrintForge.Infrastructure\PrintForge.Infrastructure.csproj" />
   </ItemGroup>

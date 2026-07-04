@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MongoDB.Driver;
 using PrintForge.Constants;
 using PrintForge.Infrastructure.Auth;
 using PrintForge.Infrastructure.Configuration;
-using PrintForge.Infrastructure.Database;
 using PrintForge.Models;
 using PrintForge.Models.Entities;
 using PrintForge.Repositories.Interfaces;
@@ -14,7 +12,6 @@ namespace PrintForge.Services;
 
 /// <summary>Startup seed — categories, products, users, blog, coupons, printers, inventory, RBAC.</summary>
 public class SeedDataService(
-    MongoDbContext db,
     IOptions<AppSettings> settings,
     ICategoryRepository categories,
     IUserRepository users,
@@ -49,16 +46,6 @@ public class SeedDataService(
 
     public async Task SeedAsync()
     {
-        await db.Users.Indexes.CreateOneAsync(new CreateIndexModel<User>(
-            Builders<User>.IndexKeys.Ascending(u => u.Email),
-            new CreateIndexOptions { Unique = true }));
-        await db.Products.Indexes.CreateOneAsync(new CreateIndexModel<Product>(
-            Builders<Product>.IndexKeys.Ascending(p => p.Slug),
-            new CreateIndexOptions { Unique = true }));
-        await db.Orders.Indexes.CreateOneAsync(new CreateIndexModel<Order>(
-            Builders<Order>.IndexKeys.Ascending(o => o.OrderNo),
-            new CreateIndexOptions { Unique = true }));
-
         if (await categories.CountAsync() == 0)
         {
             var cats = BackendConstants.CategoryDefs.Select(c => new Category

@@ -8,7 +8,7 @@
 |-------|------------|--------|
 | Frontend | React 19 + TypeScript + CRA/CRACO + shadcn/ui | Vercel |
 | Backend | .NET 10 ASP.NET Core Web API (CP layered architecture) | Render |
-| Database | MongoDB (current) / Supabase Postgres (migrations ready) | — |
+| Database | Supabase Postgres (Npgsql + Dapper) | — |
 
 ## Backend Structure (.NET / C#)
 
@@ -28,10 +28,10 @@ backend/
 ### Layer rules
 - **Controllers** — HTTP only; validate input, call service, return response
 - **Services** — business rules, orchestration (`IAuthService`, `IProductService`, etc.)
-- **Repositories** — MongoDB queries only (`IUserRepository`, `IProductRepository`, etc.)
+- **Repositories** — Postgres queries only via Dapper (`IUserRepository`, `IProductRepository`, etc.)
 - **Models** — entities in `Entities/`, request/response in `DTOs/`
 - **Constants** — module IDs, permission bits, shared enums (sync with frontend + `packages/constants/modules.json`)
-- **Infrastructure** — JWT auth, MongoDbContext, middleware, DI registration
+- **Infrastructure** — JWT auth, PostgresDb, middleware, DI registration
 
 ## Frontend Structure (TypeScript)
 
@@ -64,7 +64,7 @@ frontend/src/
 ## Environment
 
 **Vercel:** `REACT_APP_BACKEND_URL`  
-**Render / local:** `MongoUrl`, `DbName`, `JwtSecret`, `CorsOrigins`, admin/customer seed creds (see `backend/.env.example`)
+**Render / local:** `DatabaseUrl`, `JwtSecret`, `CorsOrigins`, admin/customer seed creds (see `backend/.env.example`)
 
 ## Run locally
 

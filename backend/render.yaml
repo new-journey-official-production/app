@@ -6,9 +6,7 @@ services:
     buildCommand: dotnet publish PrintForge.Api/PrintForge.Api.csproj -c Release -o out
     startCommand: cd out && ./PrintForge.Api
     envVars:
-      - key: MongoUrl
-        sync: false
-      - key: DbName
+      - key: DatabaseUrl
         sync: false
       - key: JwtSecret
         sync: false
@@ -21,4 +19,8 @@ services:
       - key: DemoCustomerEmail
         sync: false
       - key: DemoCustomerPassword
+        sync: false
+      - key: SupabaseUrl
+        sync: false
+      - key: SupabasePublishableKey
         sync: false

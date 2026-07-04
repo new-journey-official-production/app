@@ -1,50 +1,14 @@
 {
   "version": 3,
   "targets": {
-    "net10.0": {
-      "MongoDB.Bson/3.9.0": {
-        "type": "package",
-        "compile": {
-          "lib/net6.0/MongoDB.Bson.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net6.0/MongoDB.Bson.dll": {
-            "related": ".xml"
-          }
-        }
-      }
-    }
+    "net10.0": {}
   },
-  "libraries": {
-    "MongoDB.Bson/3.9.0": {
-      "sha512": "J6vB61zKwMSfxbkN+/amGvj1qVMDKrKjV3kmoOWttMcv8JJScLDCFh89FyL3f2lDUyJrnfgZCR6/KX+07e99eg==",
-      "type": "package",
-      "path": "mongodb.bson/3.9.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "README.md",
-        "lib/net472/MongoDB.Bson.dll",
-        "lib/net472/MongoDB.Bson.xml",
-        "lib/net6.0/MongoDB.Bson.dll",
-        "lib/net6.0/MongoDB.Bson.xml",
-        "lib/netstandard2.1/MongoDB.Bson.dll",
-        "lib/netstandard2.1/MongoDB.Bson.xml",
-        "mongodb.bson.3.9.0.nupkg.sha512",
-        "mongodb.bson.nuspec",
-        "packageIcon.png"
-      ]
-    }
-  },
+  "libraries": {},
   "projectFileDependencyGroups": {
-    "net10.0": [
-      "MongoDB.Bson >= 3.9.0"
-    ]
+    "net10.0": []
   },
   "packageFolders": {
-    "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\95756f0ab86de3c3268177527acc584a\\nuget": {}
+    "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget": {}
   },
   "project": {
     "version": "1.0.0",
@@ -52,7 +16,7 @@
       "projectUniqueName": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\PrintForge.Models.csproj",
       "projectName": "PrintForge.Models",
       "projectPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\PrintForge.Models.csproj",
-      "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\95756f0ab86de3c3268177527acc584a\\nuget",
+      "packagesPath": "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\c525b96b09ba79654e33b716249e794a\\nuget",
       "outputPath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
@@ -85,12 +49,6 @@
     "frameworks": {
       "net10.0": {
         "targetAlias": "net10.0",
-        "dependencies": {
-          "MongoDB.Bson": {
-            "target": "Package",
-            "version": "[3.9.0, )"
-          }
-        },
         "imports": [
           "net461",
           "net462",

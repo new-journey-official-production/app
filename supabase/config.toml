@@ -1,0 +1,16 @@
+# Supabase project reference for New Journey Store RBAC schema.
+# Migrations: supabase/migrations/
+# Seeds: supabase/seed/
+
+project_id = "zxjzapfhpzyewrclmhcj"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15

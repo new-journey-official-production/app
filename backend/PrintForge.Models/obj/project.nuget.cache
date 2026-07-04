@@ -1,10 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "8PIoEXObKq4=",
+  "dgSpecHash": "HsJCiPNVC0k=",
   "success": true,
   "projectFilePath": "C:\\Users\\tarea\\OneDrive\\Desktop\\New_Journey\\Production Code\\New_Journey_Store\\app\\backend\\PrintForge.Models\\PrintForge.Models.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\tarea\\AppData\\Local\\Temp\\cursor-sandbox-cache\\95756f0ab86de3c3268177527acc584a\\nuget\\mongodb.bson\\3.9.0\\mongodb.bson.3.9.0.nupkg.sha512"
-  ],
+  "expectedPackageFiles": [],
   "logs": []
 }

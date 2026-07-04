@@ -14,7 +14,6 @@ C:\Users\tarea\OneDrive\Desktop\New_Journey\Production Code\New_Journey_Store\ap
 C:\Users\tarea\OneDrive\Desktop\New_Journey\Production Code\New_Journey_Store\app\backend\PrintForge.Models\bin\Debug\net10.0\PrintForge.Models.deps.json
 C:\Users\tarea\OneDrive\Desktop\New_Journey\Production Code\New_Journey_Store\app\backend\PrintForge.Models\bin\Debug\net10.0\PrintForge.Models.dll
 C:\Users\tarea\OneDrive\Desktop\New_Journey\Production Code\New_Journey_Store\app\backend\PrintForge.Models\bin\Debug\net10.0\PrintForge.Models.pdb
-C:\Users\tarea\OneDrive\Desktop\New_Journey\Production Code\New_Journey_Store\app\backend\PrintForge.Models\obj\Debug\net10.0\PrintForge.Models.csproj.AssemblyReference.cache
 C:\Users\tarea\OneDrive\Desktop\New_Journey\Production Code\New_Journey_Store\app\backend\PrintForge.Models\obj\Debug\net10.0\PrintForge.Models.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\tarea\OneDrive\Desktop\New_Journey\Production Code\New_Journey_Store\app\backend\PrintForge.Models\obj\Debug\net10.0\PrintForge.Models.AssemblyInfoInputs.cache
 C:\Users\tarea\OneDrive\Desktop\New_Journey\Production Code\New_Journey_Store\app\backend\PrintForge.Models\obj\Debug\net10.0\PrintForge.Models.AssemblyInfo.cs
