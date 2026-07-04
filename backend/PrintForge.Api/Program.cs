@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PrintForge.Constants;
 using PrintForge.Infrastructure.Configuration;
+using PrintForge.Infrastructure.Database;
 using PrintForge.Infrastructure.Extensions;
 using PrintForge.Infrastructure.Middleware;
 using PrintForge.Services.Extensions;
@@ -71,11 +72,14 @@ app.UseMiddleware<ContextMiddleware>();
 app.UseMiddleware<PermissionMiddleware>();
 app.MapControllers();
 
-var databaseUrl = builder.Configuration["DatabaseUrl"];
+var databaseUrl = DatabaseUrlNormalizer.Resolve(builder.Configuration["DatabaseUrl"]);
 DatabaseUrlValidator.EnsureProductionCompatible(databaseUrl);
 
 using (var scope = app.Services.CreateScope())
 {
+    var migrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrationRunner>();
+    await migrator.ApplyPendingAsync();
+
     var seed = scope.ServiceProvider.GetRequiredService<ISeedDataService>();
     await seed.SeedAsync();
 }

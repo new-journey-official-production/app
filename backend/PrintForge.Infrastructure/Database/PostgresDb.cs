@@ -14,7 +14,7 @@ public sealed class PostgresDb(IOptions<AppSettings> settings)
         PostgresTypeHandlers.Register();
     }
 
-    public string ConnectionString => settings.Value.DatabaseUrl;
+    public string ConnectionString => DatabaseUrlNormalizer.Resolve(settings.Value.DatabaseUrl);
 
     public NpgsqlConnection OpenConnection()
     {

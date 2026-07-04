@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Npgsql" Version="10.0.0" />
@@ -22,5 +23,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\supabase\migrations\20260702000000_rbac_schema.sql" Link="Migrations\20260702000000_rbac_schema.sql" />
+    <EmbeddedResource Include="..\..\supabase\migrations\20260704100000_app_schema.sql" Link="Migrations\20260704100000_app_schema.sql" />
+    <EmbeddedResource Include="..\..\supabase\seed\modules.sql" Link="Migrations\20260704100001_modules_seed.sql" />
+  </ItemGroup>
 
 </Project>

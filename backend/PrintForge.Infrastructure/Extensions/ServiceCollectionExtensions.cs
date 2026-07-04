@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient();
         services.AddSingleton<SupabaseHealthService>();
         services.AddSingleton<PostgresDb>();
+        services.AddSingleton<DatabaseMigrationRunner>();
         services.AddSingleton<JwtService>();
         return services;
     }
