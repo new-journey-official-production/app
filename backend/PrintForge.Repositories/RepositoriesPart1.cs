@@ -44,7 +44,8 @@ public class UserRepository(PostgresDb db) : IUserRepository
             insert into users (
               id, email, password_hash, name, phone, role, role_id, avatar_url, email_verified, created_at
             ) values (
-              @Id, @Email, @PasswordHash, @Name, @Phone, @Role, @RoleId, @AvatarUrl, @EmailVerified, @CreatedAt
+              @Id, @Email, @PasswordHash, @Name, @Phone, @Role, @RoleId, @AvatarUrl, @EmailVerified,
+              coalesce(nullif(@CreatedAt, '')::timestamptz, now())
             );
             """;
 
@@ -272,7 +273,9 @@ public class ProductRepository(PostgresDb db) : IProductRepository
             ) values (
               @Id, @Name, @Slug, @Description, @ShortDescription, @CategorySlug, @Price, @DiscountPrice, @Stock,
               @Material, @WeightG, @Dimensions, @PrintTimeHours, @ColorVariants, @Images, @Tags, @Featured, @IsActive,
-              @SeoTitle, @SeoDescription, @RatingAvg, @RatingCount, @OrdersCount, @CreatedAt, @UpdatedAt
+              @SeoTitle, @SeoDescription, @RatingAvg, @RatingCount, @OrdersCount,
+              coalesce(nullif(@CreatedAt, '')::timestamptz, now()),
+              coalesce(nullif(@UpdatedAt, '')::timestamptz, now())
             );
             """;
 
@@ -354,7 +357,8 @@ public class ReviewRepository(PostgresDb db) : IReviewRepository
             insert into reviews (
               id, product_id, user_id, user_name, rating, title, comment, approved, created_at
             ) values (
-              @Id, @ProductId, @UserId, @UserName, @Rating, @Title, @Comment, @Approved, @CreatedAt
+              @Id, @ProductId, @UserId, @UserName, @Rating, @Title, @Comment, @Approved,
+              coalesce(nullif(@CreatedAt, '')::timestamptz, now())
             );
             """;
 
@@ -436,7 +440,7 @@ public class WishlistRepository(PostgresDb db) : IWishlistRepository
     {
         const string sql = """
             insert into wishlist (id, user_id, product_id, created_at)
-            values (@Id, @UserId, @ProductId, @CreatedAt);
+            values (@Id, @UserId, @ProductId, coalesce(nullif(@CreatedAt, '')::timestamptz, now()));
             """;
 
         await using var connection = await db.OpenConnectionAsync();
@@ -482,7 +486,8 @@ public class AddressRepository(PostgresDb db) : IAddressRepository
             insert into addresses (
               id, user_id, label, full_name, phone, line1, line2, city, state, postal_code, country, is_default, created_at
             ) values (
-              @Id, @UserId, @Label, @FullName, @Phone, @Line1, @Line2, @City, @State, @PostalCode, @Country, @IsDefault, @CreatedAt
+              @Id, @UserId, @Label, @FullName, @Phone, @Line1, @Line2, @City, @State, @PostalCode, @Country, @IsDefault,
+              coalesce(nullif(@CreatedAt, '')::timestamptz, now())
             );
             """;
 
@@ -550,7 +555,9 @@ public class CouponRepository(PostgresDb db) : ICouponRepository
             insert into coupons (
               id, code, kind, value, min_order, max_discount, is_active, expires_at, created_at
             ) values (
-              @Id, @Code, @Kind, @Value, @MinOrder, @MaxDiscount, @IsActive, @ExpiresAt, @CreatedAt
+              @Id, @Code, @Kind, @Value, @MinOrder, @MaxDiscount, @IsActive,
+              nullif(@ExpiresAt, '')::timestamptz,
+              coalesce(nullif(@CreatedAt, '')::timestamptz, now())
             );
             """;
 
@@ -578,7 +585,9 @@ public class CouponRepository(PostgresDb db) : ICouponRepository
             insert into coupons (
               id, code, kind, value, min_order, max_discount, is_active, expires_at, created_at
             ) values (
-              @Id, @Code, @Kind, @Value, @MinOrder, @MaxDiscount, @IsActive, @ExpiresAt, @CreatedAt
+              @Id, @Code, @Kind, @Value, @MinOrder, @MaxDiscount, @IsActive,
+              nullif(@ExpiresAt, '')::timestamptz,
+              coalesce(nullif(@CreatedAt, '')::timestamptz, now())
             );
             """;
 
