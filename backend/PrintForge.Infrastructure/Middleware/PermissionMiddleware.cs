@@ -16,7 +16,8 @@ public class PermissionMiddleware
         var ctx = RequestContextAccessor.Get();
         var moduleId = ctx.ModuleId;
 
-        if (!string.IsNullOrEmpty(moduleId) && ctx.User is not null)
+        if (!string.IsNullOrEmpty(moduleId) && ctx.User is not null
+            && !Modules.PublicModules.Contains(moduleId))
         {
             var bits = ctx.Permissions.GetValueOrDefault(moduleId, 0);
             var method = http.Request.Method.ToUpperInvariant();

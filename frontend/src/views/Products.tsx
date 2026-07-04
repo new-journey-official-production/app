@@ -33,10 +33,16 @@ export default function Products() {
 
   useEffect(() => {
     setLoading(true);
-    api.get("/products", { params }).then((r) => {
-      setItems(r.data.items);
-      setTotal(r.data.total);
-    }).finally(() => setLoading(false));
+    api.get("/products", { params })
+      .then((r) => {
+        setItems(Array.isArray(r.data?.items) ? r.data.items : []);
+        setTotal(typeof r.data?.total === "number" ? r.data.total : 0);
+      })
+      .catch(() => {
+        setItems([]);
+        setTotal(0);
+      })
+      .finally(() => setLoading(false));
   }, [params]);
 
   const setParam = (k, v) => {

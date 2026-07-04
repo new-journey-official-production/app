@@ -30,8 +30,12 @@ export default function Home() {
   const [latest, setLatest] = useState<ApiRow[]>([]);
 
   useEffect(() => {
-    api.get("/products", { params: { featured: true, limit: 8 } }).then((r) => setFeatured(r.data.items)).catch(() => {});
-    api.get("/products", { params: { sort: "newest", limit: 8 } }).then((r) => setLatest(r.data.items)).catch(() => {});
+    api.get("/products", { params: { featured: true, limit: 8 } })
+      .then((r) => setFeatured(Array.isArray(r.data?.items) ? r.data.items : []))
+      .catch(() => setFeatured([]));
+    api.get("/products", { params: { sort: "newest", limit: 8 } })
+      .then((r) => setLatest(Array.isArray(r.data?.items) ? r.data.items : []))
+      .catch(() => setLatest([]));
   }, []);
 
   return (

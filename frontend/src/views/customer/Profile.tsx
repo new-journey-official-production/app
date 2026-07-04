@@ -13,9 +13,16 @@ export default function CustomerProfile() {
   const [addr, setAddr] = useState({ label: "Home", full_name: "", phone: "", line1: "", line2: "", city: "", state: "", postal_code: "", country: "India", is_default: false });
   const [busy, setBusy] = useState(false);
 
+  const [addrBusy, setAddrBusy] = useState(false);
+
   useEffect(() => {
     if (user) setF({ name: user.name || "", phone: user.phone || "", avatar_url: user.avatar_url || "" });
-    api.get("/addresses").then((r) => setAddresses(r.data));
+    api.get("/addresses")
+      .then((r) => setAddresses(Array.isArray(r.data) ? r.data : []))
+      .catch((err) => {
+        setAddresses([]);
+        toast.error(apiError(err));
+      });
   }, [user]);
 
   const save = async (e) => {
@@ -31,18 +38,23 @@ export default function CustomerProfile() {
 
   const addAddr = async (e) => {
     e.preventDefault();
+    setAddrBusy(true);
     try {
       await api.post("/addresses", addr);
       const r = await api.get("/addresses");
-      setAddresses(r.data);
+      setAddresses(Array.isArray(r.data) ? r.data : []);
       setAddr({ label: "Home", full_name: "", phone: "", line1: "", line2: "", city: "", state: "", postal_code: "", country: "India", is_default: false });
       toast.success("Address saved");
     } catch (err) { toast.error(apiError(err)); }
+    finally { setAddrBusy(false); }
   };
 
   const removeAddr = async (id) => {
-    await api.delete(`/addresses/${id}`);
-    setAddresses((a) => a.filter((x) => x.id !== id));
+    try {
+      await api.delete(`/addresses/${id}`);
+      setAddresses((a) => a.filter((x) => x.id !== id));
+      toast.success("Address removed");
+    } catch (err) { toast.error(apiError(err)); }
   };
 
   return (
@@ -80,7 +92,7 @@ export default function CustomerProfile() {
           <Field label="State" value={addr.state} onChange={(v) => setAddr({ ...addr, state: v })} required />
           <Field label="Postal code" value={addr.postal_code} onChange={(v) => setAddr({ ...addr, postal_code: v })} required />
           <Field label="Country" value={addr.country} onChange={(v) => setAddr({ ...addr, country: v })} />
-          <Button type="submit" className="col-span-2">Save address</Button>
+          <Button type="submit" className="col-span-2" disabled={addrBusy}>{addrBusy ? "Saving…" : "Save address"}</Button>
         </form>
       </div>
     </CustomerShell>

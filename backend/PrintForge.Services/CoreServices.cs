@@ -148,6 +148,8 @@ public class PermissionService(
 
         var staffBits = new Dictionary<string, int>
         {
+            [Modules.Storefront] = (int)CPPermissions.Read,
+            [Modules.Catalog] = (int)CPPermissions.Read,
             [Modules.Dashboard] = PermissionHelper.FullCrud,
             [Modules.Products] = (int)(CPPermissions.Read | CPPermissions.Update | CPPermissions.Create),
             [Modules.Orders] = (int)(CPPermissions.Read | CPPermissions.Update),
@@ -170,12 +172,14 @@ public class PermissionService(
 
         var customerBits = new Dictionary<string, int>
         {
+            [Modules.Storefront] = (int)CPPermissions.Read,
+            [Modules.Catalog] = (int)CPPermissions.Read,
             [Modules.Account] = (int)CPPermissions.Read,
             [Modules.AccountOrders] = (int)(CPPermissions.Read | CPPermissions.Create),
             [Modules.AccountWishlist] = PermissionHelper.FullCrud,
-            [Modules.AccountProfile] = (int)(CPPermissions.Read | CPPermissions.Update),
+            [Modules.AccountProfile] = PermissionHelper.FullCrud,
             [Modules.AccountSupport] = (int)(CPPermissions.Read | CPPermissions.Create | CPPermissions.Update),
-            [Modules.Checkout] = (int)CPPermissions.Create
+            [Modules.Checkout] = (int)(CPPermissions.Read | CPPermissions.Create)
         };
         foreach (var (modId, bits) in customerBits)
             await rbac.UpsertRolePermissionAsync(roleIds["customer"], modId, bits);

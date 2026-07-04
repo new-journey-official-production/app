@@ -31,11 +31,11 @@ export default function ProductDetail() {
     }).catch(() => toast.error("Product not found"));
   }, [slug]);
 
-  if (!data) {
+  if (!data?.product) {
     return <div className="mx-auto max-w-7xl px-4 py-24"><div className="h-96 rounded-2xl shimmer" /></div>;
   }
 
-  const p = data.product;
+  const p = data.product as ApiRow;
   const priceNow = p.discount_price || p.price;
 
   const addToCart = () => {

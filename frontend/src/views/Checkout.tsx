@@ -20,28 +20,39 @@ export default function Checkout() {
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [addrSaving, setAddrSaving] = useState(false);
   const [form, setForm] = useState({ full_name: "", phone: "", line1: "", line2: "", city: "", state: "", postal_code: "", country: "India", label: "Home", is_default: true });
 
   useEffect(() => {
     if (items.length === 0) nav("/cart");
-    api.get("/addresses").then((r) => {
-      setAddresses(r.data);
-      const def = r.data.find((a) => a.is_default) || r.data[0];
-      if (def) setAddressId(def.id);
-      else setShowForm(true);
-    });
-  }, []);
+    api.get("/addresses")
+      .then((r) => {
+        const list = Array.isArray(r.data) ? r.data : [];
+        setAddresses(list);
+        const def = list.find((a) => a.is_default) || list[0];
+        if (def) setAddressId(def.id);
+        else setShowForm(true);
+      })
+      .catch((err) => {
+        setAddresses([]);
+        setShowForm(true);
+        toast.error(apiError(err));
+      });
+  }, [items.length, nav]);
 
   const saveAddress = async (e) => {
     e.preventDefault();
+    setAddrSaving(true);
     try {
       const { data } = await api.post("/addresses", form);
       const r = await api.get("/addresses");
-      setAddresses(r.data);
+      const list = Array.isArray(r.data) ? r.data : [];
+      setAddresses(list);
       setAddressId(data.id);
       setShowForm(false);
       toast.success("Address saved");
     } catch (err) { toast.error(apiError(err)); }
+    finally { setAddrSaving(false); }
   };
 
   const placeOrder = async () => {
@@ -102,7 +113,7 @@ export default function Checkout() {
                 <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} required />
                 <Field label="Postal code" value={form.postal_code} onChange={(v) => setForm({ ...form, postal_code: v })} required />
                 <Field label="Country" value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
-                <Button type="submit" className="col-span-2 mt-2" data-testid="save-address-btn">Save address</Button>
+                <Button type="submit" className="col-span-2 mt-2" disabled={addrSaving} data-testid="save-address-btn">{addrSaving ? "Saving…" : "Save address"}</Button>
               </form>
             )}
           </section>

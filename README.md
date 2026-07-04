@@ -20,7 +20,7 @@ Production e-commerce platform for a 3D print studio — storefront, customer ac
 ### 1. Backend
 
 ```powershell
-cd app/backend
+cd backend
 dotnet run --project PrintForge.Api
 ```
 
@@ -29,7 +29,7 @@ API runs at **http://localhost:5000** (or the port shown in the terminal). On fi
 ### 2. Frontend
 
 ```powershell
-cd app/frontend
+cd frontend
 npm install --legacy-peer-deps
 ```
 

@@ -3,7 +3,7 @@ import axios, { type AxiosError } from "axios";
 import { getCurrentLocationId, getCurrentModuleId } from "../../../storage/CPStorage";
 import type { ApiResponse, ValidationErrorDetail } from "@/types";
 
-const BASE_URL = process.env.REACT_APP_BACKEND_URL;
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5102";
 export const API_BASE = `${BASE_URL}/api`;
 
 const xhr = axios.create({

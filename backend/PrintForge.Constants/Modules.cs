@@ -39,6 +39,9 @@ public static class Modules
         Settings, Roles, Users
     ];
 
+    /// <summary>Storefront modules — readable by everyone; skip RBAC gate when browsing.</summary>
+    public static readonly string[] PublicModules = [Storefront, Catalog];
+
     public static readonly ModuleDefinition[] AllModules =
     [
         new(Dashboard, "Dashboard", "Admin dashboard", "admin"),
