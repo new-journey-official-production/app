@@ -71,6 +71,9 @@ app.UseMiddleware<ContextMiddleware>();
 app.UseMiddleware<PermissionMiddleware>();
 app.MapControllers();
 
+var databaseUrl = builder.Configuration["DatabaseUrl"];
+DatabaseUrlValidator.EnsureProductionCompatible(databaseUrl);
+
 using (var scope = app.Services.CreateScope())
 {
     var seed = scope.ServiceProvider.GetRequiredService<ISeedDataService>();
