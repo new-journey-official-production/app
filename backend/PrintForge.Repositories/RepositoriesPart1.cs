@@ -272,7 +272,9 @@ public class ProductRepository(PostgresDb db) : IProductRepository
               seo_title, seo_description, rating_avg, rating_count, orders_count, created_at, updated_at
             ) values (
               @Id, @Name, @Slug, @Description, @ShortDescription, @CategorySlug, @Price, @DiscountPrice, @Stock,
-              @Material, @WeightG, @Dimensions, @PrintTimeHours, @ColorVariants, @Images, @Tags, @Featured, @IsActive,
+              @Material, @WeightG, @Dimensions, @PrintTimeHours,
+              @ColorVariants::jsonb, @Images::jsonb, @Tags::jsonb,
+              @Featured, @IsActive,
               @SeoTitle, @SeoDescription, @RatingAvg, @RatingCount, @OrdersCount,
               coalesce(nullif(@CreatedAt, '')::timestamptz, now()),
               coalesce(nullif(@UpdatedAt, '')::timestamptz, now())

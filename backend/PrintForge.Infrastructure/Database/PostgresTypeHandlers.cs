@@ -1,6 +1,8 @@
 using System.Data;
 using System.Text.Json;
 using Dapper;
+using Npgsql;
+using NpgsqlTypes;
 
 namespace PrintForge.Infrastructure.Database;
 
@@ -40,6 +42,10 @@ public static class PostgresTypeHandlers
         public override void SetValue(IDbDataParameter parameter, T? value)
         {
             parameter.Value = value is null ? DBNull.Value : JsonSerializer.Serialize(value, JsonOptions);
+
+            // Npgsql defaults serialized JSON to text; jsonb columns require Jsonb db type or ::jsonb cast.
+            if (parameter is NpgsqlParameter npgsql)
+                npgsql.NpgsqlDbType = NpgsqlDbType.Jsonb;
         }
     }
 }
