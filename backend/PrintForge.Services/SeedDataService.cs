@@ -24,19 +24,22 @@ public class SeedDataService(
         await permissions.SeedRbacAsync();
 
         var cfg = settings.Value;
-        if (string.IsNullOrWhiteSpace(cfg.AdminPassword))
+        var adminEmail = cfg.AdminEmail?.Trim() ?? "";
+        var adminPassword = cfg.AdminPassword?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(adminPassword))
         {
             logger.LogWarning(
                 "AdminPassword is not set — bootstrap admin was NOT created. " +
                 "Set AdminEmail and AdminPassword on Render, then redeploy.");
         }
-        else if (string.IsNullOrWhiteSpace(cfg.AdminEmail))
+        else if (string.IsNullOrWhiteSpace(adminEmail))
         {
             logger.LogWarning("AdminEmail is not set — bootstrap admin was NOT created.");
         }
         else
         {
-            await EnsureAdminUserAsync(cfg.AdminEmail, cfg.AdminPassword);
+            await EnsureAdminUserAsync(adminEmail, adminPassword);
         }
 
         logger.LogInformation("Seed complete (RBAC only; catalog is empty until admin adds data)");

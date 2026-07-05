@@ -27,8 +27,12 @@ public class HealthController(
         var supabase = await supabaseHealth.CheckAsync(cancellationToken);
         var cfg = settings.Value;
         var userCount = await users.CountAsync();
-        var adminEmailConfigured = !string.IsNullOrWhiteSpace(cfg.AdminEmail);
-        var adminPasswordConfigured = !string.IsNullOrWhiteSpace(cfg.AdminPassword);
+        var adminEmail = (cfg.AdminEmail ?? "").Trim().ToLowerInvariant();
+        var adminEmailConfigured = !string.IsNullOrWhiteSpace(adminEmail);
+        var adminPasswordConfigured = !string.IsNullOrWhiteSpace(cfg.AdminPassword?.Trim());
+        var adminUser = adminEmailConfigured
+            ? await users.FindByEmailAsync(adminEmail)
+            : null;
 
         return Ok(new
         {
@@ -38,8 +42,10 @@ public class HealthController(
             {
                 admin_email_configured = adminEmailConfigured,
                 admin_password_configured = adminPasswordConfigured,
+                configured_admin_email = adminEmailConfigured ? adminEmail : null,
+                admin_account_exists = adminUser is not null,
                 user_count = userCount,
-                ready = adminEmailConfigured && adminPasswordConfigured && userCount > 0,
+                ready = adminEmailConfigured && adminPasswordConfigured && adminUser is not null,
             },
             supabase = new
             {

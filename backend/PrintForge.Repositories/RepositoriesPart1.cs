@@ -12,8 +12,16 @@ public class UserRepository(PostgresDb db) : IUserRepository
     {
         const string sql = """
             select
-              id, email, password_hash, name, phone, role, role_id, avatar_url, email_verified,
-              created_at::text as created_at
+              id as Id,
+              email as Email,
+              password_hash as PasswordHash,
+              name as Name,
+              phone as Phone,
+              role as Role,
+              role_id as RoleId,
+              avatar_url as AvatarUrl,
+              email_verified as EmailVerified,
+              created_at::text as CreatedAt
             from users
             where id = @id
             limit 1;
@@ -27,8 +35,16 @@ public class UserRepository(PostgresDb db) : IUserRepository
     {
         const string sql = """
             select
-              id, email, password_hash, name, phone, role, role_id, avatar_url, email_verified,
-              created_at::text as created_at
+              id as Id,
+              email as Email,
+              password_hash as PasswordHash,
+              name as Name,
+              phone as Phone,
+              role as Role,
+              role_id as RoleId,
+              avatar_url as AvatarUrl,
+              email_verified as EmailVerified,
+              created_at::text as CreatedAt
             from users
             where email = @email
             limit 1;
