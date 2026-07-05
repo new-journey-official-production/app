@@ -316,6 +316,11 @@ public class ImportProductsResponse
     public List<Dictionary<string, object?>> Errors { get; set; } = [];
 }
 
+public class ImportProductRowsRequest
+{
+    public List<Dictionary<string, string>> Rows { get; set; } = [];
+}
+
 public class UserDto
 {
     public string Id { get; set; } = string.Empty;

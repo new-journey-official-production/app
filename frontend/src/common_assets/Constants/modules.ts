@@ -3,6 +3,7 @@ export const MODULES = {
   DASHBOARD: "/admin",
   PRODUCTS: "/admin/products",
   ORDERS: "/admin/orders",
+  BILLING: "/admin/billing",
   INVENTORY: "/admin/inventory",
   PRINTERS: "/admin/printers",
   CUSTOMERS: "/admin/customers",

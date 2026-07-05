@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingBag, Users, Ticket, Star, BookOpen, Tag, BarChart3, Boxes, Printer, Settings as SettingsIcon, Sun, Moon, LogOut, Image as ImageIcon, Activity, Shield } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Users, Ticket, Star, BookOpen, Tag, BarChart3, Boxes, Printer, Settings as SettingsIcon, Sun, Moon, LogOut, Image as ImageIcon, Activity, Shield, Receipt } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { BRAND_NAME, BRAND_SHORT, BRAND_STUDIO } from "@/lib/brand";
 const LINKS = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
+  { to: "/admin/billing", label: "Billing", icon: Receipt },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/inventory", label: "Inventory", icon: Boxes },
   { to: "/admin/printers", label: "Printers", icon: Printer },

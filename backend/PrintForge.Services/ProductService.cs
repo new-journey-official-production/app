@@ -131,6 +131,19 @@ public class ProductService(
         return (Encoding.UTF8.GetBytes(writer.ToString()), filename);
     }
 
+    /// <summary>Blank import template with header row and one example product.</summary>
+    public Task<(byte[] Data, string Filename)> ExportTemplateAsync()
+    {
+        using var writer = new StringWriter();
+        writer.WriteLine(string.Join(",", BackendConstants.ProductCsvFields));
+        writer.WriteLine(string.Join(",",
+            "Sample Figurine", "sample-figurine", "accessories", "PLA", "499", "399", "10",
+            "50", "10x10x5 cm", "2", "Black|White", "", "gift|miniature", "false", "true",
+            "A sample product", "Full description here.", "Sample Figurine", "SEO description"));
+        var filename = "newjourney-product-import-template.csv";
+        return Task.FromResult((Encoding.UTF8.GetBytes(writer.ToString()), filename));
+    }
+
     public async Task<ImportProductsResponse> ImportCsvAsync(User user, Stream csvStream)
     {
         using var reader = new StreamReader(csvStream, Encoding.UTF8);
@@ -139,22 +152,36 @@ public class ProductService(
             return new ImportProductsResponse();
 
         var headers = headerLine.Split(',').Select(h => h.Trim().Trim('"')).ToList();
-        var created = 0;
-        var updated = 0;
-        var errors = new List<Dictionary<string, object?>>();
+        var rows = new List<Dictionary<string, string>>();
         var rowNum = 1;
         string? line;
 
         while ((line = await reader.ReadLineAsync()) is not null)
         {
             rowNum++;
+            var values = ParseCsvLine(line);
+            var row = new Dictionary<string, string>();
+            for (var i = 0; i < headers.Count && i < values.Count; i++)
+                row[headers[i]] = values[i];
+            rows.Add(row);
+        }
+
+        var result = await ImportRowsAsync(user, rows);
+        return result;
+    }
+
+    public async Task<ImportProductsResponse> ImportRowsAsync(User user, IReadOnlyList<Dictionary<string, string>> rows)
+    {
+        var created = 0;
+        var updated = 0;
+        var errors = new List<Dictionary<string, object?>>();
+        var rowNum = 1;
+
+        foreach (var row in rows)
+        {
+            rowNum++;
             try
             {
-                var values = ParseCsvLine(line);
-                var row = new Dictionary<string, string>();
-                for (var i = 0; i < headers.Count && i < values.Count; i++)
-                    row[headers[i]] = values[i];
-
                 string Get(string k) => row.TryGetValue(k, out var v) ? v.Trim() : "";
 
                 var name = Get("name");
@@ -168,29 +195,7 @@ public class ProductService(
                 if (string.IsNullOrEmpty(slug)) slug = IdHelper.Slugify(name);
                 var existing = await products.FindBySlugAsync(slug);
 
-                var payload = new Dictionary<string, object?>
-                {
-                    ["name"] = name,
-                    ["slug"] = slug,
-                    ["category_slug"] = string.IsNullOrEmpty(Get("category_slug")) ? "accessories" : Get("category_slug"),
-                    ["material"] = string.IsNullOrEmpty(Get("material")) ? "PLA" : Get("material"),
-                    ["price"] = CoerceDouble(Get("price")) ?? 0,
-                    ["discount_price"] = CoerceDouble(Get("discount_price")),
-                    ["stock"] = CoerceInt(Get("stock")) ?? 0,
-                    ["weight_g"] = CoerceDouble(Get("weight_g")),
-                    ["dimensions"] = string.IsNullOrEmpty(Get("dimensions")) ? null : Get("dimensions"),
-                    ["print_time_hours"] = CoerceDouble(Get("print_time_hours")),
-                    ["color_variants"] = CoerceList(Get("color_variants")),
-                    ["images"] = CoerceList(Get("images")),
-                    ["tags"] = CoerceList(Get("tags")),
-                    ["featured"] = CoerceBool(Get("featured")),
-                    ["is_active"] = string.IsNullOrEmpty(Get("is_active")) ? true : CoerceBool(Get("is_active")),
-                    ["short_description"] = Get("short_description"),
-                    ["description"] = Get("description"),
-                    ["seo_title"] = string.IsNullOrEmpty(Get("seo_title")) ? name : Get("seo_title"),
-                    ["seo_description"] = Get("seo_description"),
-                    ["updated_at"] = IdHelper.NowIso()
-                };
+                var payload = BuildProductPayload(row, name, slug);
 
                 if (existing is not null)
                 {
@@ -214,12 +219,41 @@ public class ProductService(
             }
         }
 
-        await activity.LogAsync(user, "products.import", "csv", new Dictionary<string, object?>
+        await activity.LogAsync(user, "products.import", "bulk", new Dictionary<string, object?>
         {
             ["created"] = created, ["updated"] = updated, ["errors"] = errors.Count
         });
 
         return new ImportProductsResponse { Created = created, Updated = updated, Errors = errors };
+    }
+
+    private static Dictionary<string, object?> BuildProductPayload(Dictionary<string, string> row, string name, string slug)
+    {
+        string Get(string k) => row.TryGetValue(k, out var v) ? v.Trim() : "";
+
+        return new Dictionary<string, object?>
+        {
+            ["name"] = name,
+            ["slug"] = slug,
+            ["category_slug"] = string.IsNullOrEmpty(Get("category_slug")) ? "accessories" : Get("category_slug"),
+            ["material"] = string.IsNullOrEmpty(Get("material")) ? "PLA" : Get("material"),
+            ["price"] = CoerceDouble(Get("price")) ?? 0,
+            ["discount_price"] = CoerceDouble(Get("discount_price")),
+            ["stock"] = CoerceInt(Get("stock")) ?? 0,
+            ["weight_g"] = CoerceDouble(Get("weight_g")),
+            ["dimensions"] = string.IsNullOrEmpty(Get("dimensions")) ? null : Get("dimensions"),
+            ["print_time_hours"] = CoerceDouble(Get("print_time_hours")),
+            ["color_variants"] = CoerceList(Get("color_variants")),
+            ["images"] = CoerceList(Get("images")),
+            ["tags"] = CoerceList(Get("tags")),
+            ["featured"] = CoerceBool(Get("featured")),
+            ["is_active"] = string.IsNullOrEmpty(Get("is_active")) ? true : CoerceBool(Get("is_active")),
+            ["short_description"] = Get("short_description"),
+            ["description"] = Get("description"),
+            ["seo_title"] = string.IsNullOrEmpty(Get("seo_title")) ? name : Get("seo_title"),
+            ["seo_description"] = Get("seo_description"),
+            ["updated_at"] = IdHelper.NowIso()
+        };
     }
 
     private static List<string> ParseCsvLine(string line)

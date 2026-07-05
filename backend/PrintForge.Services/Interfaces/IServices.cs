@@ -36,6 +36,13 @@ public interface IPaymentService
     Task<Payment> ChargeAsync(string orderId, string method, double amount);
 }
 
+public interface IBillingService
+{
+    Task<List<Dictionary<string, object?>>> AdminListAsync(string? status, string? q, int limit);
+    Task<Dictionary<string, object?>> UpdateStatusAsync(User user, string paymentId, string status);
+    Task<Dictionary<string, object?>> GetOrderBillingAsync(string orderId);
+}
+
 public interface IActivityLogService
 {
     Task LogAsync(User? user, string action, string target, Dictionary<string, object?>? meta = null);
@@ -49,7 +56,9 @@ public interface IProductService
     Task<Dictionary<string, object?>> UpdateAsync(User user, string pid, Dictionary<string, object?> payload);
     Task DeleteAsync(User user, string pid);
     Task<(byte[] Data, string Filename)> ExportCsvAsync();
+    Task<(byte[] Data, string Filename)> ExportTemplateAsync();
     Task<ImportProductsResponse> ImportCsvAsync(User user, Stream csvStream);
+    Task<ImportProductsResponse> ImportRowsAsync(User user, IReadOnlyList<Dictionary<string, string>> rows);
 }
 
 public interface IOrderService
@@ -69,6 +78,7 @@ public interface ICouponService
     Task<CouponValidationResult> ValidateAsync(string code, double subtotal);
     Task<List<Dictionary<string, object?>>> ListAsync();
     Task<Dictionary<string, object?>> CreateAsync(CouponRequest request);
+    Task<Dictionary<string, object?>> UpdateAsync(string cid, Dictionary<string, object?> payload);
     Task DeleteAsync(string cid);
 }
 

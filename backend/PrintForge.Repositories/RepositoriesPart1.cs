@@ -608,6 +608,24 @@ public class CouponRepository(PostgresDb db) : ICouponRepository
         await connection.ExecuteAsync(sql, new { id });
     }
 
+    public async Task<Coupon?> FindByIdAsync(string id)
+    {
+        var sql = $"{CouponSelect} where id = @id limit 1;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<Coupon>(sql, new { id });
+    }
+
+    public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
+    {
+        if (updates.Count == 0) return;
+        await using var connection = await db.OpenConnectionAsync();
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, setParameters) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update coupons set {setClause} where id = @id;";
+        await connection.ExecuteAsync(sql, setParameters);
+    }
+
     public async Task<long> CountAsync()
     {
         const string sql = "select count(*)::bigint from coupons;";

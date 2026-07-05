@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Edit } from "lucide-react";
 import { api } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency, ORDER_STATUS_STEPS } from "@/lib/constants";
 import StatusBadge from "@/components/StatusBadge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -54,6 +55,7 @@ export default function AdminOrders() {
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Placed</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -65,6 +67,11 @@ export default function AdminOrders() {
                 <TableCell className="font-mono-data">{formatCurrency(o.total)}</TableCell>
                 <TableCell><StatusBadge status={o.status} /></TableCell>
                 <TableCell className="text-xs text-muted-foreground font-mono-data">{o.created_at?.slice(0, 16).replace("T", " ")}</TableCell>
+                <TableCell className="text-right">
+                  <Link to={`/admin/orders/${o.id}`}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit order"><Edit className="h-4 w-4" /></Button>
+                  </Link>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

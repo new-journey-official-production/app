@@ -79,8 +79,10 @@ public interface IAddressRepository
 public interface ICouponRepository
 {
     Task<Coupon?> FindByCodeAsync(string code);
+    Task<Coupon?> FindByIdAsync(string id);
     Task<List<Coupon>> ListAsync();
     Task InsertAsync(Coupon coupon);
+    Task UpdateAsync(string id, Dictionary<string, object?> updates);
     Task DeleteAsync(string id);
     Task<long> CountAsync();
     Task InsertManyAsync(IEnumerable<Coupon> coupons);
@@ -165,6 +167,10 @@ public interface IActivityLogRepository
 public interface IPaymentRepository
 {
     Task InsertAsync(Payment payment);
+    Task<Payment?> FindByIdAsync(string id);
+    Task<Payment?> FindByOrderIdAsync(string orderId);
+    Task<List<BillingRow>> AdminListAsync(string? status, string? q, int limit);
+    Task UpdateStatusAsync(string id, string status);
 }
 
 public interface IPasswordResetRepository

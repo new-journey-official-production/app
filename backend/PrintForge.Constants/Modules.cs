@@ -6,6 +6,7 @@ public static class Modules
     public const string Dashboard = "/admin";
     public const string Products = "/admin/products";
     public const string Orders = "/admin/orders";
+    public const string Billing = "/admin/billing";
     public const string Inventory = "/admin/inventory";
     public const string Printers = "/admin/printers";
     public const string Customers = "/admin/customers";
@@ -34,7 +35,7 @@ public static class Modules
 
     public static readonly string[] AdminModules =
     [
-        Dashboard, Products, Orders, Inventory, Printers, Customers,
+        Dashboard, Products, Orders, Billing, Inventory, Printers, Customers,
         Support, Reviews, Blog, Coupons, Analytics, Media, ActivityLogs,
         Settings, Roles, Users
     ];
@@ -47,6 +48,7 @@ public static class Modules
         new(Dashboard, "Dashboard", "Admin dashboard", "admin"),
         new(Products, "Products", "Product catalog management", "admin"),
         new(Orders, "Orders", "Order management", "admin"),
+        new(Billing, "Billing", "Payment tracking and invoices", "admin"),
         new(Inventory, "Inventory", "Inventory management", "admin"),
         new(Printers, "Printers", "Printer fleet management", "admin"),
         new(Customers, "Customers", "Customer management", "admin"),

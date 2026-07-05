@@ -122,14 +122,36 @@ public class AdminProductsController(IProductService products) : ControllerBase
         return File(data, "text/csv", filename);
     }
 
+    [HttpGet("export/template")]
+    [AdminAuthorize]
+    public async Task<IActionResult> ExportTemplate()
+    {
+        var (data, filename) = await products.ExportTemplateAsync();
+        return File(data, "text/csv", filename);
+    }
+
     [HttpPost("import")]
     [AdminAuthorize]
     public async Task<IActionResult> Import(IFormFile file)
     {
-        if (file is null || !file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-            return BadRequest(new { detail = "CSV file required" });
+        if (file is null || file.Length == 0)
+            return BadRequest(new { detail = "File required" });
+
+        var name = file.FileName.ToLowerInvariant();
+        if (!name.EndsWith(".csv") && !name.EndsWith(".txt"))
+            return BadRequest(new { detail = "Upload a CSV file (.csv). For Excel, save as CSV or use the admin bulk upload." });
+
         await using var stream = file.OpenReadStream();
         return Ok(await products.ImportCsvAsync(HttpContext.GetRequiredUser(), stream));
+    }
+
+    [HttpPost("import-rows")]
+    [AdminAuthorize]
+    public async Task<IActionResult> ImportRows([FromBody] ImportProductRowsRequest request)
+    {
+        if (request.Rows is null || request.Rows.Count == 0)
+            return BadRequest(new { detail = "No rows to import" });
+        return Ok(await products.ImportRowsAsync(HttpContext.GetRequiredUser(), request.Rows));
     }
 }
 
@@ -318,6 +340,14 @@ public class CouponsController(ICouponService coupons) : ControllerBase
     [AdminAuthorize]
     public async Task<IActionResult> Create([FromBody] CouponRequest request) =>
         Ok(await coupons.CreateAsync(request));
+
+    [HttpPatch("{cid}")]
+    [AdminAuthorize]
+    public async Task<IActionResult> Update(string cid, [FromBody] Dictionary<string, object?> payload)
+    {
+        try { return Ok(await coupons.UpdateAsync(cid, payload)); }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
+    }
 
     [HttpDelete("{cid}")]
     [AdminAuthorize]

@@ -149,4 +149,14 @@ public class CouponService(ICouponRepository coupons) : ICouponService
     }
 
     public async Task DeleteAsync(string cid) => await coupons.DeleteAsync(cid);
+
+    public async Task<Dictionary<string, object?>> UpdateAsync(string cid, Dictionary<string, object?> payload)
+    {
+        if (payload.TryGetValue("code", out var codeObj) && codeObj is string codeStr)
+            payload["code"] = codeStr.ToUpperInvariant().Trim();
+
+        await coupons.UpdateAsync(cid, payload);
+        var updated = await coupons.FindByIdAsync(cid) ?? throw new KeyNotFoundException("Not found");
+        return BsonMapper.ToDict(updated);
+    }
 }

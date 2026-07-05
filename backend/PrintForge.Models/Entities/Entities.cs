@@ -308,6 +308,21 @@ public class Payment
     public string CreatedAt { get; set; } = string.Empty;
 }
 
+/// <summary>Payment row joined with order fields for admin billing list.</summary>
+public class BillingRow
+{
+    public string Id { get; set; } = string.Empty;
+    public string OrderId { get; set; } = string.Empty;
+    public string OrderNo { get; set; } = string.Empty;
+    public string UserEmail { get; set; } = string.Empty;
+    public string Method { get; set; } = string.Empty;
+    public double Amount { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string TransactionId { get; set; } = string.Empty;
+    public string OrderStatus { get; set; } = string.Empty;
+    public string CreatedAt { get; set; } = string.Empty;
+}
+
 public class PasswordReset
 {
     public string Id { get; set; } = string.Empty;

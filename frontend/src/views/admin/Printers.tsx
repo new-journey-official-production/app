@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2, Printer as PrinterIcon } from "lucide-react";
+import { Plus, Trash2, Printer as PrinterIcon, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
@@ -20,6 +20,8 @@ const empty = { name: "", model: "", status: "idle", nozzle_size: "0.4mm", filam
 export default function AdminPrinters() {
   const [items, setItems] = useState<ApiRow[]>([]);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [f, setF] = useState(empty);
 
   const load = () => api.get("/printers").then((r) => setItems(r.data));
@@ -30,6 +32,29 @@ export default function AdminPrinters() {
     try {
       await api.post("/printers", { ...f, total_hours: Number(f.total_hours) });
       toast.success("Printer added"); setOpen(false); setF(empty); load();
+    } catch (err) { toast.error(apiError(err)); }
+  };
+
+  const openEdit = (p: ApiRow) => {
+    setEditId(String(p.id));
+    setF({
+      name: p.name || "",
+      model: p.model || "",
+      status: p.status || "idle",
+      nozzle_size: p.nozzle_size || "0.4mm",
+      filament_loaded: p.filament_loaded || "",
+      current_job: p.current_job || "",
+      total_hours: p.total_hours ?? 0,
+    });
+    setEditOpen(true);
+  };
+
+  const saveEdit = async (e) => {
+    e.preventDefault();
+    if (!editId) return;
+    try {
+      await api.patch(`/printers/${editId}`, { ...f, total_hours: Number(f.total_hours) });
+      toast.success("Printer updated"); setEditOpen(false); setEditId(null); setF(empty); load();
     } catch (err) { toast.error(apiError(err)); }
   };
 
@@ -51,17 +76,17 @@ export default function AdminPrinters() {
           <DialogTrigger asChild><Button className="gap-2 bg-orange-600 hover:bg-orange-700"><Plus className="h-4 w-4" /> Add printer</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>New printer</DialogTitle></DialogHeader>
-            <form onSubmit={save} className="grid grid-cols-2 gap-3">
-              <Field label="Name" value={f.name} onChange={(v) => setF({ ...f, name: v })} required className="col-span-2" />
-              <Field label="Model" value={f.model} onChange={(v) => setF({ ...f, model: v })} required className="col-span-2" />
-              <Field label="Nozzle size" value={f.nozzle_size} onChange={(v) => setF({ ...f, nozzle_size: v })} />
-              <Field label="Total hours" type="number" value={f.total_hours} onChange={(v) => setF({ ...f, total_hours: v })} />
-              <Field label="Filament loaded" value={f.filament_loaded} onChange={(v) => setF({ ...f, filament_loaded: v })} className="col-span-2" />
-              <Button type="submit" className="col-span-2">Save</Button>
-            </form>
+            <PrinterForm f={f} setF={setF} onSubmit={save} submitLabel="Save" />
           </DialogContent>
         </Dialog>
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit printer</DialogTitle></DialogHeader>
+          <PrinterForm f={f} setF={setF} onSubmit={saveEdit} submitLabel="Update" />
+        </DialogContent>
+      </Dialog>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="printer-grid">
         {items.map((p) => (
@@ -84,7 +109,7 @@ export default function AdminPrinters() {
             </div>
             <div className="mt-4 flex items-center gap-2">
               <Select value={p.status} onValueChange={(v) => setStatus(p.id, v)}>
-                <SelectTrigger className="text-xs h-8"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="text-xs h-8 flex-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="idle">Idle</SelectItem>
                   <SelectItem value="printing">Printing</SelectItem>
@@ -93,12 +118,40 @@ export default function AdminPrinters() {
                   <SelectItem value="offline">Offline</SelectItem>
                 </SelectContent>
               </Select>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)} title="Edit"><Edit className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => del(p.id)}><Trash2 className="h-4 w-4" /></Button>
             </div>
           </div>
         ))}
       </div>
     </div>
+  );
+}
+
+function PrinterForm({ f, setF, onSubmit, submitLabel }) {
+  return (
+    <form onSubmit={onSubmit} className="grid grid-cols-2 gap-3">
+      <Field label="Name" value={f.name} onChange={(v) => setF({ ...f, name: v })} required className="col-span-2" />
+      <Field label="Model" value={f.model} onChange={(v) => setF({ ...f, model: v })} required className="col-span-2" />
+      <Field label="Nozzle size" value={f.nozzle_size} onChange={(v) => setF({ ...f, nozzle_size: v })} />
+      <Field label="Total hours" type="number" value={f.total_hours} onChange={(v) => setF({ ...f, total_hours: v })} />
+      <Field label="Filament loaded" value={f.filament_loaded} onChange={(v) => setF({ ...f, filament_loaded: v })} className="col-span-2" />
+      <Field label="Current job" value={f.current_job} onChange={(v) => setF({ ...f, current_job: v })} className="col-span-2" />
+      <div className="col-span-2">
+        <label className="text-xs text-muted-foreground block mb-1">Status</label>
+        <Select value={f.status} onValueChange={(v) => setF({ ...f, status: v })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="idle">Idle</SelectItem>
+            <SelectItem value="printing">Printing</SelectItem>
+            <SelectItem value="paused">Paused</SelectItem>
+            <SelectItem value="maintenance">Maintenance</SelectItem>
+            <SelectItem value="offline">Offline</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Button type="submit" className="col-span-2">{submitLabel}</Button>
+    </form>
   );
 }
 

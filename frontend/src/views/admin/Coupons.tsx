@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
@@ -15,6 +15,8 @@ const empty = { code: "", kind: "percent", value: 10, min_order: 0, max_discount
 export default function AdminCoupons() {
   const [items, setItems] = useState<ApiRow[]>([]);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [f, setF] = useState(empty);
 
   const load = () => api.get("/coupons").then((r) => setItems(r.data));
@@ -31,6 +33,35 @@ export default function AdminCoupons() {
     } catch (err) { toast.error(apiError(err)); }
   };
 
+  const openEdit = (c: ApiRow) => {
+    setEditId(String(c.id));
+    setF({
+      code: c.code || "",
+      kind: c.kind || "percent",
+      value: c.value ?? 10,
+      min_order: c.min_order ?? 0,
+      max_discount: c.max_discount ?? null,
+      is_active: c.is_active !== false,
+    });
+    setEditOpen(true);
+  };
+
+  const saveEdit = async (e) => {
+    e.preventDefault();
+    if (!editId) return;
+    try {
+      await api.patch(`/coupons/${editId}`, {
+        code: f.code.toUpperCase(),
+        kind: f.kind,
+        value: Number(f.value),
+        min_order: Number(f.min_order),
+        max_discount: f.max_discount === "" || f.max_discount == null ? null : Number(f.max_discount),
+        is_active: f.is_active,
+      });
+      toast.success("Coupon updated"); setEditOpen(false); setEditId(null); setF(empty); load();
+    } catch (err) { toast.error(apiError(err)); }
+  };
+
   const del = async (id) => { if (window.confirm("Delete?")) { await api.delete(`/coupons/${id}`); load(); } };
 
   return (
@@ -38,40 +69,27 @@ export default function AdminCoupons() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">Coupons</h1>
-          <div className="text-sm text-muted-foreground">{items.length} active</div>
+          <div className="text-sm text-muted-foreground">{items.length} coupons</div>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button className="gap-2 bg-orange-600 hover:bg-orange-700"><Plus className="h-4 w-4" /> New coupon</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>New coupon</DialogTitle></DialogHeader>
-            <form onSubmit={save} className="grid grid-cols-2 gap-3">
-              <Field label="Code" value={f.code} onChange={(v) => setF({ ...f, code: v })} required className="col-span-2" />
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1">Kind</label>
-                <Select value={f.kind} onValueChange={(v) => setF({ ...f, kind: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="percent">Percentage</SelectItem>
-                    <SelectItem value="flat">Flat</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Field label={f.kind === "percent" ? "Percent" : "Amount (₹)"} type="number" value={f.value} onChange={(v) => setF({ ...f, value: v })} />
-              <Field label="Min order (₹)" type="number" value={f.min_order} onChange={(v) => setF({ ...f, min_order: v })} />
-              <Field label="Max discount (₹, optional)" type="number" value={f.max_discount ?? ""} onChange={(v) => setF({ ...f, max_discount: v })} />
-              <div className="col-span-2 flex items-center justify-between">
-                <label className="text-sm">Active</label>
-                <Switch checked={f.is_active} onCheckedChange={(v) => setF({ ...f, is_active: v })} />
-              </div>
-              <Button type="submit" className="col-span-2">Save</Button>
-            </form>
+            <CouponForm f={f} setF={setF} onSubmit={save} submitLabel="Save" />
           </DialogContent>
         </Dialog>
       </div>
 
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit coupon</DialogTitle></DialogHeader>
+          <CouponForm f={f} setF={setF} onSubmit={saveEdit} submitLabel="Update" />
+        </DialogContent>
+      </Dialog>
+
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <Table>
-          <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Kind</TableHead><TableHead>Value</TableHead><TableHead>Min order</TableHead><TableHead>Max</TableHead><TableHead>Active</TableHead><TableHead></TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Kind</TableHead><TableHead>Value</TableHead><TableHead>Min order</TableHead><TableHead>Max</TableHead><TableHead>Active</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
             {items.map((c) => (
               <TableRow key={c.id}>
@@ -81,13 +99,44 @@ export default function AdminCoupons() {
                 <TableCell className="font-mono-data">{formatCurrency(c.min_order)}</TableCell>
                 <TableCell className="font-mono-data">{c.max_discount ? formatCurrency(c.max_discount) : "—"}</TableCell>
                 <TableCell><span className={`text-[10px] px-2 py-0.5 rounded-full ${c.is_active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : "bg-zinc-100 text-zinc-800 dark:bg-zinc-800"}`}>{c.is_active ? "Active" : "Off"}</span></TableCell>
-                <TableCell><Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => del(c.id)}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(c)} title="Edit"><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => del(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
     </div>
+  );
+}
+
+function CouponForm({ f, setF, onSubmit, submitLabel }) {
+  return (
+    <form onSubmit={onSubmit} className="grid grid-cols-2 gap-3">
+      <Field label="Code" value={f.code} onChange={(v) => setF({ ...f, code: v })} required className="col-span-2" />
+      <div>
+        <label className="text-xs text-muted-foreground block mb-1">Kind</label>
+        <Select value={f.kind} onValueChange={(v) => setF({ ...f, kind: v })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="percent">Percentage</SelectItem>
+            <SelectItem value="flat">Flat</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Field label={f.kind === "percent" ? "Percent" : "Amount (₹)"} type="number" value={f.value} onChange={(v) => setF({ ...f, value: v })} />
+      <Field label="Min order (₹)" type="number" value={f.min_order} onChange={(v) => setF({ ...f, min_order: v })} />
+      <Field label="Max discount (₹, optional)" type="number" value={f.max_discount ?? ""} onChange={(v) => setF({ ...f, max_discount: v })} />
+      <div className="col-span-2 flex items-center justify-between">
+        <label className="text-sm">Active</label>
+        <Switch checked={f.is_active} onCheckedChange={(v) => setF({ ...f, is_active: v })} />
+      </div>
+      <Button type="submit" className="col-span-2">{submitLabel}</Button>
+    </form>
   );
 }
 

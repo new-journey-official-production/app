@@ -626,6 +626,18 @@ public class ActivityLogRepository(PostgresDb db) : IActivityLogRepository
 /// <summary>Postgres-backed payment repository.</summary>
 public class PaymentRepository(PostgresDb db) : IPaymentRepository
 {
+    private const string PaymentSelect = """
+        select
+          id as Id,
+          order_id as OrderId,
+          method as Method,
+          amount as Amount,
+          status as Status,
+          transaction_id as TransactionId,
+          created_at::text as CreatedAt
+        from payments
+        """;
+
     public async Task InsertAsync(Payment payment)
     {
         await using var conn = await db.OpenConnectionAsync();
@@ -639,6 +651,58 @@ public class PaymentRepository(PostgresDb db) : IPaymentRepository
             );
             """;
         await conn.ExecuteAsync(sql, payment);
+    }
+
+    public async Task<Payment?> FindByIdAsync(string id)
+    {
+        var sql = $"{PaymentSelect} where id = @Id limit 1;";
+        await using var conn = await db.OpenConnectionAsync();
+        return await conn.QuerySingleOrDefaultAsync<Payment>(sql, new { Id = id });
+    }
+
+    public async Task<Payment?> FindByOrderIdAsync(string orderId)
+    {
+        var sql = $"{PaymentSelect} where order_id = @OrderId order by created_at desc limit 1;";
+        await using var conn = await db.OpenConnectionAsync();
+        return await conn.QuerySingleOrDefaultAsync<Payment>(sql, new { OrderId = orderId });
+    }
+
+    public async Task<List<BillingRow>> AdminListAsync(string? status, string? q, int limit)
+    {
+        const string sql = """
+            select
+              p.id as Id,
+              p.order_id as OrderId,
+              o.order_no as OrderNo,
+              o.user_email as UserEmail,
+              p.method as Method,
+              p.amount as Amount,
+              p.status as Status,
+              p.transaction_id as TransactionId,
+              o.status as OrderStatus,
+              p.created_at::text as CreatedAt
+            from payments p
+            inner join orders o on o.id = p.order_id
+            where (@Status is null or p.status = @Status)
+              and (
+                    @Query is null
+                    or o.order_no ilike ('%' || @Query || '%')
+                    or o.user_email ilike ('%' || @Query || '%')
+                    or p.transaction_id ilike ('%' || @Query || '%')
+                  )
+            order by p.created_at desc
+            limit @Limit;
+            """;
+        await using var conn = await db.OpenConnectionAsync();
+        var items = await conn.QueryAsync<BillingRow>(sql, new { Status = status, Query = q, Limit = limit });
+        return items.ToList();
+    }
+
+    public async Task UpdateStatusAsync(string id, string status)
+    {
+        const string sql = "update payments set status = @Status where id = @Id;";
+        await using var conn = await db.OpenConnectionAsync();
+        await conn.ExecuteAsync(sql, new { Id = id, Status = status });
     }
 }
 

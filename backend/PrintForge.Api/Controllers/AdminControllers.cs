@@ -62,6 +62,36 @@ public class AdminOrdersController(IOrderService orders) : ControllerBase
 }
 
 [ApiController]
+[Route("api/admin/billing")]
+public class AdminBillingController(IBillingService billing) : ControllerBase
+{
+    [HttpGet]
+    [AdminAuthorize]
+    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? q, [FromQuery] int limit = 200) =>
+        Ok(await billing.AdminListAsync(status, q, limit));
+
+    [HttpGet("order/{orderId}")]
+    [AdminAuthorize]
+    public async Task<IActionResult> GetByOrder(string orderId)
+    {
+        try { return Ok(await billing.GetOrderBillingAsync(orderId)); }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
+    }
+
+    [HttpPatch("{paymentId}/status")]
+    [AdminAuthorize]
+    public async Task<IActionResult> UpdateStatus(string paymentId, [FromBody] Dictionary<string, object?> payload)
+    {
+        var status = payload.GetValueOrDefault("status")?.ToString();
+        if (string.IsNullOrWhiteSpace(status))
+            return BadRequest(new { detail = "status is required" });
+        try { return Ok(await billing.UpdateStatusAsync(HttpContext.GetRequiredUser(), paymentId, status)); }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Payment not found" }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { detail = ex.Message }); }
+    }
+}
+
+[ApiController]
 [Route("api/inventory")]
 public class InventoryController(IInventoryRepository inventory) : ControllerBase
 {

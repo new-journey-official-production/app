@@ -41,6 +41,7 @@ const AdminDashboard = lazy(() => import("@/views/admin/Dashboard"));
 const AdminProducts = lazy(() => import("@/views/admin/Products"));
 const AdminProductForm = lazy(() => import("@/views/admin/ProductForm"));
 const AdminOrders = lazy(() => import("@/views/admin/Orders"));
+const AdminBilling = lazy(() => import("@/views/admin/Billing"));
 const AdminOrderDetail = lazy(() => import("@/views/admin/OrderDetail"));
 const AdminInventory = lazy(() => import("@/views/admin/Inventory"));
 const AdminPrinters = lazy(() => import("@/views/admin/Printers"));
@@ -147,6 +148,7 @@ export default function App() {
                   <Route path="/admin/products/new" element={<AdminProductForm />} />
                   <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
                   <Route path="/admin/orders" element={<AdminOrders />} />
+                  <Route path="/admin/billing" element={<AdminBilling />} />
                   <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
                   <Route path="/admin/inventory" element={<AdminInventory />} />
                   <Route path="/admin/printers" element={<AdminPrinters />} />

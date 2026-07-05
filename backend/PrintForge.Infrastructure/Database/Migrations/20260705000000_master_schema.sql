@@ -338,6 +338,7 @@ insert into modules (module_id, name, description, metadata) values
   ('/admin', 'Dashboard', 'Admin dashboard', '{"group":"admin"}'),
   ('/admin/products', 'Products', 'Product catalog management', '{"group":"admin"}'),
   ('/admin/orders', 'Orders', 'Order management', '{"group":"admin"}'),
+  ('/admin/billing', 'Billing', 'Payment tracking and invoices', '{"group":"admin"}'),
   ('/admin/inventory', 'Inventory', 'Inventory management', '{"group":"admin"}'),
   ('/admin/printers', 'Printers', 'Printer fleet management', '{"group":"admin"}'),
   ('/admin/customers', 'Customers', 'Customer management', '{"group":"admin"}'),

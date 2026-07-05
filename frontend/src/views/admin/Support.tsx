@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Edit } from "lucide-react";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function AdminSupport() {
   const [tickets, setTickets] = useState<ApiRow[]>([]);
   const [active, setActive] = useState<ApiRow | null>(null);
   const [reply, setReply] = useState("");
+  const [editSubject, setEditSubject] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
 
   const load = () => api.get("/admin/tickets").then((r) => setTickets(r.data));
   useEffect(() => { load(); }, []);
@@ -27,6 +31,18 @@ export default function AdminSupport() {
     await api.patch(`/admin/tickets/${active.id}`, { status });
     setActive({ ...active, status });
     load();
+  };
+
+  const saveSubject = async (e) => {
+    e.preventDefault();
+    if (!active) return;
+    try {
+      await api.patch(`/admin/tickets/${active.id}`, { subject: editSubject });
+      setActive({ ...active, subject: editSubject });
+      setEditOpen(false);
+      load();
+      toast.success("Subject updated");
+    } catch (err) { toast.error(apiError(err)); }
   };
 
   return (
@@ -58,6 +74,7 @@ export default function AdminSupport() {
                   <div className="text-xs text-muted-foreground">{active.user_email} · {active.user_name} {active.order_no ? `· Order ${active.order_no}` : ""}</div>
                 </div>
                 <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => { setEditSubject(active.subject || ""); setEditOpen(true); }}><Edit className="h-3.5 w-3.5" /> Edit</Button>
                   <Button size="sm" variant={active.status === "open" ? "default" : "outline"} onClick={() => setStatus("open")}>Open</Button>
                   <Button size="sm" variant={active.status === "answered" ? "default" : "outline"} onClick={() => setStatus("answered")}>Answered</Button>
                   <Button size="sm" variant={active.status === "closed" ? "default" : "outline"} onClick={() => setStatus("closed")}>Closed</Button>
@@ -79,6 +96,16 @@ export default function AdminSupport() {
           ) : <div className="text-sm text-muted-foreground">Select a ticket to view the conversation.</div>}
         </div>
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit ticket subject</DialogTitle></DialogHeader>
+          <form onSubmit={saveSubject} className="space-y-3">
+            <input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required />
+            <Button type="submit" className="w-full">Save</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
