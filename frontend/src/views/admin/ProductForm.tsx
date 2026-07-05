@@ -73,18 +73,39 @@ export default function ProductForm() {
     }
   };
 
+  const buildPayload = (): ApiRow => {
+    const payload: ApiRow = {
+      name: f.name,
+      description: f.description,
+      short_description: f.short_description,
+      category_slug: f.category_slug,
+      price: Number(f.price),
+      stock: Number(f.stock),
+      material: f.material,
+      dimensions: f.dimensions || "",
+      color_variants: f.color_variants || [],
+      images: f.images || [],
+      tags: f.tags || [],
+      featured: !!f.featured,
+      is_active: !!f.is_active,
+      seo_title: f.seo_title || "",
+      seo_description: f.seo_description || "",
+    };
+    if (f.slug?.trim()) payload.slug = f.slug.trim();
+    if (f.discount_price === "" || f.discount_price == null) payload.discount_price = null;
+    else payload.discount_price = Number(f.discount_price);
+    if (f.weight_g === "" || f.weight_g == null) payload.weight_g = null;
+    else payload.weight_g = Number(f.weight_g);
+    if (f.print_time_hours === "" || f.print_time_hours == null) payload.print_time_hours = null;
+    else payload.print_time_hours = Number(f.print_time_hours);
+    return payload;
+  };
+
   const save = async (e) => {
     e.preventDefault();
     setBusy(true);
     try {
-      const payload: ApiRow = { ...f, price: Number(f.price), stock: Number(f.stock) };
-      if (!payload.slug?.trim()) delete payload.slug;
-      if (f.discount_price === "" || f.discount_price == null) payload.discount_price = null;
-      else payload.discount_price = Number(f.discount_price);
-      if (f.weight_g === "" || f.weight_g == null) payload.weight_g = null;
-      else payload.weight_g = Number(f.weight_g);
-      if (f.print_time_hours === "" || f.print_time_hours == null) payload.print_time_hours = null;
-      else payload.print_time_hours = Number(f.print_time_hours);
+      const payload = buildPayload();
 
       if (isEdit) await api.patch(`/products/${id}`, payload);
       else await api.post("/products", payload);

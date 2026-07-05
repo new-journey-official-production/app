@@ -98,6 +98,7 @@ public class ProductsController(IProductService products) : ControllerBase
     {
         try { return Ok(await products.UpdateAsync(HttpContext.GetRequiredUser(), pid, payload)); }
         catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
+        catch (Exception ex) { return StatusCode(500, new { detail = ex.Message }); }
     }
 
     [HttpDelete("{pid}")]

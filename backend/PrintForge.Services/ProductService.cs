@@ -1,5 +1,6 @@
 using System.Text;
 using PrintForge.Constants;
+using PrintForge.Infrastructure.Database;
 using PrintForge.Models;
 using PrintForge.Models.DTOs;
 using PrintForge.Models.Entities;
@@ -81,6 +82,8 @@ public class ProductService(
 
     public async Task<Dictionary<string, object?>> UpdateAsync(User user, string pid, Dictionary<string, object?> payload)
     {
+        payload = PostgresPayloadNormalizer.SanitizeProductPatch(payload);
+
         if (payload.TryGetValue("slug", out var slugObj)
             && slugObj is string slugStr
             && string.IsNullOrWhiteSpace(slugStr))
