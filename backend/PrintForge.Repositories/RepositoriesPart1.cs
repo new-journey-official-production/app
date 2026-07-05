@@ -485,8 +485,19 @@ public class AddressRepository(PostgresDb db) : IAddressRepository
 {
     private const string AddressSelect = """
         select
-          id, user_id, label, full_name, phone, line1, line2, city, state, postal_code, country, is_default,
-          created_at::text as created_at
+          id as Id,
+          user_id as UserId,
+          label as Label,
+          full_name as FullName,
+          phone as Phone,
+          line1 as Line1,
+          line2 as Line2,
+          city as City,
+          state as State,
+          postal_code as PostalCode,
+          country as Country,
+          coalesce(is_default, false) as IsDefault,
+          created_at::text as CreatedAt
         from addresses
         """;
 

@@ -230,34 +230,48 @@ public class AddressesController(IAddressRepository addresses) : ControllerBase
     [UserAuthorize]
     public async Task<IActionResult> List()
     {
-        var items = await addresses.FindByUserAsync(HttpContext.GetRequiredUser().Id);
-        return Ok(items.Select(BsonMapper.ToDict));
+        try
+        {
+            var items = await addresses.FindByUserAsync(HttpContext.GetRequiredUser().Id);
+            return Ok(items.Select(BsonMapper.ToDict));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { detail = ex.Message });
+        }
     }
 
     [HttpPost]
     [UserAuthorize]
     public async Task<IActionResult> Create([FromBody] AddressRequest request)
     {
-        var user = HttpContext.GetRequiredUser();
-        if (request.IsDefault) await addresses.ClearDefaultAsync(user.Id);
-        var doc = new Address
+        try
         {
-            Id = IdHelper.NewId(),
-            UserId = user.Id,
-            Label = request.Label,
-            FullName = request.FullName,
-            Phone = request.Phone,
-            Line1 = request.Line1,
-            Line2 = request.Line2,
-            City = request.City,
-            State = request.State,
-            PostalCode = request.PostalCode,
-            Country = request.Country,
-            IsDefault = request.IsDefault,
-            CreatedAt = IdHelper.NowIso()
-        };
-        await addresses.InsertAsync(doc);
-        return Ok(BsonMapper.ToDict(doc));
+            var user = HttpContext.GetRequiredUser();
+            if (request.IsDefault) await addresses.ClearDefaultAsync(user.Id);
+            var doc = new Address
+            {
+                Id = IdHelper.NewId(),
+                UserId = user.Id,
+                Label = request.Label,
+                FullName = request.FullName,
+                Phone = request.Phone,
+                Line1 = request.Line1,
+                Line2 = request.Line2,
+                City = request.City,
+                State = request.State,
+                PostalCode = request.PostalCode,
+                Country = request.Country,
+                IsDefault = request.IsDefault,
+                CreatedAt = IdHelper.NowIso()
+            };
+            await addresses.InsertAsync(doc);
+            return Ok(BsonMapper.ToDict(doc));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { detail = ex.Message });
+        }
     }
 
     [HttpPatch("{aid}")]

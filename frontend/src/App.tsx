@@ -84,12 +84,27 @@ function ProductSlugRedirect() {
   return <Navigate to={`/product/${slug}`} replace />;
 }
 
+/** Scroll to top on every route change; disable browser scroll restoration. */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <ModuleRouteTracker />
             <Suspense fallback={<PageLoader />}>
               <Routes>

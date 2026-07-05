@@ -49,13 +49,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       data-testid={`product-card-${testKey}`}
       className="group relative flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+      <div className="relative aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center p-3">
         {product.images?.[0] ? (
           <img
             src={product.images[0]}
             alt={product.name}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="max-h-full max-w-full object-contain"
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">No image</div>

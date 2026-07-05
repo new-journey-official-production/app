@@ -187,8 +187,8 @@ export default function ProductForm() {
             </div>
             <div className="grid grid-cols-4 gap-2">
               {(f.images || []).map((img, i) => (
-                <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border">
-                  <img src={img} alt="" className="h-full w-full object-cover" />
+                <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center p-1">
+                  <img src={img} alt="" className="max-h-full max-w-full object-contain" />
                   <button type="button" onClick={() => setF({ ...f, images: f.images.filter((_, j) => j !== i) })} className="absolute top-1 right-1 rounded-full bg-black/60 text-white p-0.5"><X className="h-3 w-3" /></button>
                 </div>
               ))}

@@ -29,6 +29,7 @@ export default function ProductDetail() {
       setNotFound(true);
       return;
     }
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     setNotFound(false);
     setData(null);
     setImgIdx(0);
@@ -94,14 +95,14 @@ export default function ProductDetail() {
 
       <div className="grid lg:grid-cols-2 gap-10">
         <div>
-          <div className="aspect-square rounded-3xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-border" data-testid="product-hero-image">
-            {p.images?.[imgIdx] && <img src={p.images[imgIdx]} alt={p.name} className="h-full w-full object-cover" />}
+          <div className="aspect-square rounded-3xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-border flex items-center justify-center p-4" data-testid="product-hero-image">
+            {p.images?.[imgIdx] && <img src={p.images[imgIdx]} alt={p.name} className="max-h-full max-w-full object-contain" />}
           </div>
           {(p.images || []).length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
               {p.images.map((img, i) => (
-                <button key={i} onClick={() => setImgIdx(i)} className={`h-20 w-20 flex-none rounded-lg overflow-hidden border ${i === imgIdx ? "border-orange-600 ring-2 ring-orange-600/30" : "border-border"}`}>
-                  <img src={img} alt="" className="h-full w-full object-cover" />
+                <button key={i} onClick={() => setImgIdx(i)} className={`h-20 w-20 flex-none rounded-lg overflow-hidden border bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center p-1 ${i === imgIdx ? "border-orange-600 ring-2 ring-orange-600/30" : "border-border"}`}>
+                  <img src={img} alt="" className="max-h-full max-w-full object-contain" />
                 </button>
               ))}
             </div>

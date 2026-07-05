@@ -28,7 +28,7 @@ export default function Checkout() {
   const { user } = useAuth();
   const [addresses, setAddresses] = useState<ApiRow[]>([]);
   const [addressId, setAddressId] = useState("");
-  const [method, setMethod] = useState("upi");
+  const [method, setMethod] = useState("cod");
   const [coupon, setCoupon] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
@@ -103,6 +103,16 @@ export default function Checkout() {
 
   const selectedAddress = addresses.find((a) => a.id === addressId);
 
+  /** Online payment methods are disabled until gateway integration. */
+  const onPaymentChange = (value: string) => {
+    if (value !== "cod") {
+      toast.info("Not available yet — please choose Cash on Delivery. Online payment coming soon.");
+      setMethod("cod");
+      return;
+    }
+    setMethod(value);
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Checkout</h1>
@@ -152,14 +162,14 @@ export default function Checkout() {
 
           <section className="rounded-2xl border border-border p-6" data-testid="checkout-payment-section">
             <div className="font-display font-semibold text-lg mb-4">Payment method</div>
-            <RadioGroup value={method} onValueChange={setMethod} className="grid sm:grid-cols-2 gap-3">
-              <PaymentTile id="upi" label="UPI" icon={Wallet} checked={method === "upi"} />
-              <PaymentTile id="card" label="Credit / Debit Card" icon={CreditCard} checked={method === "card"} />
-              <PaymentTile id="netbanking" label="Net Banking" icon={Building2} checked={method === "netbanking"} />
+            <RadioGroup value={method} onValueChange={onPaymentChange} className="grid sm:grid-cols-2 gap-3">
+              <PaymentTile id="upi" label="UPI" icon={Wallet} checked={method === "upi"} disabled hint="Coming soon" />
+              <PaymentTile id="card" label="Credit / Debit Card" icon={CreditCard} checked={method === "card"} disabled hint="Coming soon" />
+              <PaymentTile id="netbanking" label="Net Banking" icon={Building2} checked={method === "netbanking"} disabled hint="Coming soon" />
               <PaymentTile id="cod" label="Cash on Delivery" icon={Truck} checked={method === "cod"} />
             </RadioGroup>
             <div className="mt-3 text-xs text-muted-foreground rounded-md bg-muted p-3">
-              Payments are currently simulated. In production this switches to Stripe / Razorpay / UPI without changing the order flow.
+              Cash on Delivery is available now. UPI, card, and net banking will be enabled when the payment gateway is connected.
             </div>
           </section>
 
@@ -221,12 +231,13 @@ function Field({ label, value, onChange, className = "", ...rest }) {
   );
 }
 
-function PaymentTile({ id, label, icon: Icon, checked }) {
+function PaymentTile({ id, label, icon: Icon, checked, disabled = false, hint }) {
   return (
-    <label htmlFor={id} className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer ${checked ? "border-zinc-950 dark:border-white bg-zinc-50 dark:bg-zinc-900" : "border-border"}`} data-testid={`pay-${id}`}>
+    <label htmlFor={id} className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer ${checked ? "border-zinc-950 dark:border-white bg-zinc-50 dark:bg-zinc-900" : "border-border"} ${disabled ? "opacity-55" : ""}`} data-testid={`pay-${id}`}>
       <RadioGroupItem value={id} id={id} />
       <Icon className="h-4 w-4 text-muted-foreground" />
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-sm font-medium flex-1">{label}</span>
+      {hint && <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{hint}</span>}
     </label>
   );
 }
