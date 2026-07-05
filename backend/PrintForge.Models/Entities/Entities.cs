@@ -94,6 +94,43 @@ public class Address
     public string Country { get; set; } = "India";
     public bool IsDefault { get; set; }
     public string CreatedAt { get; set; } = string.Empty;
+
+    /** Snapshot for jsonb storage on orders — not used for Dapper table reads. */
+    public EmbeddedAddress ToEmbedded() => new()
+    {
+        Id = Id,
+        UserId = UserId,
+        Label = Label,
+        FullName = FullName,
+        Phone = Phone,
+        Line1 = Line1,
+        Line2 = Line2,
+        City = City,
+        State = State,
+        PostalCode = PostalCode,
+        Country = Country,
+        IsDefault = IsDefault,
+        CreatedAt = CreatedAt,
+    };
+}
+
+/// <summary>Address snapshot stored as jsonb on orders. Separate from <see cref="Address"/> so Dapper table queries are not JSON-parsed.</summary>
+public class EmbeddedAddress
+{
+    public string Id { get; set; } = string.Empty;
+
+    public string UserId { get; set; } = string.Empty;
+    public string Label { get; set; } = "Home";
+    public string FullName { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string Line1 { get; set; } = string.Empty;
+    public string? Line2 { get; set; }
+    public string City { get; set; } = string.Empty;
+    public string State { get; set; } = string.Empty;
+    public string PostalCode { get; set; } = string.Empty;
+    public string Country { get; set; } = "India";
+    public bool IsDefault { get; set; }
+    public string CreatedAt { get; set; } = string.Empty;
 }
 
 public class Coupon
@@ -136,7 +173,7 @@ public class Order
     public string UserId { get; set; } = string.Empty;
     public string UserEmail { get; set; } = string.Empty;
     public List<OrderItem> Items { get; set; } = [];
-    public Address Address { get; set; } = new();
+    public EmbeddedAddress Address { get; set; } = new();
     public string PaymentMethod { get; set; } = string.Empty;
     public string? CouponCode { get; set; }
     public double Subtotal { get; set; }

@@ -70,7 +70,7 @@ public class OrderService(
             UserId = user.Id,
             UserEmail = user.Email,
             Items = lineItems,
-            Address = address,
+            Address = address.ToEmbedded(),
             PaymentMethod = request.PaymentMethod,
             CouponCode = couponCode,
             Subtotal = totals.Subtotal,

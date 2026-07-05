@@ -19,7 +19,21 @@ const EMPTY_FORM = {
 /** Normalizes address rows from API (snake_case keys). */
 function normalizeAddresses(raw: unknown): ApiRow[] {
   if (!Array.isArray(raw)) return [];
-  return raw.filter((a) => a && typeof a === "object" && (a as ApiRow).id);
+  return raw
+    .filter((a) => a && typeof a === "object")
+    .map((a) => {
+      const row = a as ApiRow;
+      const id = row.id ?? (row as ApiRow & { Id?: string }).Id;
+      return id ? { ...row, id: String(id) } : null;
+    })
+    .filter(Boolean) as ApiRow[];
+}
+
+function addressIdFromRow(row: unknown): string {
+  if (!row || typeof row !== "object") return "";
+  const r = row as ApiRow & { Id?: string };
+  const id = r.id ?? r.Id;
+  return id ? String(id) : "";
 }
 
 export default function Checkout() {
@@ -70,13 +84,23 @@ export default function Checkout() {
     setAddrSaving(true);
     try {
       const { data: created } = await api.post("/addresses", form);
-      const { data: refreshed } = await api.get("/addresses");
-      const list = normalizeAddresses(refreshed);
-      setAddresses(list);
-      const savedId = created?.id || list[list.length - 1]?.id;
-      if (savedId) setAddressId(String(savedId));
-      setShowForm(false);
-      setForm({ ...EMPTY_FORM });
+      const savedId = addressIdFromRow(created);
+      if (savedId) {
+        setAddressId(savedId);
+        setShowForm(false);
+        setForm({ ...EMPTY_FORM });
+      }
+      try {
+        const { data: refreshed } = await api.get("/addresses");
+        const list = normalizeAddresses(refreshed);
+        setAddresses(list);
+        if (list.length > 0) pickDefaultAddress(list);
+        else if (savedId) setAddressId(savedId);
+        setShowForm(false);
+      } catch {
+        // POST succeeded; keep saved selection even if list refresh fails.
+        if (savedId) setAddresses((prev) => prev.length ? prev : [{ ...form, id: savedId, is_default: form.is_default }]);
+      }
       toast.success("Address saved");
     } catch (err) { toast.error(apiError(err)); }
     finally { setAddrSaving(false); }
@@ -101,7 +125,8 @@ export default function Checkout() {
     finally { setBusy(false); }
   };
 
-  const selectedAddress = addresses.find((a) => a.id === addressId);
+  const selectedAddress = addresses.find((a) => String(a.id) === String(addressId));
+  const canPlaceOrder = Boolean(addressId);
 
   /** Online payment methods are disabled until gateway integration. */
   const onPaymentChange = (value: string) => {
@@ -210,7 +235,7 @@ export default function Checkout() {
             <div className="font-semibold">Total</div>
             <div className="font-mono-data font-bold text-lg" data-testid="checkout-total">{formatCurrency(totals.total)}</div>
           </div>
-          <Button onClick={placeOrder} disabled={busy || !addressId} className="w-full mt-5 rounded-full bg-orange-600 hover:bg-orange-700" data-testid="place-order-btn">
+          <Button onClick={placeOrder} disabled={busy || !canPlaceOrder} className="w-full mt-5 rounded-full bg-orange-600 hover:bg-orange-700" data-testid="place-order-btn">
             {busy ? "Placing order…" : `Place order · ${formatCurrency(totals.total)}`}
           </Button>
           <div className="mt-3 text-[11px] text-muted-foreground text-center">
