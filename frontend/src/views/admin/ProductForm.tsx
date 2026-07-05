@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Plus, X, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { api, apiError } from "@/lib/api";
+import { api, apiError, API_BASE } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { CATEGORIES, MATERIALS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const empty = {
   name: "", slug: "", description: "", short_description: "",
-  category_slug: "kitchen", price: 0, discount_price: null, stock: 0,
+  category_slug: "", price: 0, discount_price: null, stock: 0,
   material: "PLA", weight_g: null, dimensions: "", print_time_hours: null,
   color_variants: [], images: [], tags: [], featured: false, is_active: true,
   seo_title: "", seo_description: "",
@@ -21,11 +21,26 @@ const empty = {
 export default function ProductForm() {
   const { id } = useParams();
   const nav = useNavigate();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [f, setF] = useState<ApiRow>({ ...empty });
+  const [categories, setCategories] = useState(CATEGORIES);
   const [colorInput, setColorInput] = useState("");
   const [imgInput, setImgInput] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const isEdit = !!id;
+
+  useEffect(() => {
+    api.get("/categories")
+      .then((r) => {
+        const list = Array.isArray(r.data) ? r.data : [];
+        if (list.length > 0) {
+          setCategories(list);
+          setF((prev) => ({ ...prev, category_slug: prev.category_slug || list[0].slug }));
+        }
+      })
+      .catch(() => setCategories(CATEGORIES));
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -33,11 +48,37 @@ export default function ProductForm() {
     }
   }, [id]);
 
+  const uploadFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setUploading(true);
+    try {
+      const urls: string[] = [];
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const { data } = await api.post("/admin/media/upload", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        if (data?.id) urls.push(`${API_BASE}/admin/media/${data.id}`);
+      }
+      if (urls.length) {
+        setF((prev) => ({ ...prev, images: [...(prev.images || []), ...urls] }));
+        toast.success(`${urls.length} image${urls.length > 1 ? "s" : ""} uploaded`);
+      }
+    } catch (err) {
+      toast.error(apiError(err));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
   const save = async (e) => {
     e.preventDefault();
     setBusy(true);
     try {
       const payload: ApiRow = { ...f, price: Number(f.price), stock: Number(f.stock) };
+      if (!payload.slug?.trim()) delete payload.slug;
       if (f.discount_price === "" || f.discount_price == null) payload.discount_price = null;
       else payload.discount_price = Number(f.discount_price);
       if (f.weight_g === "" || f.weight_g == null) payload.weight_g = null;
@@ -78,9 +119,9 @@ export default function ProductForm() {
             <Field label="Stock" type="number" value={f.stock} onChange={(v) => setF({ ...f, stock: v })} />
             <div>
               <Label className="text-xs text-muted-foreground block mb-1">Category</Label>
-              <Select value={f.category_slug} onValueChange={(v) => setF({ ...f, category_slug: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}</SelectContent>
+              <Select value={f.category_slug || categories[0]?.slug} onValueChange={(v) => setF({ ...f, category_slug: v })}>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>{categories.map((c) => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
@@ -112,9 +153,15 @@ export default function ProductForm() {
           </section>
 
           <section className="rounded-xl border border-border bg-card p-6">
-            <Label className="text-xs text-muted-foreground block mb-2">Images (URLs)</Label>
+            <Label className="text-xs text-muted-foreground block mb-2">Product images</Label>
+            <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => uploadFiles(e.target.files)} />
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading} className="gap-2">
+                <Upload className="h-4 w-4" /> {uploading ? "Uploading…" : "Upload from computer"}
+              </Button>
+            </div>
             <div className="flex gap-2 mb-3">
-              <input value={imgInput} onChange={(e) => setImgInput(e.target.value)} placeholder="https://…" className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+              <input value={imgInput} onChange={(e) => setImgInput(e.target.value)} placeholder="Or paste image URL" className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
               <Button type="button" onClick={addImg} variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -143,7 +190,7 @@ export default function ProductForm() {
             </div>
           </section>
 
-          <Button type="submit" disabled={busy} className="w-full bg-orange-600 hover:bg-orange-700" data-testid="save-product-btn">
+          <Button type="submit" disabled={busy || uploading} className="w-full bg-orange-600 hover:bg-orange-700" data-testid="save-product-btn">
             {busy ? "Saving…" : isEdit ? "Update product" : "Create product"}
           </Button>
         </aside>

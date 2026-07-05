@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Heart, ShoppingCart, Share2, Star, Package, Ruler, Weight, Clock, ShieldCheck } from "lucide-react";
 import { api, apiError } from "@/lib/api";
@@ -15,6 +15,7 @@ export default function ProductDetail() {
   const { slug } = useParams();
   const nav = useNavigate();
   const [data, setData] = useState<ApiRow | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [imgIdx, setImgIdx] = useState(0);
   const [qty, setQty] = useState(1);
   const [variant, setVariant] = useState<string | null>(null);
@@ -24,12 +25,25 @@ export default function ProductDetail() {
   const [posting, setPosting] = useState(false);
 
   useEffect(() => {
+    if (!slug) {
+      setNotFound(true);
+      return;
+    }
+    setNotFound(false);
+    setData(null);
     setImgIdx(0);
-    api.get(`/products/${slug}`).then((r) => {
-      setData(r.data);
-      setVariant(r.data.product.color_variants?.[0] || null);
-    }).catch(() => toast.error("Product not found"));
+    api.get(`/products/${slug}`)
+      .then((r) => {
+        setData(r.data);
+        setVariant(r.data.product.color_variants?.[0] || null);
+      })
+      .catch(() => {
+        setNotFound(true);
+        toast.error("Product not found");
+      });
   }, [slug]);
+
+  if (notFound) return <Navigate to="/404" replace />;
 
   if (!data?.product) {
     return <div className="mx-auto max-w-7xl px-4 py-24"><div className="h-96 rounded-2xl shimmer" /></div>;
@@ -39,12 +53,12 @@ export default function ProductDetail() {
   const priceNow = p.discount_price || p.price;
 
   const addToCart = () => {
-    add(p, qty, variant);
+    add(p as Product, qty, variant);
     toast.success(`${p.name} added to cart`);
   };
 
   const buyNow = () => {
-    add(p, qty, variant);
+    add(p as Product, qty, variant);
     nav("/cart");
   };
 
@@ -53,7 +67,7 @@ export default function ProductDetail() {
     try {
       if (navigator.share) await navigator.share({ title: p.name, url });
       else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
-    } catch {}
+    } catch { /* user cancelled share */ }
   };
 
   const submitReview = async (e) => {
@@ -73,11 +87,12 @@ export default function ProductDetail() {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <nav className="text-xs text-muted-foreground mb-6 flex items-center gap-2" data-testid="breadcrumb">
-        <Link to="/">Home</Link> / <Link to="/products">Shop</Link> / <Link to={`/products/category/${p.category_slug}`}>{p.category_slug.replace(/-/g, " ")}</Link> / <span className="text-foreground truncate">{p.name}</span>
+        <Link to="/">Home</Link> / <Link to="/products">Shop</Link> / {p.category_slug && (
+          <><Link to={`/products/category/${p.category_slug}`}>{p.category_slug.replace(/-/g, " ")}</Link> / </>
+        )}<span className="text-foreground truncate">{p.name}</span>
       </nav>
 
       <div className="grid lg:grid-cols-2 gap-10">
-        {/* Gallery */}
         <div>
           <div className="aspect-square rounded-3xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-border" data-testid="product-hero-image">
             {p.images?.[imgIdx] && <img src={p.images[imgIdx]} alt={p.name} className="h-full w-full object-cover" />}
@@ -93,7 +108,6 @@ export default function ProductDetail() {
           )}
         </div>
 
-        {/* Info */}
         <div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground">{p.material}</div>
           <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-2" data-testid="product-title">{p.name}</h1>
@@ -117,7 +131,6 @@ export default function ProductDetail() {
               </span>
             )}
           </div>
-          <div className="mt-1 text-xs text-muted-foreground">Inclusive of 18% GST.</div>
 
           <p className="mt-6 text-muted-foreground leading-relaxed">{p.short_description}</p>
 
@@ -176,7 +189,6 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="mt-16">
         <Tabs defaultValue="description">
           <TabsList data-testid="product-tabs">
@@ -233,7 +245,6 @@ export default function ProductDetail() {
         </Tabs>
       </div>
 
-      {/* Related */}
       {data.related?.length > 0 && (
         <div className="mt-16">
           <h2 className="font-display text-2xl font-bold tracking-tight mb-6">You might also like</h2>

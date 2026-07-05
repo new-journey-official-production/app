@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -77,6 +77,13 @@ function ModuleRouteTracker() {
   return null;
 }
 
+/** Redirects mistaken /products/{slug} URLs to /product/{slug}. */
+function ProductSlugRedirect() {
+  const { slug } = useParams();
+  if (!slug || slug === "category") return <Navigate to="/404" replace />;
+  return <Navigate to={`/product/${slug}`} replace />;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -91,6 +98,7 @@ export default function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/products/category/:slug" element={<Products />} />
+                  <Route path="/products/:slug" element={<ProductSlugRedirect />} />
                   <Route path="/product/:slug" element={<ProductDetail />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />

@@ -50,7 +50,7 @@ export function CartProvider({ children }: CartProviderProps) {
         {
           product_id: product.id,
           name: product.name,
-          slug: product.slug,
+          slug: product.slug?.trim() || product.id,
           image: (product.images || [])[0],
           price: product.discount_price || product.price,
           quantity,
@@ -79,9 +79,10 @@ export function CartProvider({ children }: CartProviderProps) {
 
   const totals = useMemo((): CartTotals => {
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const shipping = subtotal >= 999 || subtotal === 0 ? 0 : 79;
-    const gst = subtotal * 0.18;
-    const total = subtotal + shipping + gst;
+    // GST and shipping disabled for early launch — shown as "—" in checkout/cart.
+    const shipping = 0;
+    const gst = 0;
+    const total = subtotal;
     return { subtotal, shipping, gst, total, count: items.reduce((s, i) => s + i.quantity, 0) };
   }, [items]);
 

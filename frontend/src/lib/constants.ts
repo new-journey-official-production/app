@@ -51,6 +51,12 @@ export function formatCurrency(n: number | string | null | undefined): string {
   return "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
 
+/** Storefront product detail path — falls back to id when slug is missing. */
+export function productPath(product: { slug?: string; id?: string; product_id?: string }): string {
+  const key = product.slug?.trim() || product.id || product.product_id;
+  return key ? `/product/${key}` : "/products";
+}
+
 export function statusLabel(k: string | null | undefined): string {
   return (k || "").replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }

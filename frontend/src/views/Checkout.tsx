@@ -5,14 +5,27 @@ import { CreditCard, Wallet, Building2, Truck, Plus } from "lucide-react";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
+const EMPTY_FORM = {
+  full_name: "", phone: "", line1: "", line2: "", city: "", state: "",
+  postal_code: "", country: "India", label: "Home", is_default: true,
+};
+
+/** Normalizes address rows from API (snake_case keys). */
+function normalizeAddresses(raw: unknown): ApiRow[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((a) => a && typeof a === "object" && (a as ApiRow).id);
+}
+
 export default function Checkout() {
   const { items, totals, clear } = useCart();
   const nav = useNavigate();
+  const { user } = useAuth();
   const [addresses, setAddresses] = useState<ApiRow[]>([]);
   const [addressId, setAddressId] = useState("");
   const [method, setMethod] = useState("upi");
@@ -21,35 +34,49 @@ export default function Checkout() {
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [addrSaving, setAddrSaving] = useState(false);
-  const [form, setForm] = useState({ full_name: "", phone: "", line1: "", line2: "", city: "", state: "", postal_code: "", country: "India", label: "Home", is_default: true });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
+
+  const pickDefaultAddress = (list: ApiRow[]) => {
+    const def = list.find((a) => a.is_default) || list[0];
+    if (def?.id) setAddressId(String(def.id));
+  };
 
   useEffect(() => {
     if (items.length === 0) nav("/cart");
+  }, [items.length, nav]);
+
+  useEffect(() => {
+    if (!user) return;
     api.get("/addresses")
       .then((r) => {
-        const list = Array.isArray(r.data) ? r.data : [];
+        const list = normalizeAddresses(r.data);
         setAddresses(list);
-        const def = list.find((a) => a.is_default) || list[0];
-        if (def) setAddressId(def.id);
-        else setShowForm(true);
+        if (list.length > 0) {
+          pickDefaultAddress(list);
+          setShowForm(false);
+        } else {
+          setShowForm(true);
+        }
       })
       .catch((err) => {
         setAddresses([]);
         setShowForm(true);
         toast.error(apiError(err));
       });
-  }, [items.length, nav]);
+  }, [user]);
 
   const saveAddress = async (e) => {
     e.preventDefault();
     setAddrSaving(true);
     try {
-      const { data } = await api.post("/addresses", form);
-      const r = await api.get("/addresses");
-      const list = Array.isArray(r.data) ? r.data : [];
+      const { data: created } = await api.post("/addresses", form);
+      const { data: refreshed } = await api.get("/addresses");
+      const list = normalizeAddresses(refreshed);
       setAddresses(list);
-      setAddressId(data.id);
+      const savedId = created?.id || list[list.length - 1]?.id;
+      if (savedId) setAddressId(String(savedId));
       setShowForm(false);
+      setForm({ ...EMPTY_FORM });
       toast.success("Address saved");
     } catch (err) { toast.error(apiError(err)); }
     finally { setAddrSaving(false); }
@@ -74,6 +101,8 @@ export default function Checkout() {
     finally { setBusy(false); }
   };
 
+  const selectedAddress = addresses.find((a) => a.id === addressId);
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Checkout</h1>
@@ -84,7 +113,7 @@ export default function Checkout() {
               <div className="font-display font-semibold text-lg">Shipping address</div>
               {addresses.length > 0 && (
                 <Button variant="ghost" size="sm" onClick={() => setShowForm((v) => !v)} className="gap-1" data-testid="add-address-btn">
-                  <Plus className="h-4 w-4" /> New
+                  <Plus className="h-4 w-4" /> {showForm ? "Cancel" : "New"}
                 </Button>
               )}
             </div>
@@ -92,7 +121,7 @@ export default function Checkout() {
               <RadioGroup value={addressId} onValueChange={setAddressId} className="space-y-2">
                 {addresses.map((a) => (
                   <label key={a.id} htmlFor={a.id} className={`flex gap-3 rounded-xl border p-4 cursor-pointer ${addressId === a.id ? "border-zinc-950 dark:border-white" : "border-border"}`} data-testid={`address-${a.id}`}>
-                    <RadioGroupItem value={a.id} id={a.id} className="mt-1" />
+                    <RadioGroupItem value={String(a.id)} id={String(a.id)} className="mt-1" />
                     <div className="flex-1 text-sm">
                       <div className="font-semibold">{a.full_name} <span className="text-xs text-muted-foreground ml-2">{a.label}</span></div>
                       <div className="text-muted-foreground">{a.line1}{a.line2 ? `, ${a.line2}` : ""}</div>
@@ -103,7 +132,7 @@ export default function Checkout() {
                 ))}
               </RadioGroup>
             )}
-            {(showForm || addresses.length === 0) && (
+            {showForm && (
               <form onSubmit={saveAddress} className="grid grid-cols-2 gap-3" data-testid="address-form">
                 <Field label="Full name" value={form.full_name} onChange={(v) => setForm({ ...form, full_name: v })} required />
                 <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required />
@@ -115,6 +144,9 @@ export default function Checkout() {
                 <Field label="Country" value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
                 <Button type="submit" className="col-span-2 mt-2" disabled={addrSaving} data-testid="save-address-btn">{addrSaving ? "Saving…" : "Save address"}</Button>
               </form>
+            )}
+            {addressId && selectedAddress && !showForm && (
+              <div className="mt-3 text-xs text-emerald-600">Shipping to {selectedAddress.full_name}, {selectedAddress.city}</div>
             )}
           </section>
 
@@ -158,8 +190,8 @@ export default function Checkout() {
           <div className="my-4 border-t border-border" />
           <div className="space-y-2 text-sm">
             <Row k="Subtotal" v={formatCurrency(totals.subtotal)} />
-            <Row k="GST (18%)" v={formatCurrency(totals.gst)} />
-            <Row k="Shipping" v={totals.subtotal >= 999 ? "Free" : formatCurrency(79)} />
+            <Row k="GST (18%)" v="—" />
+            <Row k="Shipping" v="—" />
           </div>
           <div className="mt-3 flex gap-2">
             <input value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="Coupon code" className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs" data-testid="checkout-coupon-input" />
@@ -168,7 +200,7 @@ export default function Checkout() {
             <div className="font-semibold">Total</div>
             <div className="font-mono-data font-bold text-lg" data-testid="checkout-total">{formatCurrency(totals.total)}</div>
           </div>
-          <Button onClick={placeOrder} disabled={busy} className="w-full mt-5 rounded-full bg-orange-600 hover:bg-orange-700" data-testid="place-order-btn">
+          <Button onClick={placeOrder} disabled={busy || !addressId} className="w-full mt-5 rounded-full bg-orange-600 hover:bg-orange-700" data-testid="place-order-btn">
             {busy ? "Placing order…" : `Place order · ${formatCurrency(totals.total)}`}
           </Button>
           <div className="mt-3 text-[11px] text-muted-foreground text-center">

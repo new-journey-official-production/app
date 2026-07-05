@@ -194,9 +194,10 @@ public class OrderService(
         List<OrderItem> items, double discount)
     {
         var subtotal = items.Sum(i => i.Price * i.Quantity);
-        var shipping = subtotal >= 999 ? 0 : 79;
-        var gst = Math.Round((subtotal - discount) * 0.18, 2);
-        var total = Math.Round(subtotal - discount + gst + shipping, 2);
+        // GST and shipping disabled for early launch.
+        var shipping = 0.0;
+        var gst = 0.0;
+        var total = Math.Round(subtotal - discount, 2);
         return (Math.Round(subtotal, 2), shipping, gst, Math.Round(discount, 2), total);
     }
 }

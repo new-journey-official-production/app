@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Minus, Plus, Trash2, ShoppingBag, TicketPercent } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { formatCurrency } from "@/lib/constants";
+import { formatCurrency, productPath } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { api, apiError } from "@/lib/api";
 
@@ -26,7 +26,7 @@ export default function Cart() {
     finally { setBusy(false); }
   };
 
-  const grand = Math.max(0, totals.subtotal - discount) * 1.18 + (totals.subtotal >= 999 || totals.subtotal === 0 ? 0 : 79);
+  const grand = Math.max(0, totals.subtotal - discount);
 
   if (items.length === 0) {
     return (
@@ -46,11 +46,11 @@ export default function Cart() {
         <div className="space-y-4" data-testid="cart-items">
           {items.map((it) => (
             <div key={`${it.product_id}-${it.variant}`} className="flex gap-4 rounded-2xl border border-border p-4" data-testid={`cart-item-${it.slug}`}>
-              <Link to={`/product/${it.slug}`} className="h-24 w-24 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex-none">
+              <Link to={productPath(it)} className="h-24 w-24 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex-none">
                 {it.image && <img src={it.image} alt="" className="h-full w-full object-cover" />}
               </Link>
               <div className="flex-1 min-w-0">
-                <Link to={`/product/${it.slug}`} className="font-display font-semibold text-lg hover:text-orange-600">{it.name}</Link>
+                <Link to={productPath(it)} className="font-display font-semibold text-lg hover:text-orange-600">{it.name}</Link>
                 <div className="text-xs text-muted-foreground mt-0.5">{it.material}{it.variant ? ` · ${it.variant}` : ""}</div>
                 <div className="mt-3 flex items-center justify-between">
                   <div className="flex items-center rounded-full border border-border">
@@ -75,8 +75,8 @@ export default function Cart() {
           <div className="mt-4 space-y-2 text-sm">
             <Row k="Subtotal" v={formatCurrency(totals.subtotal)} />
             {discount > 0 && <Row k={`Coupon (${applied})`} v={`− ${formatCurrency(discount)}`} className="text-emerald-600" />}
-            <Row k="GST (18%)" v={formatCurrency(Math.max(0, totals.subtotal - discount) * 0.18)} />
-            <Row k="Shipping" v={totals.subtotal >= 999 ? "Free" : formatCurrency(79)} />
+            <Row k="GST (18%)" v="—" />
+            <Row k="Shipping" v="—" />
             <div className="border-t border-border pt-3 mt-3 flex items-center justify-between font-semibold">
               <span>Total</span>
               <span className="font-mono-data text-lg" data-testid="cart-total">{formatCurrency(grand)}</span>

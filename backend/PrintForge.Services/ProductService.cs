@@ -40,7 +40,9 @@ public class ProductService(
 
     public async Task<Dictionary<string, object?>> CreateAsync(User user, ProductRequest request)
     {
-        var slug = request.Slug ?? IdHelper.Slugify(request.Name);
+        var slug = string.IsNullOrWhiteSpace(request.Slug)
+            ? IdHelper.Slugify(request.Name)
+            : request.Slug.Trim();
         if (await products.FindBySlugAsync(slug) is not null)
             slug = $"{slug}-{IdHelper.NewId()[..6]}";
 
@@ -79,6 +81,17 @@ public class ProductService(
 
     public async Task<Dictionary<string, object?>> UpdateAsync(User user, string pid, Dictionary<string, object?> payload)
     {
+        if (payload.TryGetValue("slug", out var slugObj)
+            && slugObj is string slugStr
+            && string.IsNullOrWhiteSpace(slugStr))
+        {
+            payload.Remove("slug");
+        }
+
+        var existing = await products.FindByIdAsync(pid);
+        if (existing is not null && string.IsNullOrWhiteSpace(existing.Slug) && !payload.ContainsKey("slug"))
+            payload["slug"] = IdHelper.Slugify(existing.Name);
+
         payload["updated_at"] = IdHelper.NowIso();
         await products.UpdateAsync(pid, payload);
         var p = await products.FindByIdAsync(pid) ?? throw new KeyNotFoundException("Not found");

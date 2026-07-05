@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api, apiError } from "@/lib/api";
-import { formatCurrency } from "@/lib/constants";
+import { formatCurrency, productPath } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import type { Product } from "@/types";
 
@@ -21,6 +21,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { user } = useAuth();
   const priceNow = product.discount_price || product.price;
   const hasDiscount = product.discount_price && product.discount_price < product.price;
+  const href = productPath(product);
+  const testKey = product.slug || product.id || "item";
 
   const wishlist = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -43,8 +45,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link
-      to={`/product/${product.slug}`}
-      data-testid={`product-card-${product.slug}`}
+      to={href}
+      data-testid={`product-card-${testKey}`}
       className="group relative flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
@@ -66,14 +68,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={wishlist}
           aria-label="Add to wishlist"
-          data-testid={`wishlist-btn-${product.slug}`}
+          data-testid={`wishlist-btn-${testKey}`}
           className="absolute top-3 right-3 p-2 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur border border-border opacity-0 group-hover:opacity-100 transition-opacity hover:text-orange-600"
         >
           <Heart className="h-4 w-4" />
         </button>
         <button
           onClick={addToCart}
-          data-testid={`add-to-cart-${product.slug}`}
+          data-testid={`add-to-cart-${testKey}`}
           className="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 rounded-full bg-zinc-950/90 text-white text-sm font-medium py-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all"
         >
           <ShoppingCart className="h-4 w-4" /> Quick add
