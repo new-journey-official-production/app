@@ -12,6 +12,7 @@ public interface IUserRepository
     Task<List<User>> FindAllForAdminAsync(int limit = 500);
     Task UpdateManyByRoleAsync(string role, string roleId);
     Task<long> CountCustomersAsync();
+    Task<long> CountAsync();
 }
 
 public interface ICategoryRepository

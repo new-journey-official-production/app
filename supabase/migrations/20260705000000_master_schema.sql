@@ -361,3 +361,6 @@ insert into modules (module_id, name, description, metadata) values
   ('/products', 'Catalog', 'Product catalog browsing', '{"group":"public"}')
 on conflict (module_id) do nothing;
 
+-- Allow Supabase anon key health checks against modules registry
+grant select on public.modules to anon, authenticated, service_role;
+

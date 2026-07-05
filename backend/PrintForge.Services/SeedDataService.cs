@@ -24,13 +24,25 @@ public class SeedDataService(
         await permissions.SeedRbacAsync();
 
         var cfg = settings.Value;
-        if (!string.IsNullOrWhiteSpace(cfg.AdminEmail) && !string.IsNullOrWhiteSpace(cfg.AdminPassword))
+        if (string.IsNullOrWhiteSpace(cfg.AdminPassword))
+        {
+            logger.LogWarning(
+                "AdminPassword is not set — bootstrap admin was NOT created. " +
+                "Set AdminEmail and AdminPassword on Render, then redeploy.");
+        }
+        else if (string.IsNullOrWhiteSpace(cfg.AdminEmail))
+        {
+            logger.LogWarning("AdminEmail is not set — bootstrap admin was NOT created.");
+        }
+        else
+        {
             await EnsureAdminUserAsync(cfg.AdminEmail, cfg.AdminPassword);
+        }
 
         logger.LogInformation("Seed complete (RBAC only; catalog is empty until admin adds data)");
     }
 
-    /// <summary>Creates the bootstrap admin when env vars are set and no user exists yet.</summary>
+    /// <summary>Creates or updates the bootstrap admin from Render env vars.</summary>
     private async Task EnsureAdminUserAsync(string email, string password)
     {
         var normalized = email.Trim().ToLowerInvariant();
@@ -47,15 +59,15 @@ public class SeedDataService(
                 EmailVerified = true,
                 CreatedAt = IdHelper.NowIso()
             });
+            logger.LogInformation("Bootstrap admin created for {Email}", normalized);
             return;
         }
 
-        if (!PasswordHasher.Verify(password, existing.PasswordHash))
+        await users.UpdateAsync(existing.Id, new Dictionary<string, object?>
         {
-            await users.UpdateAsync(existing.Id, new Dictionary<string, object?>
-            {
-                ["password_hash"] = PasswordHasher.Hash(password)
-            });
-        }
+            ["password_hash"] = PasswordHasher.Hash(password),
+            ["role"] = "admin"
+        });
+        logger.LogInformation("Bootstrap admin password synced for {Email}", normalized);
     }
 }

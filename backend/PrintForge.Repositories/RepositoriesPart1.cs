@@ -116,6 +116,13 @@ public class UserRepository(PostgresDb db) : IUserRepository
         await using var connection = await db.OpenConnectionAsync();
         return await connection.ExecuteScalarAsync<long>(sql);
     }
+
+    public async Task<long> CountAsync()
+    {
+        const string sql = "select count(*)::bigint from users;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.ExecuteScalarAsync<long>(sql);
+    }
 }
 
 /// <summary>Data access for categories in Postgres.</summary>
