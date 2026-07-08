@@ -3,16 +3,24 @@ import { useParams, useSearchParams, Link } from "react-router-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 import { api } from "@/lib/api";
 import type { ApiRow, Product } from "@/types";
-import { CATEGORIES, MATERIALS } from "@/lib/constants";
+import { CATEGORIES } from "@/lib/constants";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+/** Quick-select price bands for common shopping ranges. */
+const PRICE_PRESETS = [
+  { label: "Under ₹500", min: "", max: "500" },
+  { label: "₹500 – ₹1,000", min: "500", max: "1000" },
+  { label: "₹1,000 – ₹2,500", min: "1000", max: "2500" },
+  { label: "₹2,500+", min: "2500", max: "" },
+] as const;
 
 export default function Products() {
   const { slug } = useParams();
   const [sp, setSp] = useSearchParams();
   const q = sp.get("q") || "";
-  const material = sp.get("material") || "";
   const sort = sp.get("sort") || "newest";
   const minPrice = sp.get("min_price") || "";
   const maxPrice = sp.get("max_price") || "";
@@ -20,16 +28,22 @@ export default function Products() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [draftMinPrice, setDraftMinPrice] = useState(minPrice);
+  const [draftMaxPrice, setDraftMaxPrice] = useState(maxPrice);
+
+  useEffect(() => {
+    setDraftMinPrice(minPrice);
+    setDraftMaxPrice(maxPrice);
+  }, [minPrice, maxPrice]);
 
   const params = useMemo(() => {
     const p: Record<string, string | number> = { limit: 60, sort };
     if (slug) p.category = slug;
     if (q) p.q = q;
-    if (material) p.material = material;
     if (minPrice) p.min_price = minPrice;
     if (maxPrice) p.max_price = maxPrice;
     return p;
-  }, [slug, q, material, sort, minPrice, maxPrice]);
+  }, [slug, q, sort, minPrice, maxPrice]);
 
   useEffect(() => {
     setLoading(true);
@@ -45,14 +59,56 @@ export default function Products() {
       .finally(() => setLoading(false));
   }, [params]);
 
-  const setParam = (k, v) => {
+  const setParam = (k: string, v: string | null) => {
     const next = new URLSearchParams(sp);
     if (v == null || v === "") next.delete(k);
     else next.set(k, v);
     setSp(next);
   };
 
+  const setParams = (updates: Record<string, string | null>) => {
+    const next = new URLSearchParams(sp);
+    Object.entries(updates).forEach(([k, v]) => {
+      if (v == null || v === "") next.delete(k);
+      else next.set(k, v);
+    });
+    setSp(next);
+  };
+
+  const applyPriceFilter = () => {
+    setParams({ min_price: draftMinPrice || null, max_price: draftMaxPrice || null });
+  };
+
+  const clearAllFilters = () => {
+    setDraftMinPrice("");
+    setDraftMaxPrice("");
+    setSp({});
+  };
+
+  const activeFilters = useMemo(() => {
+    const filters: { key: string; label: string; clear: () => void }[] = [];
+    if (q) filters.push({ key: "q", label: `Search: "${q}"`, clear: () => setParam("q", null) });
+    if (minPrice || maxPrice) {
+      const label = minPrice && maxPrice
+        ? `₹${minPrice} – ₹${maxPrice}`
+        : minPrice
+          ? `From ₹${minPrice}`
+          : `Up to ₹${maxPrice}`;
+      filters.push({
+        key: "price",
+        label,
+        clear: () => {
+          setDraftMinPrice("");
+          setDraftMaxPrice("");
+          setParams({ min_price: null, max_price: null });
+        },
+      });
+    }
+    return filters;
+  }, [q, minPrice, maxPrice, sp]);
+
   const currentCat = CATEGORIES.find((c) => c.slug === slug);
+  const pricePresetActive = (min: string, max: string) => minPrice === min && maxPrice === max;
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
@@ -89,30 +145,105 @@ export default function Products() {
         ))}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
+      {activeFilters.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="active-filters">
+          <span className="text-xs text-muted-foreground">Active filters:</span>
+          {activeFilters.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={f.clear}
+              className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium hover:bg-accent transition"
+            >
+              {f.label}
+              <X className="h-3 w-3" />
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
         <aside className={`${showFilters ? "block" : "hidden"} lg:block`} data-testid="filters-sidebar">
-          <div className="space-y-6 sticky top-24">
-            <FilterGroup title="Material">
-              <div className="space-y-1">
-                <button className={`w-full text-left rounded-md px-3 py-1.5 text-sm ${material === "" ? "bg-accent" : "hover:bg-accent"}`} onClick={() => setParam("material", "")}>All</button>
-                {MATERIALS.map((m) => (
-                  <button key={m} className={`w-full text-left rounded-md px-3 py-1.5 text-sm ${material === m ? "bg-accent font-semibold" : "hover:bg-accent"}`} onClick={() => setParam("material", m)} data-testid={`filter-material-${m.toLowerCase()}`}>
-                    {m}
+          <div className="sticky top-24 rounded-xl border border-border bg-card p-5 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="font-display font-semibold text-sm">Filters</div>
+              {(minPrice || maxPrice || q) && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <X className="h-3 w-3" /> Reset
+                </button>
+              )}
+            </div>
+
+            <FilterGroup title="Price range">
+              <div className="flex flex-wrap gap-2">
+                {PRICE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => {
+                      setDraftMinPrice(preset.min);
+                      setDraftMaxPrice(preset.max);
+                      setParams({ min_price: preset.min || null, max_price: preset.max || null });
+                    }}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                      pricePresetActive(preset.min, preset.max)
+                        ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
+                        : "bg-secondary text-secondary-foreground hover:bg-accent"
+                    }`}
+                    data-testid={`filter-price-preset-${preset.min || "0"}-${preset.max || "max"}`}
+                  >
+                    {preset.label}
                   </button>
                 ))}
               </div>
-            </FilterGroup>
-            <FilterGroup title="Price range (₹)">
-              <div className="flex gap-2">
-                <input type="number" placeholder="Min" value={minPrice} onChange={(e) => setParam("min_price", e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm" data-testid="filter-min-price" />
-                <input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setParam("max_price", e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm" data-testid="filter-max-price" />
+
+              <div className="mt-4 space-y-2">
+                <Label className="text-xs text-muted-foreground">Custom range (₹)</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Min"
+                    value={draftMinPrice}
+                    onChange={(e) => setDraftMinPrice(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && applyPriceFilter()}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    data-testid="filter-min-price"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Max"
+                    value={draftMaxPrice}
+                    onChange={(e) => setDraftMaxPrice(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && applyPriceFilter()}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    data-testid="filter-max-price"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={applyPriceFilter}
+                  data-testid="apply-price-filter-btn"
+                >
+                  Apply price
+                </Button>
               </div>
             </FilterGroup>
-            {(material || minPrice || maxPrice || q) && (
-              <button onClick={() => setSp({})} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                <X className="h-3 w-3" /> Clear filters
-              </button>
-            )}
           </div>
         </aside>
 
@@ -138,7 +269,7 @@ export default function Products() {
   );
 }
 
-function Chip({ active, to, children }) {
+function Chip({ active, to, children }: { active: boolean; to: string; children: React.ReactNode }) {
   return (
     <Link to={to} className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition ${active ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950" : "bg-secondary text-secondary-foreground hover:bg-accent"}`}>
       {children}
@@ -146,10 +277,10 @@ function Chip({ active, to, children }) {
   );
 }
 
-function FilterGroup({ title, children }) {
+function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-xs uppercase tracking-widest font-semibold text-foreground/70 mb-2">{title}</div>
+      <div className="text-xs uppercase tracking-widest font-semibold text-foreground/70 mb-3">{title}</div>
       {children}
     </div>
   );

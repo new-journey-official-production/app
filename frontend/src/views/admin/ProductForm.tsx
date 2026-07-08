@@ -4,7 +4,7 @@ import { ArrowLeft, Plus, X, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError, API_BASE } from "@/lib/api";
 import type { ApiRow } from "@/types";
-import { CATEGORIES, MATERIALS } from "@/lib/constants";
+import { CATEGORIES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const empty = {
   name: "", slug: "", description: "", short_description: "",
   category_slug: "", price: 0, discount_price: null, stock: 0,
-  material: "PLA", weight_g: null, dimensions: "", print_time_hours: null,
   color_variants: [], images: [], tags: [], featured: false, is_active: true,
   seo_title: "", seo_description: "",
 };
@@ -81,8 +80,6 @@ export default function ProductForm() {
       category_slug: f.category_slug,
       price: Number(f.price),
       stock: Number(f.stock),
-      material: f.material,
-      dimensions: f.dimensions || "",
       color_variants: f.color_variants || [],
       images: f.images || [],
       tags: f.tags || [],
@@ -94,10 +91,6 @@ export default function ProductForm() {
     if (f.slug?.trim()) payload.slug = f.slug.trim();
     if (f.discount_price === "" || f.discount_price == null) payload.discount_price = null;
     else payload.discount_price = Number(f.discount_price);
-    if (f.weight_g === "" || f.weight_g == null) payload.weight_g = null;
-    else payload.weight_g = Number(f.weight_g);
-    if (f.print_time_hours === "" || f.print_time_hours == null) payload.print_time_hours = null;
-    else payload.print_time_hours = Number(f.print_time_hours);
     return payload;
   };
 
@@ -145,16 +138,6 @@ export default function ProductForm() {
                 <SelectContent>{categories.map((c) => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs text-muted-foreground block mb-1">Material</Label>
-              <Select value={f.material} onValueChange={(v) => setF({ ...f, material: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{MATERIALS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <Field label="Weight (g)" type="number" value={f.weight_g ?? ""} onChange={(v) => setF({ ...f, weight_g: v })} />
-            <Field label="Dimensions" value={f.dimensions || ""} onChange={(v) => setF({ ...f, dimensions: v })} />
-            <Field label="Print time (hours)" type="number" step="0.1" value={f.print_time_hours ?? ""} onChange={(v) => setF({ ...f, print_time_hours: v })} />
           </section>
 
           <section className="rounded-xl border border-border bg-card p-6">

@@ -64,7 +64,7 @@ export default function AdminProducts() {
                     </div>
                     <div>
                       <div className="font-medium">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">{p.material}</div>
+                      <div className="text-xs text-muted-foreground capitalize">{p.category_slug?.replace(/-/g, " ")}</div>
                     </div>
                   </div>
                 </TableCell>
