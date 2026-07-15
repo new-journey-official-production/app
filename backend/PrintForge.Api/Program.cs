@@ -9,6 +9,10 @@ using PrintForge.Infrastructure.Middleware;
 using PrintForge.Services.Extensions;
 using PrintForge.Services.Interfaces;
 
+// Disable config file watchers before host construction — Render free/shared
+// containers exhaust the inotify instance limit (128) and crash at startup.
+Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER_RELOADCONFIGONCHANGE", "false");
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Render injects PORT; bind Kestrel so health checks and traffic reach the container.
