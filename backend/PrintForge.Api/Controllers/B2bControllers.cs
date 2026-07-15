@@ -101,10 +101,18 @@ public class B2bPublicController(IB2bService b2b) : ControllerBase
 public class B2bAdminController(IB2bService b2b) : ControllerBase
 {
     [HttpGet("dashboard")]
-    public async Task<IActionResult> Dashboard() => Ok(await b2b.GetDashboardAsync());
+    public async Task<IActionResult> Dashboard()
+    {
+        try { return Ok(await b2b.GetDashboardAsync()); }
+        catch (Exception ex) { return StatusCode(500, new { detail = ex.Message }); }
+    }
 
     [HttpGet("analytics")]
-    public async Task<IActionResult> Analytics() => Ok(await b2b.GetAnalyticsAsync());
+    public async Task<IActionResult> Analytics()
+    {
+        try { return Ok(await b2b.GetAnalyticsAsync()); }
+        catch (Exception ex) { return StatusCode(500, new { detail = ex.Message }); }
+    }
 
     // —— Categories ——
     [HttpGet("categories")]

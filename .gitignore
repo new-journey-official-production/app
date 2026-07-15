@@ -84,20 +84,41 @@ agenthub/agents/youtube/db
 **/.cache/
 node_modules/.cache/
 *.cache
+**/*.cache
+**/*.cache.json
 
-# .NET build output
-[Bb]in/
-[Oo]bj/
+# .NET build output (never commit)
+**/[Bb]in/
+**/[Oo]bj/
 [Dd]ebug/
 [Rr]elease/
+artifacts/
 *.dll
 *.exe
 *.pdb
 *.deps.json
 *.runtimeconfig.json
+*.runtimeconfig.dev.json
 project.lock.json
 project.fragment.lock.json
-artifacts/
+*.nuget.cache
+*.nuget.dgspec.json
+*.nuget.g.props
+*.nuget.g.targets
+*.csproj.AssemblyReference.cache
+*.csproj.CoreCompileInputs.cache
+*.csproj.FileListAbsolute.txt
+*.AssemblyInfoInputs.cache
+*.assets.cache
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.GlobalUsings.g.cs
+*.sourcelink.json
+rjsmcshtml.dswa.cache.json
+rjsmrazor.dswa.cache.json
+rpswa.dswa.cache.json
+**/staticwebassets/
+*.DotNetCore.targets
+apphost.exe
 
 memory/test_credentials.md
 

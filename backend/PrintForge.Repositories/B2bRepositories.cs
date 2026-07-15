@@ -467,13 +467,19 @@ public class B2bAnalyticsRepository(PostgresDb db) : IB2bAnalyticsRepository
 
     public async Task<List<(string Date, long Count)>> SeriesAsync(string eventType, int days)
     {
+        // Use interval multiply — string concat (@days || ' days') fails for integer params in Postgres.
         const string sql = """
             select to_char(d::date, 'YYYY-MM-DD') as date, coalesce(c.cnt, 0)::bigint as count
-            from generate_series((now() at time zone 'utc')::date - (@days - 1), (now() at time zone 'utc')::date, '1 day') d
+            from generate_series(
+              (timezone('utc', now()))::date - (@days - 1),
+              (timezone('utc', now()))::date,
+              interval '1 day'
+            ) d
             left join (
               select created_at::date as day, count(*)::bigint as cnt
               from b2b_analytics_events
-              where event_type = @eventType and created_at >= now() - (@days || ' days')::interval
+              where event_type = @eventType
+                and created_at >= (timezone('utc', now()))::date - (@days - 1)
               group by 1
             ) c on c.day = d::date
             order by 1;
@@ -501,15 +507,19 @@ public class B2bAnalyticsRepository(PostgresDb db) : IB2bAnalyticsRepository
     public async Task<List<(string Id, string Name, long Count)>> TopCategoriesAsync(int limit = 10)
     {
         const string sql = """
-            select coalesce(e.category_id, p.category_id, '') as id,
-                   coalesce(c.name, 'Unknown') as name,
-                   count(*)::bigint as count
-            from b2b_analytics_events e
-            left join b2b_products p on p.id = e.product_id
-            left join b2b_categories c on c.id = coalesce(e.category_id, p.category_id)
-            where e.event_type in ('view', 'download', 'quote')
-            group by 1, 2
-            having coalesce(e.category_id, p.category_id) is not null
+            select
+              cat_id as id,
+              coalesce(c.name, 'Unknown') as name,
+              count(*)::bigint as count
+            from (
+              select coalesce(nullif(e.category_id, ''), p.category_id) as cat_id
+              from b2b_analytics_events e
+              left join b2b_products p on p.id = e.product_id
+              where e.event_type in ('view', 'download', 'quote')
+            ) x
+            left join b2b_categories c on c.id = x.cat_id
+            where x.cat_id is not null
+            group by cat_id, c.name
             order by count desc
             limit @limit;
             """;

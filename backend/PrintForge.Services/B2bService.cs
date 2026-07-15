@@ -17,6 +17,7 @@ public class B2bService(
     IB2bAnalyticsRepository analytics,
     IB2bSettingsRepository settings,
     INotificationRepository notifications,
+    IUserRepository users,
     IActivityLogService activity) : IB2bService
 {
     private static readonly HashSet<string> CategoryImmutable = new(StringComparer.Ordinal)
@@ -45,15 +46,15 @@ public class B2bService(
         var hiddenProducts = await products.CountAsync(visible: false);
         var featuredProducts = await products.CountAsync(featured: true);
         var bestSellers = await products.CountAsync(bestSeller: true);
-        var totalDownloads = await analytics.CountDownloadsAsync();
-        var todayDownloads = await analytics.CountDownloadsAsync(today, today.AddDays(1));
-        var monthlyDownloads = await analytics.CountDownloadsAsync(monthStart);
+        var totalDownloads = await SafeLong(() => analytics.CountDownloadsAsync());
+        var todayDownloads = await SafeLong(() => analytics.CountDownloadsAsync(today, today.AddDays(1)));
+        var monthlyDownloads = await SafeLong(() => analytics.CountDownloadsAsync(monthStart));
         var quoteCount = await quotes.CountAsync();
         var pendingQuotes = await quotes.CountAsync("pending");
         var dealerRegs = await dealers.CountAsync();
-        var mostDownloaded = await products.FindTopByCounterAsync("downloads_count");
-        var mostViewed = await products.FindTopByCounterAsync("views_count");
-        var topCats = await analytics.TopCategoriesAsync(1);
+        var mostDownloaded = await Safe(() => products.FindTopByCounterAsync("downloads_count"));
+        var mostViewed = await Safe(() => products.FindTopByCounterAsync("views_count"));
+        var topCats = await Safe(() => analytics.TopCategoriesAsync(1), []);
 
         return new
         {
@@ -72,20 +73,20 @@ public class B2bService(
             most_downloaded_product = mostDownloaded is null ? null : BsonMapper.ToDict(mostDownloaded),
             most_viewed_product = mostViewed is null ? null : BsonMapper.ToDict(mostViewed),
             top_category = topCats.Count > 0 ? new { id = topCats[0].Id, name = topCats[0].Name, count = topCats[0].Count } : null,
-            downloads_series = (await analytics.SeriesAsync("download", 14)).Select(x => new { date = x.Date, count = x.Count }),
-            views_series = (await analytics.SeriesAsync("view", 14)).Select(x => new { date = x.Date, count = x.Count }),
-            quotes_series = (await analytics.SeriesAsync("quote", 14)).Select(x => new { date = x.Date, count = x.Count }),
-            top_categories = (await analytics.TopCategoriesAsync(8)).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
-            top_products = (await analytics.TopProductsAsync("download", 8)).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
+            downloads_series = (await SafeSeries("download", 14)).Select(x => new { date = x.Date, count = x.Count }),
+            views_series = (await SafeSeries("view", 14)).Select(x => new { date = x.Date, count = x.Count }),
+            quotes_series = (await SafeSeries("quote", 14)).Select(x => new { date = x.Date, count = x.Count }),
+            top_categories = (await Safe(() => analytics.TopCategoriesAsync(8), [])).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
+            top_products = (await Safe(() => analytics.TopProductsAsync("download", 8), [])).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
         };
     }
 
     public async Task<object> GetAnalyticsAsync()
     {
-        var views = await analytics.CountEventsAsync("view");
-        var downloads = await analytics.CountEventsAsync("download");
-        var quoteEvents = await analytics.CountEventsAsync("quote");
-        var shares = await analytics.CountEventsAsync("share");
+        var views = await SafeLong(() => analytics.CountEventsAsync("view"));
+        var downloads = await SafeLong(() => analytics.CountEventsAsync("download"));
+        var quoteEvents = await SafeLong(() => analytics.CountEventsAsync("quote"));
+        var shares = await SafeLong(() => analytics.CountEventsAsync("share"));
         var conversion = views > 0 ? Math.Round(100.0 * quoteEvents / views, 2) : 0;
         var downloadConversion = views > 0 ? Math.Round(100.0 * downloads / views, 2) : 0;
 
@@ -97,16 +98,40 @@ public class B2bService(
             shares,
             quote_conversion_rate = conversion,
             download_conversion_rate = downloadConversion,
-            downloads_series = (await analytics.SeriesAsync("download", 30)).Select(x => new { date = x.Date, count = x.Count }),
-            views_series = (await analytics.SeriesAsync("view", 30)).Select(x => new { date = x.Date, count = x.Count }),
-            quotes_series = (await analytics.SeriesAsync("quote", 30)).Select(x => new { date = x.Date, count = x.Count }),
-            top_categories = (await analytics.TopCategoriesAsync(10)).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
-            top_products = (await analytics.TopProductsAsync("view", 10)).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
-            most_downloaded = (await analytics.TopProductsAsync("download", 10)).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
-            most_shared = (await analytics.TopProductsAsync("share", 10)).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
-            devices = (await analytics.DeviceBreakdownAsync()).Select(x => new { device = x.Device, count = x.Count }),
-            countries = (await analytics.CountryBreakdownAsync()).Select(x => new { country = x.Country, count = x.Count }),
+            downloads_series = (await SafeSeries("download", 30)).Select(x => new { date = x.Date, count = x.Count }),
+            views_series = (await SafeSeries("view", 30)).Select(x => new { date = x.Date, count = x.Count }),
+            quotes_series = (await SafeSeries("quote", 30)).Select(x => new { date = x.Date, count = x.Count }),
+            top_categories = (await Safe(() => analytics.TopCategoriesAsync(10), [])).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
+            top_products = (await Safe(() => analytics.TopProductsAsync("view", 10), [])).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
+            most_downloaded = (await Safe(() => analytics.TopProductsAsync("download", 10), [])).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
+            most_shared = (await Safe(() => analytics.TopProductsAsync("share", 10), [])).Select(x => new { id = x.Id, name = x.Name, count = x.Count }),
+            devices = (await Safe(() => analytics.DeviceBreakdownAsync(), [])).Select(x => new { device = x.Device, count = x.Count }),
+            countries = (await Safe(() => analytics.CountryBreakdownAsync(), [])).Select(x => new { country = x.Country, count = x.Count }),
         };
+    }
+
+    private async Task<List<(string Date, long Count)>> SafeSeries(string eventType, int days)
+    {
+        try { return await analytics.SeriesAsync(eventType, days); }
+        catch { return []; }
+    }
+
+    private static async Task<long> SafeLong(Func<Task<long>> action)
+    {
+        try { return await action(); }
+        catch { return 0; }
+    }
+
+    private static async Task<T?> Safe<T>(Func<Task<T?>> action) where T : class
+    {
+        try { return await action(); }
+        catch { return null; }
+    }
+
+    private static async Task<T> Safe<T>(Func<Task<T>> action, T fallback)
+    {
+        try { return await action(); }
+        catch { return fallback; }
     }
 
     public async Task<object> ListCategoriesAsync(bool includeArchived = false, bool tree = true)
@@ -710,16 +735,34 @@ public class B2bService(
 
     private async Task NotifyAdminsAsync(string title, string body, string type)
     {
-        // Notifications table uses user_id — store system broadcast for admin role via empty-user sentinel.
-        await notifications.InsertAsync(new Notification
+        // Notifications.user_id FK → users.id — never use sentinel strings like "admin".
+        try
         {
-            Id = IdHelper.NewId(),
-            UserId = "admin",
-            Title = title,
-            Message = body,
-            Kind = type,
-            Read = false,
-            CreatedAt = IdHelper.NowIso(),
-        });
+            var recipients = (await users.FindAllForAdminAsync(200))
+                .Where(u => u.Role is "admin" or "staff")
+                .Select(u => u.Id)
+                .Distinct()
+                .ToList();
+
+            if (recipients.Count == 0) return;
+
+            foreach (var userId in recipients)
+            {
+                await notifications.InsertAsync(new Notification
+                {
+                    Id = IdHelper.NewId(),
+                    UserId = userId,
+                    Title = title,
+                    Message = body,
+                    Kind = type,
+                    Read = false,
+                    CreatedAt = IdHelper.NowIso(),
+                });
+            }
+        }
+        catch
+        {
+            // Notifications must never block catalog mutations.
+        }
     }
 }

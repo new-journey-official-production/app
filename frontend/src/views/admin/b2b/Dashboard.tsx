@@ -7,20 +7,47 @@ import {
 import {
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
-import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
+import { Button } from "@/components/ui/button";
 
 export default function B2bAdminDashboard() {
   const [s, setS] = useState<ApiRow | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    api.get("/admin/b2b/dashboard").then((r) => setS(r.data)).catch(() => setS(null));
-  }, []);
+  const load = () => {
+    setLoading(true);
+    setError("");
+    api.get("/admin/b2b/dashboard")
+      .then((r) => setS(r.data))
+      .catch((err) => {
+        setS(null);
+        setError(apiError(err));
+        toast.error(apiError(err));
+      })
+      .finally(() => setLoading(false));
+  };
 
-  if (!s) {
+  useEffect(() => { load(); }, []);
+
+  if (loading) {
     return (
       <div className="p-8">
         <div className="h-96 rounded-xl shimmer" />
+      </div>
+    );
+  }
+
+  if (error || !s) {
+    return (
+      <div className="p-6 lg:p-8">
+        <h1 className="font-display text-3xl font-bold tracking-tight mb-2">B2B Overview</h1>
+        <div className="rounded-xl border border-border bg-card p-8 text-center space-y-3">
+          <p className="text-sm text-muted-foreground">{error || "Could not load dashboard"}</p>
+          <Button variant="outline" onClick={load}>Retry</Button>
+        </div>
       </div>
     );
   }
