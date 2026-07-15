@@ -31,6 +31,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailLogRepository, EmailLogRepository>();
         services.AddScoped<INewsletterRepository, NewsletterRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
+        services.AddScoped<IB2bCategoryRepository, B2bCategoryRepository>();
+        services.AddScoped<IB2bProductRepository, B2bProductRepository>();
+        services.AddScoped<IB2bQuoteRepository, B2bQuoteRepository>();
+        services.AddScoped<IB2bDealerRepository, B2bDealerRepository>();
+        services.AddScoped<IB2bAnalyticsRepository, B2bAnalyticsRepository>();
+        services.AddScoped<IB2bSettingsRepository, B2bSettingsRepository>();
 
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IAuthUserProvider, AuthUserProvider>();
@@ -46,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMediaService, MediaService>();
         services.AddScoped<IRbacService, RbacService>();
         services.AddScoped<ISeedDataService, SeedDataService>();
+        services.AddScoped<IB2bService, B2bService>();
 
         return services;
     }

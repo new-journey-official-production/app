@@ -73,6 +73,7 @@ export default function Footer() {
 
           <FooterCol title="Company">
             <Link to="/about" className="block py-1 hover:text-foreground">About</Link>
+            <Link to="/b2b" className="block py-1 hover:text-foreground">B2B Wholesale</Link>
             <Link to="/blog" className="block py-1 hover:text-foreground">Journal</Link>
             <Link to="/contact" className="block py-1 hover:text-foreground">Contact</Link>
             <Link to="/faq" className="block py-1 hover:text-foreground">FAQ</Link>

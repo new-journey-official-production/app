@@ -33,6 +33,15 @@ export const ModulesMap: Record<string, ModuleRouteConfig> = {
   "/admin/permissions": { moduleId: MODULES.ROLES, OP: CPPermissions.READ },
   "/admin/roles": { moduleId: MODULES.ROLES, OP: CPPermissions.READ },
   "/admin/users": { moduleId: MODULES.USERS, OP: CPPermissions.READ },
+  "/b2b": { moduleId: MODULES.B2B_PORTAL, OP: CPPermissions.READ, public: true },
+  "/admin/b2b": { moduleId: MODULES.B2B_DASHBOARD, OP: CPPermissions.READ },
+  "/admin/b2b/categories": { moduleId: MODULES.B2B_CATEGORIES, OP: CPPermissions.READ },
+  "/admin/b2b/products": { moduleId: MODULES.B2B_PRODUCTS, OP: CPPermissions.READ },
+  "/admin/b2b/catalog": { moduleId: MODULES.B2B_CATALOG, OP: CPPermissions.READ },
+  "/admin/b2b/quotes": { moduleId: MODULES.B2B_QUOTES, OP: CPPermissions.READ },
+  "/admin/b2b/dealers": { moduleId: MODULES.B2B_DEALERS, OP: CPPermissions.READ },
+  "/admin/b2b/analytics": { moduleId: MODULES.B2B_ANALYTICS, OP: CPPermissions.READ },
+  "/admin/b2b/settings": { moduleId: MODULES.B2B_SETTINGS, OP: CPPermissions.READ },
 };
 
 /** Resolve module config for a path (exact or prefix match for nested routes). */

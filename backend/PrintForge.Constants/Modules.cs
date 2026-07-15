@@ -21,6 +21,16 @@ public static class Modules
     public const string Roles = "/admin/roles";
     public const string Users = "/admin/users";
 
+    public const string B2bDashboard = "/admin/b2b";
+    public const string B2bCategories = "/admin/b2b/categories";
+    public const string B2bProducts = "/admin/b2b/products";
+    public const string B2bCatalog = "/admin/b2b/catalog";
+    public const string B2bQuotes = "/admin/b2b/quotes";
+    public const string B2bDealers = "/admin/b2b/dealers";
+    public const string B2bAnalytics = "/admin/b2b/analytics";
+    public const string B2bSettings = "/admin/b2b/settings";
+    public const string B2bPortal = "/b2b";
+
     public const string Account = "/account";
     public const string AccountOrders = "/account/orders";
     public const string AccountWishlist = "/account/wishlist";
@@ -37,11 +47,12 @@ public static class Modules
     [
         Dashboard, Products, Orders, Billing, Inventory, Printers, Customers,
         Support, Reviews, Blog, Coupons, Analytics, Media, ActivityLogs,
-        Settings, Roles, Users
+        Settings, Roles, Users,
+        B2bDashboard, B2bCategories, B2bProducts, B2bCatalog, B2bQuotes, B2bDealers, B2bAnalytics, B2bSettings
     ];
 
     /// <summary>Storefront modules — readable by everyone; skip RBAC gate when browsing.</summary>
-    public static readonly string[] PublicModules = [Storefront, Catalog];
+    public static readonly string[] PublicModules = [Storefront, Catalog, B2bPortal];
 
     public static readonly ModuleDefinition[] AllModules =
     [
@@ -62,6 +73,14 @@ public static class Modules
         new(Settings, "Settings", "System settings", "admin"),
         new(Roles, "Roles", "Role management", "admin"),
         new(Users, "Users", "User permission management", "admin"),
+        new(B2bDashboard, "B2B Dashboard", "B2B catalog management overview", "admin"),
+        new(B2bCategories, "B2B Categories", "B2B category management", "admin"),
+        new(B2bProducts, "B2B Products", "B2B product management", "admin"),
+        new(B2bCatalog, "B2B Catalog Generator", "PDF catalog generation", "admin"),
+        new(B2bQuotes, "B2B Quote Requests", "Wholesale quote request management", "admin"),
+        new(B2bDealers, "B2B Dealers", "Dealer registration management", "admin"),
+        new(B2bAnalytics, "B2B Analytics", "B2B catalog analytics", "admin"),
+        new(B2bSettings, "B2B Settings", "B2B module settings", "admin"),
         new(Account, "Account", "Customer account dashboard", "customer"),
         new(AccountOrders, "My Orders", "Customer order history", "customer"),
         new(AccountWishlist, "Wishlist", "Customer wishlist", "customer"),
@@ -69,7 +88,8 @@ public static class Modules
         new(AccountSupport, "Customer Support", "Customer support tickets", "customer"),
         new(Checkout, "Checkout", "Place orders", "customer"),
         new(Storefront, "Storefront", "Public storefront", "public"),
-        new(Catalog, "Catalog", "Product catalog browsing", "public")
+        new(Catalog, "Catalog", "Product catalog browsing", "public"),
+        new(B2bPortal, "B2B Portal", "Public B2B wholesale catalog", "public")
     ];
 }
 

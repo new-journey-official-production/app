@@ -4,12 +4,12 @@
     <RestoreSuccess Condition=" '$(RestoreSuccess)' == '' ">True</RestoreSuccess>
     <RestoreTool Condition=" '$(RestoreTool)' == '' ">NuGet</RestoreTool>
     <ProjectAssetsFile Condition=" '$(ProjectAssetsFile)' == '' ">$(MSBuildThisFileDirectory)project.assets.json</ProjectAssetsFile>
-    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\AppData\Local\Temp\cursor-sandbox-cache\aa3fb3a6d1e24503c06facc88da3b56b\nuget</NuGetPackageRoot>
-    <NuGetPackageFolders Condition=" '$(NuGetPackageFolders)' == '' ">C:\Users\tarea\AppData\Local\Temp\cursor-sandbox-cache\aa3fb3a6d1e24503c06facc88da3b56b\nuget</NuGetPackageFolders>
+    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\AppData\Local\Temp\cursor-sandbox-cache\a023108a0ae92dcdd838e614ee061019\nuget</NuGetPackageRoot>
+    <NuGetPackageFolders Condition=" '$(NuGetPackageFolders)' == '' ">C:\Users\tarea\AppData\Local\Temp\cursor-sandbox-cache\a023108a0ae92dcdd838e614ee061019\nuget</NuGetPackageFolders>
     <NuGetProjectStyle Condition=" '$(NuGetProjectStyle)' == '' ">PackageReference</NuGetProjectStyle>
     <NuGetToolVersion Condition=" '$(NuGetToolVersion)' == '' ">7.0.0</NuGetToolVersion>
   </PropertyGroup>
   <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <SourceRoot Include="C:\Users\tarea\AppData\Local\Temp\cursor-sandbox-cache\aa3fb3a6d1e24503c06facc88da3b56b\nuget\" />
+    <SourceRoot Include="C:\Users\tarea\AppData\Local\Temp\cursor-sandbox-cache\a023108a0ae92dcdd838e614ee061019\nuget\" />
   </ItemGroup>
 </Project>

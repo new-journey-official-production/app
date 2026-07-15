@@ -12,6 +12,7 @@ import { BRAND_NAME, BRAND_SHORT } from "@/lib/brand";
 const NAV = [
   { to: "/", label: "Home" },
   { to: "/products", label: "Shop" },
+  { to: "/b2b", label: "B2B" },
   { to: "/about", label: "About" },
   { to: "/blog", label: "Journal" },
   { to: "/contact", label: "Contact" },

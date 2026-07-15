@@ -56,6 +56,22 @@ const AdminActivityLogs = lazy(() => import("@/views/admin/ActivityLogs"));
 const AdminSettings = lazy(() => import("@/views/admin/Settings"));
 const AdminPermissions = lazy(() => import("@/views/admin/Permissions"));
 
+const B2bLanding = lazy(() => import("@/views/b2b/Landing"));
+const B2bCatalog = lazy(() => import("@/views/b2b/Catalog"));
+const B2bProductDetail = lazy(() => import("@/views/b2b/ProductDetail"));
+const B2bQuoteRequest = lazy(() => import("@/views/b2b/QuoteRequest"));
+const B2bDealerApply = lazy(() => import("@/views/b2b/DealerApply"));
+
+const B2bAdminDashboard = lazy(() => import("@/views/admin/b2b/Dashboard"));
+const B2bAdminCategories = lazy(() => import("@/views/admin/b2b/Categories"));
+const B2bAdminProducts = lazy(() => import("@/views/admin/b2b/Products"));
+const B2bAdminProductForm = lazy(() => import("@/views/admin/b2b/ProductForm"));
+const B2bAdminCatalog = lazy(() => import("@/views/admin/b2b/CatalogGenerator"));
+const B2bAdminQuotes = lazy(() => import("@/views/admin/b2b/Quotes"));
+const B2bAdminDealers = lazy(() => import("@/views/admin/b2b/Dealers"));
+const B2bAdminAnalytics = lazy(() => import("@/views/admin/b2b/Analytics"));
+const B2bAdminSettings = lazy(() => import("@/views/admin/b2b/Settings"));
+
 function PageLoader() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center" data-testid="page-loader">
@@ -139,6 +155,14 @@ export default function App() {
                   <Route path="/account/wishlist" element={<ProtectedRoute><CustomerWishlist /></ProtectedRoute>} />
                   <Route path="/account/profile" element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
                   <Route path="/account/support" element={<ProtectedRoute><CustomerSupport /></ProtectedRoute>} />
+
+                  {/* B2B public portal */}
+                  <Route path="/b2b" element={<B2bLanding />} />
+                  <Route path="/b2b/catalog" element={<B2bCatalog />} />
+                  <Route path="/b2b/catalog/:categorySlug" element={<B2bCatalog />} />
+                  <Route path="/b2b/product/:slug" element={<B2bProductDetail />} />
+                  <Route path="/b2b/quote" element={<B2bQuoteRequest />} />
+                  <Route path="/b2b/become-dealer" element={<B2bDealerApply />} />
                 </Route>
 
                 {/* Admin */}
@@ -164,6 +188,18 @@ export default function App() {
                   <Route path="/admin/permissions" element={<AdminPermissions />} />
                   <Route path="/admin/roles" element={<AdminPermissions />} />
                   <Route path="/admin/users" element={<AdminPermissions />} />
+
+                  {/* B2B admin */}
+                  <Route path="/admin/b2b" element={<B2bAdminDashboard />} />
+                  <Route path="/admin/b2b/categories" element={<B2bAdminCategories />} />
+                  <Route path="/admin/b2b/products" element={<B2bAdminProducts />} />
+                  <Route path="/admin/b2b/products/new" element={<B2bAdminProductForm />} />
+                  <Route path="/admin/b2b/products/:id/edit" element={<B2bAdminProductForm />} />
+                  <Route path="/admin/b2b/catalog" element={<B2bAdminCatalog />} />
+                  <Route path="/admin/b2b/quotes" element={<B2bAdminQuotes />} />
+                  <Route path="/admin/b2b/dealers" element={<B2bAdminDealers />} />
+                  <Route path="/admin/b2b/analytics" element={<B2bAdminAnalytics />} />
+                  <Route path="/admin/b2b/settings" element={<B2bAdminSettings />} />
                 </Route>
 
                 <Route path="/404" element={<NotFound />} />

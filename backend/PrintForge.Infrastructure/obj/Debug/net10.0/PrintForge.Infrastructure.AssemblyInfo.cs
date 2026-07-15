@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PrintForge.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5a18eb8bd6cc65b238ab868ef486e6702f0f4aca")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b2692789974c095d6507224d016340bef2df94fa")]
 [assembly: System.Reflection.AssemblyProductAttribute("PrintForge.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PrintForge.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

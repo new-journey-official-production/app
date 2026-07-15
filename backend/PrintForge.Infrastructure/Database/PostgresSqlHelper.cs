@@ -9,6 +9,8 @@ public static class PostgresSqlHelper
     private static readonly HashSet<string> JsonbColumns = new(StringComparer.Ordinal)
     {
         "color_variants", "images", "tags", "items", "address", "timeline", "messages", "metadata", "context", "meta",
+        "colors", "customization", "gallery", "lifestyle_images", "white_bg_images", "transparent_images",
+        "images_360", "videos", "faqs", "categories",
     };
 
     public static (string SetClause, DynamicParameters Parameters) BuildSetClause(

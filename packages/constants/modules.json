@@ -2,6 +2,7 @@
   { "module_id": "/admin", "name": "Dashboard", "group": "admin" },
   { "module_id": "/admin/products", "name": "Products", "group": "admin" },
   { "module_id": "/admin/orders", "name": "Orders", "group": "admin" },
+  { "module_id": "/admin/billing", "name": "Billing", "group": "admin" },
   { "module_id": "/admin/inventory", "name": "Inventory", "group": "admin" },
   { "module_id": "/admin/printers", "name": "Printers", "group": "admin" },
   { "module_id": "/admin/customers", "name": "Customers", "group": "admin" },
@@ -15,6 +16,14 @@
   { "module_id": "/admin/settings", "name": "Settings", "group": "admin" },
   { "module_id": "/admin/roles", "name": "Roles", "group": "admin" },
   { "module_id": "/admin/users", "name": "Users", "group": "admin" },
+  { "module_id": "/admin/b2b", "name": "B2B Dashboard", "group": "admin" },
+  { "module_id": "/admin/b2b/categories", "name": "B2B Categories", "group": "admin" },
+  { "module_id": "/admin/b2b/products", "name": "B2B Products", "group": "admin" },
+  { "module_id": "/admin/b2b/catalog", "name": "B2B Catalog Generator", "group": "admin" },
+  { "module_id": "/admin/b2b/quotes", "name": "B2B Quote Requests", "group": "admin" },
+  { "module_id": "/admin/b2b/dealers", "name": "B2B Dealers", "group": "admin" },
+  { "module_id": "/admin/b2b/analytics", "name": "B2B Analytics", "group": "admin" },
+  { "module_id": "/admin/b2b/settings", "name": "B2B Settings", "group": "admin" },
   { "module_id": "/account", "name": "Account", "group": "customer" },
   { "module_id": "/account/orders", "name": "My Orders", "group": "customer" },
   { "module_id": "/account/wishlist", "name": "Wishlist", "group": "customer" },
@@ -22,5 +31,6 @@
   { "module_id": "/account/support", "name": "Customer Support", "group": "customer" },
   { "module_id": "/checkout", "name": "Checkout", "group": "customer" },
   { "module_id": "/", "name": "Storefront", "group": "public" },
-  { "module_id": "/products", "name": "Catalog", "group": "public" }
+  { "module_id": "/products", "name": "Catalog", "group": "public" },
+  { "module_id": "/b2b", "name": "B2B Portal", "group": "public" }
 ]

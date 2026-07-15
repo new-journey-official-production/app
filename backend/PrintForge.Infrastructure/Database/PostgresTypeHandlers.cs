@@ -24,6 +24,9 @@ public static class PostgresTypeHandlers
         SqlMapper.AddTypeHandler(new JsonTypeHandler<List<PrintForge.Models.Entities.TicketMessage>>());
         // EmbeddedAddress only — never register JsonTypeHandler on Address (breaks multi-column Dapper reads).
         SqlMapper.AddTypeHandler(new JsonTypeHandler<PrintForge.Models.Entities.EmbeddedAddress>());
+        SqlMapper.AddTypeHandler(new JsonTypeHandler<List<PrintForge.Models.Entities.B2bColor>>());
+        SqlMapper.AddTypeHandler(new JsonTypeHandler<PrintForge.Models.Entities.B2bCustomization>());
+        SqlMapper.AddTypeHandler(new JsonTypeHandler<List<PrintForge.Models.Entities.B2bFaq>>());
     }
 
     private sealed class JsonTypeHandler<T> : SqlMapper.TypeHandler<T>

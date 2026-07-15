@@ -165,7 +165,16 @@ public class PermissionService(
             [Modules.ActivityLogs] = (int)CPPermissions.Read,
             [Modules.Settings] = (int)CPPermissions.Read,
             [Modules.Roles] = (int)CPPermissions.Read,
-            [Modules.Users] = (int)CPPermissions.Read
+            [Modules.Users] = (int)CPPermissions.Read,
+            [Modules.B2bDashboard] = (int)CPPermissions.Read,
+            [Modules.B2bCategories] = (int)(CPPermissions.Read | CPPermissions.Update | CPPermissions.Create),
+            [Modules.B2bProducts] = (int)(CPPermissions.Read | CPPermissions.Update | CPPermissions.Create),
+            [Modules.B2bCatalog] = (int)(CPPermissions.Read | CPPermissions.Create),
+            [Modules.B2bQuotes] = (int)(CPPermissions.Read | CPPermissions.Update),
+            [Modules.B2bDealers] = (int)(CPPermissions.Read | CPPermissions.Update),
+            [Modules.B2bAnalytics] = (int)CPPermissions.Read,
+            [Modules.B2bSettings] = (int)CPPermissions.Read,
+            [Modules.B2bPortal] = (int)CPPermissions.Read
         };
         foreach (var (modId, bits) in staffBits)
             await rbac.UpsertRolePermissionAsync(roleIds["staff"], modId, bits);
@@ -179,7 +188,8 @@ public class PermissionService(
             [Modules.AccountWishlist] = PermissionHelper.FullCrud,
             [Modules.AccountProfile] = PermissionHelper.FullCrud,
             [Modules.AccountSupport] = (int)(CPPermissions.Read | CPPermissions.Create | CPPermissions.Update),
-            [Modules.Checkout] = (int)(CPPermissions.Read | CPPermissions.Create)
+            [Modules.Checkout] = (int)(CPPermissions.Read | CPPermissions.Create),
+            [Modules.B2bPortal] = (int)(CPPermissions.Read | CPPermissions.Create)
         };
         foreach (var (modId, bits) in customerBits)
             await rbac.UpsertRolePermissionAsync(roleIds["customer"], modId, bits);
