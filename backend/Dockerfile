@@ -18,8 +18,11 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 ENV ASPNETCORE_ENVIRONMENT=Production
-# Render containers hit the Linux inotify limit (128) when ASP.NET watches appsettings.json.
-ENV DOTNET_HOSTBUILDER_RELOADCONFIGONCHANGE=false
+# Disable appsettings.json file watchers (Render inotify limit = 128).
+ENV hostBuilder__reloadConfigOnChange=false
+ENV DOTNET_hostBuilder__reloadConfigOnChange=false
+ENV ASPNETCORE_hostBuilder__reloadConfigOnChange=false
+ENV DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE=false
 
 COPY --from=build /app/publish .
 

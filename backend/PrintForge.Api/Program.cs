@@ -9,16 +9,34 @@ using PrintForge.Infrastructure.Middleware;
 using PrintForge.Services.Extensions;
 using PrintForge.Services.Interfaces;
 
-// Disable config file watchers before host construction — Render free/shared
-// containers exhaust the inotify instance limit (128) and crash at startup.
-Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER_RELOADCONFIGONCHANGE", "false");
+// CreateEmptyBuilder avoids default appsettings FileSystemWatchers.
+// Render's shared containers hit the Linux inotify limit (128) and crash if
+// WebApplication.CreateBuilder registers reloadOnChange watchers.
+var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory,
+});
 
-var builder = WebApplication.CreateBuilder(args);
+var envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+    ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+    ?? "Production";
+
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{envName}.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables()
+    .AddCommandLine(args);
+
+builder.Logging.AddConsole();
+builder.WebHost.UseKestrel();
 
 // Render injects PORT; bind Kestrel so health checks and traffic reach the container.
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrWhiteSpace(port))
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+else
+    builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
 builder.Services.Configure<AppSettings>(builder.Configuration);
 builder.Services.AddPrintForgeInfrastructure();
@@ -48,6 +66,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddRouting();
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
