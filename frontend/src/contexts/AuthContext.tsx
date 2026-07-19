@@ -54,16 +54,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (email: string, password: string): Promise<User> => {
     const data = (await AuthDao.login(email, password)) as User;
     setUser(data);
-    const perms = await fetchAndStorePermissions();
-    setPermissions(perms);
+    try {
+      const perms = await fetchAndStorePermissions();
+      setPermissions(perms);
+    } catch {
+      setPermissions({});
+    }
     return data;
   };
 
   const register = async (payload: RegisterPayload): Promise<User> => {
     const data = (await AuthDao.register(payload)) as User;
     setUser(data);
-    const perms = await fetchAndStorePermissions();
-    setPermissions(perms);
+    try {
+      const perms = await fetchAndStorePermissions();
+      setPermissions(perms);
+    } catch {
+      setPermissions({});
+    }
     return data;
   };
 

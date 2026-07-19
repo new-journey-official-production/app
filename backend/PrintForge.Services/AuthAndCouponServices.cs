@@ -12,13 +12,17 @@ namespace PrintForge.Services;
 public class AuthService(
     IUserRepository users,
     IPasswordResetRepository resets,
-    IEmailService email) : IAuthService
+    IEmailService email,
+    IRbacRepository rbac) : IAuthService
 {
     public async Task<UserDto> RegisterAsync(RegisterRequest request)
     {
         var emailNorm = request.Email.ToLowerInvariant().Trim();
         if (await users.FindByEmailAsync(emailNorm) is not null)
             throw new InvalidOperationException("Email already registered");
+
+        // Assign customer role immediately so RBAC permissions resolve on first checkout.
+        var customerRole = await rbac.FindRoleBySlugAsync("customer");
 
         var user = new User
         {
@@ -28,6 +32,7 @@ public class AuthService(
             Name = request.Name.Trim(),
             Phone = request.Phone,
             Role = "customer",
+            RoleId = customerRole?.Id,
             EmailVerified = false,
             CreatedAt = IdHelper.NowIso()
         };

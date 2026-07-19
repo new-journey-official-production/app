@@ -51,8 +51,15 @@ public static class Modules
         B2bDashboard, B2bCategories, B2bProducts, B2bCatalog, B2bQuotes, B2bDealers, B2bAnalytics, B2bSettings
     ];
 
-    /// <summary>Storefront modules — readable by everyone; skip RBAC gate when browsing.</summary>
-    public static readonly string[] PublicModules = [Storefront, Catalog, B2bPortal];
+    /// <summary>
+    /// Storefront + customer modules — skip RBAC gate on API calls.
+    /// Authentication is still enforced by [UserAuthorize] on controllers.
+    /// </summary>
+    public static readonly string[] PublicModules =
+    [
+        Storefront, Catalog, B2bPortal,
+        Account, AccountOrders, AccountWishlist, AccountProfile, AccountSupport, Checkout
+    ];
 
     public static readonly ModuleDefinition[] AllModules =
     [

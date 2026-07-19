@@ -168,7 +168,7 @@ export default function Checkout() {
               </RadioGroup>
             )}
             {showForm && (
-              <form onSubmit={saveAddress} className="grid grid-cols-2 gap-3" data-testid="address-form">
+              <form onSubmit={saveAddress} className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="address-form">
                 <Field label="Full name" value={form.full_name} onChange={(v) => setForm({ ...form, full_name: v })} required />
                 <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required />
                 <Field label="Address line 1" value={form.line1} onChange={(v) => setForm({ ...form, line1: v })} required className="col-span-2" />
@@ -204,7 +204,7 @@ export default function Checkout() {
           </section>
         </div>
 
-        <aside className="rounded-2xl border border-border p-6 h-fit sticky top-24" data-testid="checkout-summary">
+        <aside className="rounded-2xl border border-border p-6 h-fit lg:sticky lg:top-24" data-testid="checkout-summary">
           <div className="font-display font-semibold text-lg">Order summary</div>
           <div className="mt-4 space-y-2 text-sm max-h-64 overflow-y-auto">
             {items.map((it) => (

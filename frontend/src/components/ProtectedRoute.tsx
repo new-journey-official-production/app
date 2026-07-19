@@ -1,5 +1,6 @@
-import React, { type ReactNode } from "react";
+import React, { useEffect, useRef, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
@@ -29,6 +30,18 @@ export default function ProtectedRoute({ children, admin = false }: ProtectedRou
     );
   }
   if (!user) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  if (admin && !canAccessAdmin()) return <Navigate to="/" replace />;
+  if (admin && !canAccessAdmin()) return <AdminAccessDenied />;
   return children;
+}
+
+/** Redirect non-admin users with a clear message instead of a silent bounce to home. */
+function AdminAccessDenied() {
+  const shown = useRef(false);
+  useEffect(() => {
+    if (!shown.current) {
+      shown.current = true;
+      toast.error("Admin access required");
+    }
+  }, []);
+  return <Navigate to="/account" replace />;
 }

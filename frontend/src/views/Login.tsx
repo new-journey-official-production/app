@@ -42,7 +42,7 @@ export default function Login() {
             <Link to="/forgot-password" className="hover:text-foreground" data-testid="login-forgot-link">Forgot password?</Link>
           </div>
           <div className="text-center text-sm">
-            No account? <Link to="/register" className="font-semibold hover:text-orange-600" data-testid="login-register-link">Create one</Link>
+            No account? <Link to="/register" state={loc.state} className="font-semibold hover:text-orange-600" data-testid="login-register-link">Create one</Link>
           </div>
         </form>
       </div>

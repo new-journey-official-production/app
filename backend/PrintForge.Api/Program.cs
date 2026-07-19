@@ -74,16 +74,30 @@ builder.Services.AddControllers()
         o.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower;
     });
 
-var corsOrigins = (builder.Configuration["CorsOrigins"] ?? "*").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+// Cookie auth requires AllowCredentials — never use AllowAnyOrigin with withCredentials.
+var configuredOrigins = (builder.Configuration["CorsOrigins"] ?? "")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+var defaultOrigins = new[]
+{
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:30000",
+    "https://store.newjourneyofficial.com",
+    "https://nj-store-tan.vercel.app",
+};
+var corsOrigins = (configuredOrigins.Contains("*") || configuredOrigins.Length == 0
+    ? defaultOrigins
+    : configuredOrigins.Concat(defaultOrigins))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-    {
-        if (corsOrigins.Contains("*"))
-            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-        else
-            policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
-    });
+        policy.WithOrigins(corsOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 var app = builder.Build();

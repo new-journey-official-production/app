@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiError } from "@/lib/api";
@@ -9,6 +9,7 @@ import { BRAND_NAME } from "@/lib/brand";
 export default function Register() {
   const { register } = useAuth();
   const nav = useNavigate();
+  const loc = useLocation();
   const [f, setF] = useState({ name: "", email: "", password: "", phone: "" });
   const [busy, setBusy] = useState(false);
 
@@ -16,9 +17,10 @@ export default function Register() {
     e.preventDefault();
     setBusy(true);
     try {
-      await register(f);
+      const u = await register(f);
       toast.success("Account created");
-      nav("/account");
+      const from = loc.state?.from;
+      nav(from || "/account");
     } catch (err) { toast.error(apiError(err)); }
     finally { setBusy(false); }
   };
@@ -37,7 +39,7 @@ export default function Register() {
             {busy ? "Creating…" : "Create account"}
           </Button>
           <div className="text-center text-sm">
-            Already have an account? <Link to="/login" className="font-semibold hover:text-orange-600" data-testid="register-login-link">Sign in</Link>
+            Already have an account? <Link to="/login" state={loc.state} className="font-semibold hover:text-orange-600" data-testid="register-login-link">Sign in</Link>
           </div>
         </form>
       </div>

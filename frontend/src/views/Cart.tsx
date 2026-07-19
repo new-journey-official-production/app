@@ -70,7 +70,7 @@ export default function Cart() {
           ))}
         </div>
 
-        <aside className="rounded-2xl border border-border p-6 h-fit sticky top-24" data-testid="cart-summary">
+        <aside className="rounded-2xl border border-border p-6 h-fit lg:sticky lg:top-24" data-testid="cart-summary">
           <div className="font-display font-semibold text-lg">Order summary</div>
           <div className="mt-4 space-y-2 text-sm">
             <Row k="Subtotal" v={formatCurrency(totals.subtotal)} />
