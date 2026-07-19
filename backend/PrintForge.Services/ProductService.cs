@@ -63,6 +63,8 @@ public class ProductService(
             Dimensions = request.Dimensions,
             PrintTimeHours = request.PrintTimeHours,
             ColorVariants = request.ColorVariants,
+            Colors = request.Colors,
+            HeroImage = request.HeroImage ?? request.Images.FirstOrDefault() ?? "",
             Images = request.Images,
             Tags = request.Tags,
             Featured = request.Featured,

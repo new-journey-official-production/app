@@ -12,8 +12,10 @@ export default function Home() {
   const [featured, setFeatured] = useState<ApiRow[]>([]);
   const [latest, setLatest] = useState<ApiRow[]>([]);
   const [categories, setCategories] = useState<ApiRow[]>([]);
+  const [storefront, setStorefront] = useState<ApiRow>({});
 
   useEffect(() => {
+    api.get("/storefront/settings").then((r) => setStorefront(r.data || {})).catch(() => setStorefront({}));
     api.get("/products", { params: { featured: true, limit: 8 } })
       .then((r) => setFeatured(Array.isArray(r.data?.items) ? r.data.items : []))
       .catch(() => setFeatured([]));
@@ -28,7 +30,14 @@ export default function Home() {
   return (
     <div>
       <section className="relative overflow-hidden" data-testid="home-hero">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-zinc-100 to-background dark:from-zinc-900 dark:to-background" />
+        {storefront.hero_image ? (
+          <div className="absolute inset-0 -z-10">
+            <img src={storefront.hero_image} alt="" className="h-full w-full object-cover opacity-30 dark:opacity-20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/80 to-background" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-zinc-100 to-background dark:from-zinc-900 dark:to-background" />
+        )}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 sm:py-18 lg:py-22">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 backdrop-blur px-3 py-1 text-xs uppercase tracking-widest">
@@ -36,11 +45,10 @@ export default function Home() {
               3D printed · made to order
             </div>
             <h1 className="mt-4 font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05] max-w-3xl text-balance">
-              Everyday objects.<br />
-              <span className="text-orange-600">Manufactured</span> just for you.
+              {storefront.hero_title || <>Everyday objects.<br /><span className="text-orange-600">Manufactured</span> just for you.</>}
             </h1>
             <p className="mt-4 max-w-xl text-base text-muted-foreground leading-relaxed">
-              {BRAND_NAME} prints thoughtful, useful things — one layer at a time. Browse what is in stock today.
+              {storefront.hero_subtitle || `${BRAND_NAME} prints thoughtful, useful things — one layer at a time. Browse what is in stock today.`}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link to="/products">

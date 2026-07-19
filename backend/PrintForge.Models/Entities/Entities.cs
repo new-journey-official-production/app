@@ -25,6 +25,15 @@ public class Category
     public string Image { get; set; } = string.Empty;
 }
 
+public class StorefrontSettings
+{
+    public string Id { get; set; } = "default";
+    public string HeroImage { get; set; } = string.Empty;
+    public string HeroTitle { get; set; } = string.Empty;
+    public string HeroSubtitle { get; set; } = string.Empty;
+    public string UpdatedAt { get; set; } = string.Empty;
+}
+
 public class Product
 {
     public string Id { get; set; } = string.Empty;
@@ -42,6 +51,8 @@ public class Product
     public string? Dimensions { get; set; }
     public double? PrintTimeHours { get; set; }
     public List<string> ColorVariants { get; set; } = [];
+    public List<B2bColor> Colors { get; set; } = [];
+    public string HeroImage { get; set; } = string.Empty;
     public List<string> Images { get; set; } = [];
     public List<string> Tags { get; set; } = [];
     public bool Featured { get; set; }

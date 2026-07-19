@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  ArrowLeft, Download, MessageSquareQuote, Share2, ChevronLeft, ChevronRight,
+  ArrowLeft, Download, ShoppingBag, Share2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
@@ -192,7 +192,7 @@ export default function B2bProductDetail() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to={`/b2b/quote?product=${product.slug || product.id}`}>
-                <Button className="gap-2 bg-orange-600 hover:bg-orange-700"><MessageSquareQuote className="h-4 w-4" /> Request quote</Button>
+                <Button className="gap-2 bg-orange-600 hover:bg-orange-700"><ShoppingBag className="h-4 w-4" /> Place order</Button>
               </Link>
               {product.is_downloadable !== false && (
                 <Button variant="outline" className="gap-2" onClick={downloadPdf} disabled={downloading}>

@@ -59,6 +59,18 @@ public class AdminOrdersController(IOrderService orders) : ControllerBase
         try { return Ok(await orders.AdminUpdateAsync(oid, payload)); }
         catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
     }
+
+    [HttpDelete("{oid}")]
+    [AdminAuthorize]
+    public async Task<IActionResult> Delete(string oid)
+    {
+        try
+        {
+            await orders.AdminDeleteAsync(HttpContext.GetRequiredUser(), oid);
+            return Ok(new OkResponse());
+        }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Order not found" }); }
+    }
 }
 
 [ApiController]

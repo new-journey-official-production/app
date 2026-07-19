@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
@@ -45,6 +45,15 @@ export default function AdminOrderDetail() {
     } catch (e) { toast.error(apiError(e)); }
   };
 
+  const deleteOrder = async () => {
+    if (!window.confirm(`Permanently delete order ${o?.order_no}? This removes it from analytics.`)) return;
+    try {
+      await api.delete(`/admin/orders/${id}`);
+      toast.success("Order deleted");
+      window.location.href = "/admin/orders";
+    } catch (e) { toast.error(apiError(e)); }
+  };
+
   if (!o) return <div className="p-8"><div className="h-96 rounded-2xl shimmer" /></div>;
 
   return (
@@ -55,7 +64,12 @@ export default function AdminOrderDetail() {
           <h1 className="font-display text-3xl font-bold tracking-tight font-mono-data">{o.order_no}</h1>
           <div className="text-sm text-muted-foreground">{o.user_email} · {o.created_at?.slice(0, 16).replace("T", " ")}</div>
         </div>
-        <StatusBadge status={o.status} />
+        <div className="flex items-center gap-2">
+          <StatusBadge status={o.status} />
+          <Button variant="destructive" size="sm" onClick={deleteOrder} className="gap-1">
+            <Trash2 className="h-4 w-4" /> Delete
+          </Button>
+        </div>
       </div>
 
       <div className="mt-6 grid lg:grid-cols-[1fr_360px] gap-6">

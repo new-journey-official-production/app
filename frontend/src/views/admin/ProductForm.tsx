@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, Plus, X, Upload } from "lucide-react";
+import { ArrowLeft, Plus, X, Upload, ChevronUp, ChevronDown, Star } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError, API_BASE } from "@/lib/api";
 import type { ApiRow } from "@/types";
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const empty = {
   name: "", slug: "", description: "", short_description: "",
   category_slug: "", price: 0, discount_price: null, stock: 0,
-  color_variants: [], images: [], tags: [], featured: false, is_active: true,
+  color_variants: [], colors: [], hero_image: "", images: [], tags: [], featured: false, is_active: true,
   seo_title: "", seo_description: "",
 };
 
@@ -23,7 +23,8 @@ export default function ProductForm() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [f, setF] = useState<ApiRow>({ ...empty });
   const [categories, setCategories] = useState(CATEGORIES);
-  const [colorInput, setColorInput] = useState("");
+  const [colorName, setColorName] = useState("");
+  const [colorHex, setColorHex] = useState("#888888");
   const [imgInput, setImgInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -61,7 +62,11 @@ export default function ProductForm() {
         if (data?.id) urls.push(`${API_BASE}/admin/media/${data.id}`);
       }
       if (urls.length) {
-        setF((prev) => ({ ...prev, images: [...(prev.images || []), ...urls] }));
+        setF((prev) => ({
+          ...prev,
+          images: [...(prev.images || []), ...urls],
+          hero_image: prev.hero_image || urls[0],
+        }));
         toast.success(`${urls.length} image${urls.length > 1 ? "s" : ""} uploaded`);
       }
     } catch (err) {
@@ -80,7 +85,9 @@ export default function ProductForm() {
       category_slug: f.category_slug,
       price: Number(f.price),
       stock: Number(f.stock),
-      color_variants: f.color_variants || [],
+      color_variants: (f.colors || []).map((c) => c.name),
+      colors: f.colors || [],
+      hero_image: f.hero_image || f.images?.[0] || "",
       images: f.images || [],
       tags: f.tags || [],
       featured: !!f.featured,
@@ -108,8 +115,34 @@ export default function ProductForm() {
     finally { setBusy(false); }
   };
 
-  const addColor = () => { if (colorInput) { setF({ ...f, color_variants: [...(f.color_variants || []), colorInput] }); setColorInput(""); } };
-  const addImg = () => { if (imgInput) { setF({ ...f, images: [...(f.images || []), imgInput] }); setImgInput(""); } };
+  const addColor = () => {
+    if (!colorName.trim()) return;
+    const entry = { name: colorName.trim(), hex: colorHex };
+    setF({ ...f, colors: [...(f.colors || []), entry], color_variants: [...(f.color_variants || []), colorName.trim()] });
+    setColorName("");
+  };
+
+  const moveImage = (index: number, dir: -1 | 1) => {
+    const imgs = [...(f.images || [])];
+    const next = index + dir;
+    if (next < 0 || next >= imgs.length) return;
+    [imgs[index], imgs[next]] = [imgs[next], imgs[index]];
+    setF({ ...f, images: imgs, hero_image: f.hero_image === f.images[index] ? imgs[index] : f.hero_image });
+  };
+
+  const setHero = (url: string) => setF({ ...f, hero_image: url });
+
+  const removeImage = (index: number) => {
+    const imgs = (f.images || []).filter((_, j) => j !== index);
+    const removed = f.images[index];
+    setF({
+      ...f,
+      images: imgs,
+      hero_image: f.hero_image === removed ? (imgs[0] || "") : f.hero_image,
+    });
+  };
+
+  const addImg = () => { if (imgInput) { setF({ ...f, images: [...(f.images || []), imgInput], hero_image: f.hero_image || imgInput }); setImgInput(""); } };
 
   return (
     <div className="p-6 lg:p-8">
@@ -141,38 +174,46 @@ export default function ProductForm() {
           </section>
 
           <section className="rounded-xl border border-border bg-card p-6">
-            <Label className="text-xs text-muted-foreground block mb-2">Colour variants</Label>
-            <div className="flex gap-2 mb-2">
-              <input value={colorInput} onChange={(e) => setColorInput(e.target.value)} placeholder="Colour name" className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <Label className="text-xs text-muted-foreground block mb-2">Available colours</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              <input value={colorName} onChange={(e) => setColorName(e.target.value)} placeholder="Colour name" className="flex-1 min-w-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm" />
+              <input type="color" value={colorHex} onChange={(e) => setColorHex(e.target.value)} className="h-9 w-12 rounded border border-input cursor-pointer" />
               <Button type="button" onClick={addColor} variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {(f.color_variants || []).map((c, i) => (
-                <span key={i} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-xs">
-                  {c}
-                  <button type="button" onClick={() => setF({ ...f, color_variants: f.color_variants.filter((_, j) => j !== i) })}><X className="h-3 w-3" /></button>
+              {(f.colors || []).map((c, i) => (
+                <span key={i} className="inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs">
+                  <span className="h-4 w-4 rounded-full border" style={{ backgroundColor: c.hex || "#888" }} />
+                  {c.name}
+                  <button type="button" onClick={() => setF({ ...f, colors: f.colors.filter((_, j) => j !== i), color_variants: f.color_variants.filter((_, j) => j !== i) })}><X className="h-3 w-3" /></button>
                 </span>
               ))}
             </div>
           </section>
 
           <section className="rounded-xl border border-border bg-card p-6">
-            <Label className="text-xs text-muted-foreground block mb-2">Product images</Label>
+            <Label className="text-xs text-muted-foreground block mb-2">Product images (first = hero unless set)</Label>
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => uploadFiles(e.target.files)} />
             <div className="flex flex-wrap gap-2 mb-3">
               <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading} className="gap-2">
                 <Upload className="h-4 w-4" /> {uploading ? "Uploading…" : "Upload from computer"}
               </Button>
             </div>
-            <div className="flex gap-2 mb-3">
-              <input value={imgInput} onChange={(e) => setImgInput(e.target.value)} placeholder="Or paste image URL" className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              <Button type="button" onClick={addImg} variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {(f.images || []).map((img, i) => (
-                <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center p-1">
-                  <img src={img} alt="" className="max-h-full max-w-full object-contain" />
-                  <button type="button" onClick={() => setF({ ...f, images: f.images.filter((_, j) => j !== i) })} className="absolute top-1 right-1 rounded-full bg-black/60 text-white p-0.5"><X className="h-3 w-3" /></button>
+                <div key={`${img}-${i}`} className="relative rounded-lg overflow-hidden border border-border bg-white dark:bg-zinc-900">
+                  <div className="aspect-square flex items-center justify-center p-1">
+                    <img src={img} alt="" className="max-h-full max-w-full object-contain" />
+                  </div>
+                  <div className="absolute top-1 left-1 flex flex-col gap-0.5">
+                    <button type="button" onClick={() => moveImage(i, -1)} className="rounded bg-black/60 text-white p-0.5" disabled={i === 0}><ChevronUp className="h-3 w-3" /></button>
+                    <button type="button" onClick={() => moveImage(i, 1)} className="rounded bg-black/60 text-white p-0.5" disabled={i === (f.images?.length || 0) - 1}><ChevronDown className="h-3 w-3" /></button>
+                  </div>
+                  <div className="absolute top-1 right-1 flex gap-0.5">
+                    <button type="button" onClick={() => setHero(img)} title="Set as hero" className={`rounded p-0.5 ${f.hero_image === img ? "bg-orange-600 text-white" : "bg-black/60 text-white"}`}><Star className="h-3 w-3" /></button>
+                    <button type="button" onClick={() => removeImage(i)} className="rounded bg-black/60 text-white p-0.5"><X className="h-3 w-3" /></button>
+                  </div>
+                  <div className="text-[10px] text-center py-0.5 bg-muted/80">{i + 1}{f.hero_image === img ? " · Hero" : ""}</div>
                 </div>
               ))}
             </div>

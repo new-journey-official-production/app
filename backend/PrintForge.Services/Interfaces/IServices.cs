@@ -69,6 +69,7 @@ public interface IOrderService
     Task<List<Dictionary<string, object?>>> AdminListAsync(string? status, string? q, int limit);
     Task<Dictionary<string, object?>> AdminUpdateStatusAsync(User user, string oid, Dictionary<string, object?> payload);
     Task<Dictionary<string, object?>> AdminUpdateAsync(string oid, Dictionary<string, object?> payload);
+    Task AdminDeleteAsync(User user, string oid);
 }
 
 public record CouponValidationResult(Dictionary<string, object?> Coupon, double Discount);

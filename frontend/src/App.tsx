@@ -40,6 +40,7 @@ const CustomerSupport = lazy(() => import("@/views/customer/Support"));
 const AdminDashboard = lazy(() => import("@/views/admin/Dashboard"));
 const AdminProducts = lazy(() => import("@/views/admin/Products"));
 const AdminProductForm = lazy(() => import("@/views/admin/ProductForm"));
+const AdminCategories = lazy(() => import("@/views/admin/Categories"));
 const AdminOrders = lazy(() => import("@/views/admin/Orders"));
 const AdminBilling = lazy(() => import("@/views/admin/Billing"));
 const AdminOrderDetail = lazy(() => import("@/views/admin/OrderDetail"));
@@ -171,6 +172,7 @@ export default function App() {
                   <Route path="/admin/products" element={<AdminProducts />} />
                   <Route path="/admin/products/new" element={<AdminProductForm />} />
                   <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
+                  <Route path="/admin/categories" element={<AdminCategories />} />
                   <Route path="/admin/orders" element={<AdminOrders />} />
                   <Route path="/admin/billing" element={<AdminBilling />} />
                   <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />

@@ -174,6 +174,48 @@ public class CategoryRepository(PostgresDb db) : ICategoryRepository
         await using var connection = await db.OpenConnectionAsync();
         await connection.ExecuteAsync(sql, categories);
     }
+
+    public async Task<Category?> FindByIdAsync(string id)
+    {
+        const string sql = "select id, name, slug, icon, image from categories where id = @Id;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<Category>(sql, new { Id = id });
+    }
+
+    public async Task<Category?> FindBySlugAsync(string slug)
+    {
+        const string sql = "select id, name, slug, icon, image from categories where slug = @Slug;";
+        await using var connection = await db.OpenConnectionAsync();
+        return await connection.QuerySingleOrDefaultAsync<Category>(sql, new { Slug = slug });
+    }
+
+    public async Task InsertAsync(Category category)
+    {
+        const string sql = """
+            insert into categories (id, name, slug, icon, image)
+            values (@Id, @Name, @Slug, @Icon, @Image);
+            """;
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, category);
+    }
+
+    public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
+    {
+        if (updates.Count == 0) return;
+        await using var connection = await db.OpenConnectionAsync();
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, setParameters) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update categories set {setClause} where id = @id;";
+        await connection.ExecuteAsync(sql, setParameters);
+    }
+
+    public async Task DeleteAsync(string id)
+    {
+        const string sql = "delete from categories where id = @Id;";
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync(sql, new { Id = id });
+    }
 }
 
 /// <summary>Data access for products in Postgres.</summary>
@@ -182,7 +224,7 @@ public class ProductRepository(PostgresDb db) : IProductRepository
     private const string ProductSelect = """
         select
           id, name, slug, description, short_description, category_slug, price, discount_price, stock,
-          material, weight_g, dimensions, print_time_hours, color_variants, images, tags, featured, is_active,
+          material, weight_g, dimensions, print_time_hours, color_variants, colors, hero_image, images, tags, featured, is_active,
           seo_title, seo_description, rating_avg, rating_count, orders_count,
           created_at::text as created_at, updated_at::text as updated_at
         from products
@@ -291,12 +333,12 @@ public class ProductRepository(PostgresDb db) : IProductRepository
         const string sql = """
             insert into products (
               id, name, slug, description, short_description, category_slug, price, discount_price, stock,
-              material, weight_g, dimensions, print_time_hours, color_variants, images, tags, featured, is_active,
+              material, weight_g, dimensions, print_time_hours, color_variants, colors, hero_image, images, tags, featured, is_active,
               seo_title, seo_description, rating_avg, rating_count, orders_count, created_at, updated_at
             ) values (
               @Id, @Name, @Slug, @Description, @ShortDescription, @CategorySlug, @Price, @DiscountPrice, @Stock,
               @Material, @WeightG, @Dimensions, @PrintTimeHours,
-              @ColorVariants::jsonb, @Images::jsonb, @Tags::jsonb,
+              @ColorVariants::jsonb, @Colors::jsonb, @HeroImage, @Images::jsonb, @Tags::jsonb,
               @Featured, @IsActive,
               @SeoTitle, @SeoDescription, @RatingAvg, @RatingCount, @OrdersCount,
               coalesce(nullif(@CreatedAt, '')::timestamptz, now()),
@@ -647,5 +689,33 @@ public class CouponRepository(PostgresDb db) : ICouponRepository
 
         await using var connection = await db.OpenConnectionAsync();
         await connection.ExecuteAsync(sql, coupons);
+    }
+}
+
+/// <summary>Storefront landing page settings (hero image, titles).</summary>
+public class StorefrontSettingsRepository(PostgresDb db) : IStorefrontSettingsRepository
+{
+    public async Task<StorefrontSettings> GetAsync()
+    {
+        const string sql = """
+            select id, hero_image as HeroImage, hero_title as HeroTitle,
+                   hero_subtitle as HeroSubtitle, updated_at::text as UpdatedAt
+            from storefront_settings where id = 'default';
+            """;
+        await using var connection = await db.OpenConnectionAsync();
+        var row = await connection.QuerySingleOrDefaultAsync<StorefrontSettings>(sql);
+        return row ?? new StorefrontSettings();
+    }
+
+    public async Task UpdateAsync(Dictionary<string, object?> updates)
+    {
+        if (updates.Count == 0) return;
+        await using var connection = await db.OpenConnectionAsync();
+        await connection.ExecuteAsync("insert into storefront_settings (id) values ('default') on conflict (id) do nothing;");
+        var parameters = new DynamicParameters();
+        parameters.Add("id", "default");
+        var (setClause, setParameters) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update storefront_settings set {setClause}, updated_at = now() where id = @id;";
+        await connection.ExecuteAsync(sql, setParameters);
     }
 }

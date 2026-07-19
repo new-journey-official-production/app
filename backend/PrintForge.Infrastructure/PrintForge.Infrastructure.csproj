@@ -27,6 +27,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Database\Migrations\20260705000000_master_schema.sql" />
     <EmbeddedResource Include="Database\Migrations\20260715000000_b2b_catalog.sql" />
+    <EmbeddedResource Include="Database\Migrations\20260720000000_storefront_enhancements.sql" />
   </ItemGroup>
 
 </Project>

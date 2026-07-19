@@ -47,8 +47,10 @@ export const STATUS_META: Record<string, StatusMeta> = {
   cancelled: { color: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300" },
 };
 
+/** Uses "Rs." — JetBrains Mono renders the ₹ glyph as a stray "1" in UI and PDFs. */
 export function formatCurrency(n: number | string | null | undefined): string {
-  return "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  const amount = Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  return `Rs. ${amount}`;
 }
 
 /** Storefront product detail path — falls back to id when slug is missing. */

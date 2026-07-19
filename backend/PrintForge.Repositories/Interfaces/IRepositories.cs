@@ -20,6 +20,17 @@ public interface ICategoryRepository
     Task<List<Category>> ListAsync();
     Task<long> CountAsync();
     Task InsertManyAsync(IEnumerable<Category> categories);
+    Task<Category?> FindByIdAsync(string id);
+    Task<Category?> FindBySlugAsync(string slug);
+    Task InsertAsync(Category category);
+    Task UpdateAsync(string id, Dictionary<string, object?> updates);
+    Task DeleteAsync(string id);
+}
+
+public interface IStorefrontSettingsRepository
+{
+    Task<StorefrontSettings> GetAsync();
+    Task UpdateAsync(Dictionary<string, object?> updates);
 }
 
 public interface IProductRepository
@@ -99,6 +110,7 @@ public interface IOrderRepository
     Task PushTimelineAsync(string id, OrderTimelineEntry entry, string status);
     Task<List<Order>> ListAllAsync(int limit = 5000);
     Task<long> CountByStatusesAsync(IEnumerable<string> statuses);
+    Task DeleteAsync(string id);
 }
 
 public interface IInventoryRepository
@@ -171,6 +183,7 @@ public interface IPaymentRepository
     Task<Payment?> FindByOrderIdAsync(string orderId);
     Task<List<BillingRow>> AdminListAsync(string? status, string? q, int limit);
     Task UpdateStatusAsync(string id, string status);
+    Task DeleteByOrderIdAsync(string orderId);
 }
 
 public interface IPasswordResetRepository

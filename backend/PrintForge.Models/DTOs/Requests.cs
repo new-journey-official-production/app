@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using PrintForge.Models.Entities;
 
 namespace PrintForge.Models.DTOs;
 
@@ -90,6 +91,11 @@ public class ProductRequest
 
     [JsonPropertyName("color_variants")]
     public List<string> ColorVariants { get; set; } = [];
+
+    public List<B2bColor> Colors { get; set; } = [];
+
+    [JsonPropertyName("hero_image")]
+    public string? HeroImage { get; set; }
 
     public List<string> Images { get; set; } = [];
     public List<string> Tags { get; set; } = [];
@@ -352,4 +358,12 @@ public class PermissionResponseEntry
 
     [JsonPropertyName("moduleID")]
     public string ModuleId { get; set; } = string.Empty;
+}
+
+public class CategoryRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Slug { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
 }

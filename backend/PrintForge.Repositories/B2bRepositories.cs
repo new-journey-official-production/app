@@ -267,7 +267,7 @@ public class B2bProductRepository(PostgresDb db) : IB2bProductRepository
         var idList = ids.ToList();
         if (idList.Count == 0) return [];
         await using var connection = await db.OpenConnectionAsync();
-        return (await connection.QueryAsync<B2bProduct>(Select + " where id = any(@ids);", new { ids = idList })).ToList();
+        return (await connection.QueryAsync<B2bProduct>(Select + " where id = any(@ids::text[]);", new { ids = idList.ToArray() })).ToList();
     }
 
     public async Task<List<B2bProduct>> FindRelatedAsync(string? categoryId, string excludeId, int limit = 6)

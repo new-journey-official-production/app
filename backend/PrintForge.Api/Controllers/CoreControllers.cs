@@ -70,6 +70,104 @@ public class CategoriesController(ICategoryRepository categories) : ControllerBa
 }
 
 [ApiController]
+[Route("api/admin/categories")]
+public class AdminCategoriesController(ICategoryRepository categories) : ControllerBase
+{
+    [HttpGet]
+    [AdminAuthorize]
+    public async Task<IActionResult> List()
+    {
+        var cats = await categories.ListAsync();
+        return Ok(cats.Select(BsonMapper.ToDict));
+    }
+
+    [HttpPost]
+    [AdminAuthorize]
+    public async Task<IActionResult> Create([FromBody] CategoryRequest request)
+    {
+        var slug = string.IsNullOrWhiteSpace(request.Slug)
+            ? IdHelper.Slugify(request.Name)
+            : request.Slug.Trim().ToLowerInvariant();
+        if (await categories.FindBySlugAsync(slug) is not null)
+            return BadRequest(new { detail = "Category slug already exists" });
+
+        var cat = new Category
+        {
+            Id = IdHelper.NewId(),
+            Name = request.Name.Trim(),
+            Slug = slug,
+            Icon = request.Icon?.Trim() ?? "",
+            Image = request.Image?.Trim() ?? "",
+        };
+        await categories.InsertAsync(cat);
+        return Ok(BsonMapper.ToDict(cat));
+    }
+
+    [HttpPatch("{id}")]
+    [AdminAuthorize]
+    public async Task<IActionResult> Update(string id, [FromBody] CategoryRequest request)
+    {
+        var existing = await categories.FindByIdAsync(id);
+        if (existing is null) return NotFound(new { detail = "Category not found" });
+
+        var updates = new Dictionary<string, object?>();
+        if (!string.IsNullOrWhiteSpace(request.Name)) updates["name"] = request.Name.Trim();
+        if (!string.IsNullOrWhiteSpace(request.Slug)) updates["slug"] = request.Slug.Trim().ToLowerInvariant();
+        if (request.Icon is not null) updates["icon"] = request.Icon.Trim();
+        if (request.Image is not null) updates["image"] = request.Image.Trim();
+
+        if (updates.TryGetValue("slug", out var newSlugObj) && newSlugObj is string newSlug && newSlug != existing.Slug)
+        {
+            if (await categories.FindBySlugAsync(newSlug) is not null)
+                return BadRequest(new { detail = "Category slug already exists" });
+        }
+
+        await categories.UpdateAsync(id, updates);
+        var updated = await categories.FindByIdAsync(id);
+        return Ok(BsonMapper.ToDict(updated!));
+    }
+
+    [HttpDelete("{id}")]
+    [AdminAuthorize]
+    public async Task<IActionResult> Delete(string id)
+    {
+        if (await categories.FindByIdAsync(id) is null)
+            return NotFound(new { detail = "Category not found" });
+        await categories.DeleteAsync(id);
+        return Ok(new OkResponse());
+    }
+}
+
+[ApiController]
+[Route("api/storefront")]
+public class StorefrontController(IStorefrontSettingsRepository settings) : ControllerBase
+{
+    [HttpGet("settings")]
+    public async Task<IActionResult> GetSettings() =>
+        Ok(BsonMapper.ToDict(await settings.GetAsync()));
+}
+
+[ApiController]
+[Route("api/admin/storefront")]
+public class AdminStorefrontController(IStorefrontSettingsRepository settings) : ControllerBase
+{
+    [HttpGet("settings")]
+    [AdminAuthorize]
+    public async Task<IActionResult> GetSettings() =>
+        Ok(BsonMapper.ToDict(await settings.GetAsync()));
+
+    [HttpPatch("settings")]
+    [AdminAuthorize]
+    public async Task<IActionResult> UpdateSettings([FromBody] Dictionary<string, object?> payload)
+    {
+        var allowed = new HashSet<string> { "hero_image", "hero_title", "hero_subtitle" };
+        var updates = payload.Where(kv => allowed.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+        await settings.UpdateAsync(updates);
+        return Ok(BsonMapper.ToDict(await settings.GetAsync()));
+    }
+}
+
+[ApiController]
 [Route("api/products")]
 public class ProductsController(IProductService products) : ControllerBase
 {

@@ -150,8 +150,15 @@ public class OrderRepository(PostgresDb db) : IOrderRepository
         var list = statuses?.ToArray() ?? [];
         if (list.Length == 0) return 0;
         await using var conn = await db.OpenConnectionAsync();
-        const string sql = "select count(*) from orders where status = any(@Statuses);";
+        const string sql = "select count(*) from orders where status = any(@Statuses::text[]);";
         return await conn.ExecuteScalarAsync<long>(sql, new { Statuses = list });
+    }
+
+    public async Task DeleteAsync(string id)
+    {
+        const string sql = "delete from orders where id = @Id;";
+        await using var conn = await db.OpenConnectionAsync();
+        await conn.ExecuteAsync(sql, new { Id = id });
     }
 }
 
@@ -703,6 +710,13 @@ public class PaymentRepository(PostgresDb db) : IPaymentRepository
         const string sql = "update payments set status = @Status where id = @Id;";
         await using var conn = await db.OpenConnectionAsync();
         await conn.ExecuteAsync(sql, new { Id = id, Status = status });
+    }
+
+    public async Task DeleteByOrderIdAsync(string orderId)
+    {
+        const string sql = "delete from payments where order_id = @OrderId;";
+        await using var conn = await db.OpenConnectionAsync();
+        await conn.ExecuteAsync(sql, new { OrderId = orderId });
     }
 }
 

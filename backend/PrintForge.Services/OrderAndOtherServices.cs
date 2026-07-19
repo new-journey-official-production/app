@@ -13,6 +13,7 @@ public class OrderService(
     IAddressRepository addresses,
     ICouponService coupons,
     IPaymentService payments,
+    IPaymentRepository paymentRecords,
     IEmailService email,
     IUserRepository users,
     INotificationRepository notifications,
@@ -153,6 +154,26 @@ public class OrderService(
         await orders.UpdateAsync(oid, updates);
         var o = await orders.FindByIdAsync(oid) ?? throw new KeyNotFoundException("Not found");
         return BsonMapper.ToDict(o);
+    }
+
+    public async Task AdminDeleteAsync(User user, string oid)
+    {
+        var order = await orders.FindByIdAsync(oid) ?? throw new KeyNotFoundException("Order not found");
+
+        // Restore stock when deleting a non-cancelled order.
+        if (order.Status != "cancelled")
+        {
+            foreach (var it in order.Items)
+                await products.IncrementStockAsync(it.ProductId, it.Quantity);
+        }
+
+        await paymentRecords.DeleteByOrderIdAsync(oid);
+        await orders.DeleteAsync(oid);
+        await activity.LogAsync(user, "order.delete", oid, new Dictionary<string, object?>
+        {
+            ["order_no"] = order.OrderNo,
+            ["total"] = order.Total,
+        });
     }
 
     private async Task<Order?> AdvanceStatusAsync(string orderId, string newStatus, string note)

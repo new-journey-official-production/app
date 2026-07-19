@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Heart, ShoppingCart, Share2, Star, Package, Ruler, Weight, Clock, ShieldCheck } from "lucide-react";
+import { Heart, ShoppingCart, Share2, Star, ShieldCheck } from "lucide-react";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow, Product } from "@/types";
 import { useCart } from "@/contexts/CartContext";
@@ -36,7 +36,10 @@ export default function ProductDetail() {
     api.get(`/products/${slug}`)
       .then((r) => {
         setData(r.data);
-        setVariant(r.data.product.color_variants?.[0] || null);
+        const colors = r.data.product.colors?.length
+          ? r.data.product.colors
+          : (r.data.product.color_variants || []).map((n) => ({ name: n, hex: "#888888" }));
+        setVariant(colors[0]?.name || r.data.product.color_variants?.[0] || null);
       })
       .catch(() => {
         setNotFound(true);
@@ -52,6 +55,11 @@ export default function ProductDetail() {
 
   const p = data.product as ApiRow;
   const priceNow = p.discount_price || p.price;
+  const gallery = (p.images || []) as string[];
+  const heroImage = p.hero_image || gallery[imgIdx] || gallery[0];
+  const colorOptions: ApiRow[] = (p.colors as ApiRow[])?.length
+    ? (p.colors as ApiRow[])
+    : (p.color_variants || []).map((name: string) => ({ name, hex: "#888888" }));
 
   const addToCart = () => {
     add(p as Product, qty, variant);
@@ -95,13 +103,13 @@ export default function ProductDetail() {
 
       <div className="grid lg:grid-cols-2 gap-10">
         <div>
-          <div className="aspect-square rounded-3xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-border flex items-center justify-center p-4" data-testid="product-hero-image">
-            {p.images?.[imgIdx] && <img src={p.images[imgIdx]} alt={p.name} className="max-h-full max-w-full object-contain" />}
+          <div className="aspect-square rounded-3xl overflow-hidden bg-white dark:bg-zinc-900 border border-border flex items-center justify-center p-4" data-testid="product-hero-image">
+            {heroImage && <img src={heroImage} alt={p.name} className="max-h-full max-w-full object-contain" />}
           </div>
-          {(p.images || []).length > 1 && (
+          {gallery.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
-              {p.images.map((img, i) => (
-                <button key={i} onClick={() => setImgIdx(i)} className={`h-20 w-20 flex-none rounded-lg overflow-hidden border bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center p-1 ${i === imgIdx ? "border-orange-600 ring-2 ring-orange-600/30" : "border-border"}`}>
+              {gallery.map((img, i) => (
+                <button key={i} onClick={() => setImgIdx(i)} className={`h-20 w-20 flex-none rounded-lg overflow-hidden border bg-white dark:bg-zinc-900 flex items-center justify-center p-1 ${i === imgIdx ? "border-orange-600 ring-2 ring-orange-600/30" : "border-border"}`}>
                   <img src={img} alt="" className="max-h-full max-w-full object-contain" />
                 </button>
               ))}
@@ -135,20 +143,25 @@ export default function ProductDetail() {
 
           <p className="mt-6 text-muted-foreground leading-relaxed">{p.short_description}</p>
 
-          {p.color_variants?.length > 0 && (
+          {colorOptions.length > 0 && (
             <div className="mt-6">
-              <div className="text-xs uppercase tracking-widest text-foreground/70 mb-2 font-semibold">Colour</div>
+              <div className="text-xs uppercase tracking-widest text-foreground/70 mb-2 font-semibold">Available colours</div>
               <div className="flex flex-wrap gap-2">
-                {p.color_variants.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setVariant(c)}
-                    data-testid={`variant-${c.toLowerCase().replace(/\s/g, "-")}`}
-                    className={`rounded-full border px-3 py-1 text-sm ${variant === c ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950" : "border-border hover:bg-accent"}`}
-                  >
-                    {c}
-                  </button>
-                ))}
+                {colorOptions.map((c, i) => {
+                  const name = String(c.name || c);
+                  const hex = String(c.hex || "#888888");
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setVariant(name)}
+                      data-testid={`variant-${name.toLowerCase().replace(/\s/g, "-")}`}
+                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${variant === name ? "border-zinc-950 bg-zinc-950 text-white dark:border-white dark:bg-white dark:text-zinc-950" : "border-border hover:bg-accent"}`}
+                    >
+                      <span className="h-4 w-4 rounded-full border border-border" style={{ backgroundColor: hex }} />
+                      {name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -174,13 +187,6 @@ export default function ProductDetail() {
             <Button variant="outline" size="lg" onClick={share} className="rounded-full gap-2" aria-label="Share">
               <Share2 className="h-4 w-4" />
             </Button>
-          </div>
-
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            <Spec icon={Package} label="Material" value={p.material} />
-            <Spec icon={Weight} label="Weight" value={p.weight_g ? `${p.weight_g}g` : "—"} />
-            <Spec icon={Ruler} label="Dimensions" value={p.dimensions || "—"} />
-            <Spec icon={Clock} label="Print time" value={p.print_time_hours ? `${p.print_time_hours}h` : "—"} />
           </div>
 
           <div className="mt-6 rounded-xl border border-dashed border-border p-4 flex items-center gap-3 text-sm">
@@ -254,18 +260,6 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function Spec({ icon: Icon, label, value }) {
-  return (
-    <div className="rounded-xl border border-border p-3 flex items-center gap-3">
-      <Icon className="h-4 w-4 text-muted-foreground" />
-      <div>
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
-        <div className="font-medium text-sm font-mono-data">{value}</div>
-      </div>
     </div>
   );
 }
