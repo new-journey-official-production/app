@@ -31,6 +31,8 @@ public static class Modules
     public const string B2bSettings = "/admin/b2b/settings";
     public const string B2bPortal = "/b2b";
 
+    public const string Accounts = "/admin/accounts";
+
     public const string Account = "/account";
     public const string AccountOrders = "/account/orders";
     public const string AccountWishlist = "/account/wishlist";
@@ -48,7 +50,8 @@ public static class Modules
         Dashboard, Products, Orders, Billing, Inventory, Printers, Customers,
         Support, Reviews, Blog, Coupons, Analytics, Media, ActivityLogs,
         Settings, Roles, Users,
-        B2bDashboard, B2bCategories, B2bProducts, B2bCatalog, B2bQuotes, B2bDealers, B2bAnalytics, B2bSettings
+        B2bDashboard, B2bCategories, B2bProducts, B2bCatalog, B2bQuotes, B2bDealers, B2bAnalytics, B2bSettings,
+        Accounts
     ];
 
     /// <summary>
@@ -88,6 +91,7 @@ public static class Modules
         new(B2bDealers, "B2B Dealers", "Dealer registration management", "admin"),
         new(B2bAnalytics, "B2B Analytics", "B2B catalog analytics", "admin"),
         new(B2bSettings, "B2B Settings", "B2B module settings", "admin"),
+        new(Accounts, "Accounts", "Company finance and ledger", "admin"),
         new(Account, "Account", "Customer account dashboard", "customer"),
         new(AccountOrders, "My Orders", "Customer order history", "customer"),
         new(AccountWishlist, "Wishlist", "Customer wishlist", "customer"),

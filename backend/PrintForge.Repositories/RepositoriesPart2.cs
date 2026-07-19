@@ -1002,3 +1002,86 @@ public class RbacRepository(PostgresDb db) : IRbacRepository
         return (await conn.QueryAsync<User>(sql, new { RoleId = roleId })).ToList();
     }
 }
+
+/// <summary>Postgres-backed company finance ledger.</summary>
+public class FinanceRepository(PostgresDb db) : IFinanceRepository
+{
+    private const string Select = """
+        select id, kind, title, amount, category, status, reference_id as ReferenceId,
+          due_date as DueDate, paid_at as PaidAt, notes, created_by as CreatedBy,
+          created_at::text as CreatedAt, updated_at::text as UpdatedAt
+        from finance_entries
+        """;
+
+    public async Task<List<FinanceEntry>> ListAsync(string? kind = null, int limit = 500)
+    {
+        var sql = kind is null
+            ? Select + " order by created_at desc limit @Limit;"
+            : Select + " where kind = @Kind order by created_at desc limit @Limit;";
+        await using var conn = await db.OpenConnectionAsync();
+        return (await conn.QueryAsync<FinanceEntry>(sql, new { Kind = kind, Limit = limit })).ToList();
+    }
+
+    public async Task<FinanceEntry?> FindByIdAsync(string id)
+    {
+        await using var conn = await db.OpenConnectionAsync();
+        return await conn.QuerySingleOrDefaultAsync<FinanceEntry>(Select + " where id = @Id limit 1;", new { Id = id });
+    }
+
+    public async Task InsertAsync(FinanceEntry entry)
+    {
+        const string sql = """
+            insert into finance_entries (
+              id, kind, title, amount, category, status, reference_id, due_date, paid_at,
+              notes, created_by, created_at, updated_at
+            ) values (
+              @Id, @Kind, @Title, @Amount, @Category, @Status, @ReferenceId, @DueDate, @PaidAt,
+              @Notes, @CreatedBy,
+              coalesce(nullif(@CreatedAt, '')::timestamptz, now()),
+              coalesce(nullif(@UpdatedAt, '')::timestamptz, now())
+            );
+            """;
+        await using var conn = await db.OpenConnectionAsync();
+        await conn.ExecuteAsync(sql, entry);
+    }
+
+    public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
+    {
+        if (updates.Count == 0) return;
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, dynamicParams) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        await using var conn = await db.OpenConnectionAsync();
+        await conn.ExecuteAsync($"update finance_entries set {setClause}, updated_at = now() where id = @id;", dynamicParams);
+    }
+
+    public async Task DeleteAsync(string id)
+    {
+        await using var conn = await db.OpenConnectionAsync();
+        await conn.ExecuteAsync("delete from finance_entries where id = @Id;", new { Id = id });
+    }
+
+    public async Task<Dictionary<string, double>> SummaryAsync()
+    {
+        const string sql = """
+            select
+              coalesce(sum(case when kind = 'income' and status = 'received' then amount else 0 end), 0) as total_income,
+              coalesce(sum(case when kind = 'expense' and status = 'paid' then amount else 0 end), 0) as total_expenses,
+              coalesce(sum(case when kind = 'bill' and status = 'pending' then amount else 0 end), 0) as pending_bills,
+              coalesce(sum(case when kind = 'income' and status = 'pending' then amount else 0 end), 0) as pending_income
+            from finance_entries;
+            """;
+        await using var conn = await db.OpenConnectionAsync();
+        var row = await conn.QuerySingleAsync<(double total_income, double total_expenses, double pending_bills, double pending_income)>(sql);
+        var available = row.total_income - row.total_expenses - row.pending_bills;
+        return new Dictionary<string, double>
+        {
+            ["total_income"] = Math.Round(row.total_income, 2),
+            ["total_expenses"] = Math.Round(row.total_expenses, 2),
+            ["pending_bills"] = Math.Round(row.pending_bills, 2),
+            ["pending_income"] = Math.Round(row.pending_income, 2),
+            ["available_funds"] = Math.Round(available, 2),
+            ["net_profit"] = Math.Round(row.total_income - row.total_expenses, 2),
+        };
+    }
+}

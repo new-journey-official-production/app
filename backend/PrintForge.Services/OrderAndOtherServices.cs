@@ -176,6 +176,29 @@ public class OrderService(
         });
     }
 
+    /** Customer may delete own orders that have not entered production. */
+    public async Task UserDeleteAsync(User user, string oid)
+    {
+        var order = await orders.FindByIdForUserAsync(oid, user.Id)
+            ?? throw new KeyNotFoundException("Order not found");
+
+        if (!new[] { "placed", "cancelled" }.Contains(order.Status))
+            throw new InvalidOperationException("Order cannot be deleted at this stage");
+
+        if (order.Status != "cancelled")
+        {
+            foreach (var it in order.Items)
+                await products.IncrementStockAsync(it.ProductId, it.Quantity);
+        }
+
+        await paymentRecords.DeleteByOrderIdAsync(oid);
+        await orders.DeleteAsync(oid);
+        await activity.LogAsync(user, "order.delete.self", oid, new Dictionary<string, object?>
+        {
+            ["order_no"] = order.OrderNo,
+        });
+    }
+
     private async Task<Order?> AdvanceStatusAsync(string orderId, string newStatus, string note)
     {
         var order = await orders.FindByIdAsync(orderId);

@@ -38,6 +38,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IB2bDealerRepository, B2bDealerRepository>();
         services.AddScoped<IB2bAnalyticsRepository, B2bAnalyticsRepository>();
         services.AddScoped<IB2bSettingsRepository, B2bSettingsRepository>();
+        services.AddScoped<IFinanceRepository, FinanceRepository>();
 
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IAuthUserProvider, AuthUserProvider>();
@@ -54,6 +55,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRbacService, RbacService>();
         services.AddScoped<ISeedDataService, SeedDataService>();
         services.AddScoped<IB2bService, B2bService>();
+        services.AddScoped<IFinanceService, FinanceService>();
 
         return services;
     }

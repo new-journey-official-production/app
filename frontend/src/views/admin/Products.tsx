@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import ProductBulkImport from "@/views/admin/ProductBulkImport";
@@ -23,6 +25,7 @@ export default function AdminProducts() {
   };
 
   const filtered = items.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const pagination = usePagination(filtered, 25, q);
 
   return (
     <div className="p-6 lg:p-8" data-testid="admin-products">
@@ -55,7 +58,7 @@ export default function AdminProducts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((p) => (
+            {pagination.slice.map((p) => (
               <TableRow key={p.id} data-testid={`admin-product-row-${p.slug}`}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -85,6 +88,7 @@ export default function AdminProducts() {
             ))}
           </TableBody>
         </Table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
     </div>
   );

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Edit } from "lucide-react";
-import { api } from "@/lib/api";
+import { Search, Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency, ORDER_STATUS_STEPS } from "@/lib/constants";
 import StatusBadge from "@/components/StatusBadge";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,6 +24,19 @@ export default function AdminOrders() {
     api.get("/admin/orders", { params }).then((r) => setOrders(r.data));
   };
   useEffect(() => { load(); }, [status, q]);
+
+  const pagination = usePagination(orders, 25, `${status}-${q}`);
+
+  const deleteOrder = async (e: React.MouseEvent, o: ApiRow) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm(`Permanently delete order ${o.order_no}?`)) return;
+    try {
+      await api.delete(`/admin/orders/${o.id}`);
+      toast.success("Order deleted");
+      load();
+    } catch (err) { toast.error(apiError(err)); }
+  };
 
   return (
     <div className="p-6 lg:p-8" data-testid="admin-orders">
@@ -59,7 +75,7 @@ export default function AdminOrders() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((o) => (
+            {pagination.slice.map((o) => (
               <TableRow key={o.id} className="cursor-pointer">
                 <TableCell><Link to={`/admin/orders/${o.id}`} className="font-mono-data font-semibold hover:text-orange-600" data-testid={`admin-order-${o.order_no}`}>{o.order_no}</Link></TableCell>
                 <TableCell className="text-sm">{o.user_email}</TableCell>
@@ -68,14 +84,20 @@ export default function AdminOrders() {
                 <TableCell><StatusBadge status={o.status} /></TableCell>
                 <TableCell className="text-xs text-muted-foreground font-mono-data">{o.created_at?.slice(0, 16).replace("T", " ")}</TableCell>
                 <TableCell className="text-right">
-                  <Link to={`/admin/orders/${o.id}`}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit order"><Edit className="h-4 w-4" /></Button>
-                  </Link>
+                  <div className="inline-flex items-center gap-1">
+                    <Link to={`/admin/orders/${o.id}`}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit order"><Edit className="h-4 w-4" /></Button>
+                    </Link>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" title="Delete order" onClick={(e) => deleteOrder(e, o)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
     </div>
   );

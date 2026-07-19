@@ -413,3 +413,21 @@ public class ContactMessage
     public string Message { get; set; } = string.Empty;
     public string CreatedAt { get; set; } = string.Empty;
 }
+
+/** Ledger row for company expenses, income, and bills. */
+public class FinanceEntry
+{
+    public string Id { get; set; } = string.Empty;
+    public string Kind { get; set; } = "expense";
+    public string Title { get; set; } = string.Empty;
+    public double Amount { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string Status { get; set; } = "pending";
+    public string ReferenceId { get; set; } = string.Empty;
+    public string DueDate { get; set; } = string.Empty;
+    public string PaidAt { get; set; } = string.Empty;
+    public string Notes { get; set; } = string.Empty;
+    public string CreatedBy { get; set; } = string.Empty;
+    public string CreatedAt { get; set; } = string.Empty;
+    public string UpdatedAt { get; set; } = string.Empty;
+}

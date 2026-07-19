@@ -3,6 +3,8 @@ import { Upload, Copy, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError, API_BASE } from "@/lib/api";
 import type { ApiRow } from "@/types";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 
 export default function AdminMedia() {
@@ -41,6 +43,8 @@ export default function AdminMedia() {
 
   const fmtSize = (n) => n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(2)} MB`;
 
+  const pagination = usePagination(items, 25, items.length);
+
   return (
     <div className="p-6 lg:p-8" data-testid="admin-media">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -71,8 +75,9 @@ export default function AdminMedia() {
       {items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-16 text-center text-muted-foreground">No media yet. Upload something.</div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="media-grid">
-          {items.map((m) => {
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4" data-testid="media-grid">
+          {pagination.slice.map((m) => {
             const url = `${API_BASE}/admin/media/${m.id}`;
             return (
               <div key={m.id} className="group rounded-xl border border-border bg-card overflow-hidden" data-testid={`media-item-${m.id}`}>
@@ -97,6 +102,8 @@ export default function AdminMedia() {
               </div>
             );
           })}
+          </div>
+          <AdminPagination {...pagination} onPageChange={pagination.setPage} />
         </div>
       )}
     </div>

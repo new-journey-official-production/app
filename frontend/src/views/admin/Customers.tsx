@@ -3,6 +3,8 @@ import { Edit } from "lucide-react";
 import { api } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,6 +14,8 @@ export default function AdminCustomers() {
   const [view, setView] = useState<ApiRow | null>(null);
 
   useEffect(() => { api.get("/admin/customers").then((r) => setItems(r.data)); }, []);
+
+  const pagination = usePagination(items, 25, items.length);
 
   return (
     <div className="p-6 lg:p-8">
@@ -29,7 +33,7 @@ export default function AdminCustomers() {
             <TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {items.map((u) => (
+            {pagination.slice.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.name}</TableCell>
                 <TableCell className="text-sm">{u.email}</TableCell>
@@ -46,6 +50,7 @@ export default function AdminCustomers() {
             ))}
           </TableBody>
         </Table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
 
       <Dialog open={!!view} onOpenChange={(o) => !o && setView(null)}>

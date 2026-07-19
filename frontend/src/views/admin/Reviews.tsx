@@ -3,6 +3,8 @@ import { Star, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -13,6 +15,8 @@ export default function AdminReviews() {
 
   const load = () => api.get("/reviews").then((r) => setItems(r.data));
   useEffect(() => { load(); }, []);
+
+  const pagination = usePagination(items, 25, items.length);
 
   const toggle = async (id, approved) => {
     try { await api.patch(`/reviews/${id}`, { approved }); load(); }
@@ -39,9 +43,10 @@ export default function AdminReviews() {
     <div className="p-6 lg:p-8">
       <h1 className="font-display text-3xl font-bold tracking-tight">Reviews</h1>
       <div className="text-sm text-muted-foreground mb-6">{items.length} customer reviews</div>
-      <div className="space-y-3">
-        {items.map((r) => (
-          <div key={r.id} className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="divide-y divide-border">
+        {pagination.slice.map((r) => (
+          <div key={r.id} className="p-5">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <div className="font-semibold">{r.user_name}</div>
@@ -57,6 +62,8 @@ export default function AdminReviews() {
             <div className="mt-2 text-sm text-muted-foreground">{r.comment}</div>
           </div>
         ))}
+        </div>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
 
       <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>

@@ -3,7 +3,7 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { BRAND_EMAIL_HELLO } from "@/lib/brand";
+import { BRAND_EMAIL_HELLO, BRAND_PHONE } from "@/lib/brand";
 
 export default function Contact() {
   const [f, setF] = useState({ name: "", email: "", subject: "", message: "" });
@@ -30,7 +30,7 @@ export default function Contact() {
         </p>
         <div className="mt-10 space-y-6">
           <ContactItem icon={Mail} label="Email" value={BRAND_EMAIL_HELLO} />
-          <ContactItem icon={Phone} label="WhatsApp" value="+91 98765 43210" />
+          <ContactItem icon={Phone} label="Phone / WhatsApp" value={BRAND_PHONE} />
           <ContactItem icon={MapPin} label="Studio" value="Koramangala, Bengaluru" />
         </div>
       </div>

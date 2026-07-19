@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency, MATERIALS } from "@/lib/constants";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -109,6 +111,8 @@ export default function AdminInventory() {
 }
 
 function InvSection({ title, items, onEdit, onDel }) {
+  const pagination = usePagination(items, 25, items.length);
+
   return (
     <section>
       <div className="font-display font-semibold mb-3">{title}</div>
@@ -116,7 +120,7 @@ function InvSection({ title, items, onEdit, onDel }) {
         <Table>
           <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Material</TableHead><TableHead>Color</TableHead><TableHead>Quantity</TableHead><TableHead>Reorder</TableHead><TableHead>Unit cost</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
-            {items.map((i) => (
+            {pagination.slice.map((i) => (
               <TableRow key={i.id}>
                 <TableCell className="font-medium">{i.name}</TableCell>
                 <TableCell className="text-sm">{i.material || "—"}</TableCell>
@@ -134,6 +138,7 @@ function InvSection({ title, items, onEdit, onDel }) {
             ))}
           </TableBody>
         </Table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
     </section>
   );

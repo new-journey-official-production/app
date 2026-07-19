@@ -4,6 +4,7 @@ using PrintForge.Models;
 using PrintForge.Models.DTOs;
 using PrintForge.Models.Entities;
 using PrintForge.Repositories.Interfaces;
+using PrintForge.Services;
 using PrintForge.Services.Interfaces;
 
 namespace PrintForge.Api.Controllers;
@@ -31,6 +32,19 @@ public class OrdersController(IOrderService orders) : ControllerBase
     {
         try { return Ok(await orders.GetOrderAsync(HttpContext.GetRequiredUser(), oid)); }
         catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
+    }
+
+    [HttpDelete("{oid}")]
+    [UserAuthorize]
+    public async Task<IActionResult> Delete(string oid)
+    {
+        try
+        {
+            await orders.UserDeleteAsync(HttpContext.GetRequiredUser(), oid);
+            return Ok(new OkResponse());
+        }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Order not found" }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { detail = ex.Message }); }
     }
 }
 
@@ -484,5 +498,48 @@ public class ActivityLogsController(IActivityLogRepository logs) : ControllerBas
     {
         var items = await logs.ListAsync(Math.Min(limit, 1000), action);
         return Ok(items.Select(BsonMapper.ToDict));
+    }
+}
+
+[ApiController]
+[Route("api/admin/accounts")]
+public class AdminAccountsController(IFinanceService finance) : ControllerBase
+{
+    [HttpGet("overview")]
+    [AdminAuthorize]
+    public async Task<IActionResult> Overview() => Ok(await finance.GetOverviewAsync());
+
+    [HttpGet("entries")]
+    [AdminAuthorize]
+    public async Task<IActionResult> ListEntries([FromQuery] string? kind) =>
+        Ok(await finance.ListEntriesAsync(kind));
+
+    [HttpPost("entries")]
+    [AdminAuthorize]
+    public async Task<IActionResult> CreateEntry([FromBody] Dictionary<string, object?> payload)
+    {
+        try { return Ok(await finance.CreateEntryAsync(HttpContext.GetRequiredUser(), payload)); }
+        catch (InvalidOperationException ex) { return BadRequest(new { detail = ex.Message }); }
+    }
+
+    [HttpPatch("entries/{id}")]
+    [AdminAuthorize]
+    public async Task<IActionResult> UpdateEntry(string id, [FromBody] Dictionary<string, object?> payload)
+    {
+        try { return Ok(await finance.UpdateEntryAsync(id, payload)); }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { detail = ex.Message }); }
+    }
+
+    [HttpDelete("entries/{id}")]
+    [AdminAuthorize]
+    public async Task<IActionResult> DeleteEntry(string id)
+    {
+        try
+        {
+            await finance.DeleteEntryAsync(id);
+            return Ok(new OkResponse());
+        }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
     }
 }

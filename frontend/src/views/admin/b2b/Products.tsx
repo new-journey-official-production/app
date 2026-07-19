@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -45,6 +47,8 @@ export default function B2bProducts() {
     } catch (e) { toast.error(apiError(e)); }
   };
 
+  const pagination = usePagination(items, 25, `${status}-${q}`);
+
   return (
     <div className="p-6 lg:p-8" data-testid="b2b-products">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -84,7 +88,7 @@ export default function B2bProducts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((p) => (
+            {pagination.slice.map((p) => (
               <TableRow key={p.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -121,6 +125,7 @@ export default function B2bProducts() {
             )}
           </TableBody>
         </Table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
     </div>
   );

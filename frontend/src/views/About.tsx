@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BRAND_NAME } from "@/lib/brand";
+import { Mail, Phone } from "lucide-react";
+import { BRAND_NAME, BRAND_EMAIL_HELLO, BRAND_PHONE } from "@/lib/brand";
 
 export default function About() {
   return (
@@ -50,6 +51,14 @@ export default function About() {
       <section className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-24 text-center">
         <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Come make something.</h2>
         <p className="mt-4 text-muted-foreground max-w-xl mx-auto">Whether it's a single custom part or a batch of 200 giveaways, we'd love to hear about it.</p>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm">
+          <a href={`tel:${BRAND_PHONE.replace(/\s/g, "")}`} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <Phone className="h-4 w-4" /> {BRAND_PHONE}
+          </a>
+          <a href={`mailto:${BRAND_EMAIL_HELLO}`} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <Mail className="h-4 w-4" /> {BRAND_EMAIL_HELLO}
+          </a>
+        </div>
         <div className="mt-6 flex gap-3 justify-center">
           <Link to="/contact"><Button className="rounded-full bg-zinc-950 dark:bg-white dark:text-zinc-950">Get in touch</Button></Link>
           <Link to="/products"><Button variant="outline" className="rounded-full">Browse the shop</Button></Link>

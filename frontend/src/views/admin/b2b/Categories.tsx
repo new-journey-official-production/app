@@ -5,6 +5,8 @@ import {
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -46,6 +48,8 @@ export default function B2bCategories() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const pagination = usePagination(tree, 25, tree.length);
 
   const openCreate = (parentId?: string) => {
     setEditing(null);
@@ -143,7 +147,7 @@ export default function B2bCategories() {
           <div className="p-8 text-center text-muted-foreground text-sm">No categories yet. Create your first one.</div>
         ) : (
           <div className="divide-y divide-border">
-            {tree.map((cat) => (
+            {pagination.slice.map((cat) => (
               <CategoryRow
                 key={cat.id}
                 cat={cat}
@@ -158,6 +162,7 @@ export default function B2bCategories() {
             ))}
           </div>
         )}
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

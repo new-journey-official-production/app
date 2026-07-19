@@ -3,6 +3,8 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -33,6 +35,8 @@ export default function AdminBlog() {
 
   const edit = (p) => { setF(p); setTagsInput((p.tags || []).join(", ")); setEditingId(p.id); setOpen(true); };
   const del = async (id) => { if (window.confirm("Delete?")) { await api.delete(`/blog/${id}`); load(); } };
+
+  const pagination = usePagination(items, 25, items.length);
 
   return (
     <div className="p-6 lg:p-8">
@@ -65,8 +69,9 @@ export default function AdminBlog() {
         </Dialog>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map((p) => (
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+        {pagination.slice.map((p) => (
           <div key={p.id} className="rounded-xl border border-border bg-card overflow-hidden">
             {p.cover_image && <div className="aspect-video overflow-hidden bg-zinc-100 dark:bg-zinc-800"><img src={p.cover_image} alt="" className="h-full w-full object-cover" /></div>}
             <div className="p-4">
@@ -80,6 +85,8 @@ export default function AdminBlog() {
             </div>
           </div>
         ))}
+        </div>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
     </div>
   );

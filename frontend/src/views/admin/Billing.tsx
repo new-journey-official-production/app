@@ -6,6 +6,8 @@ import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
 import { downloadFullInvoice, downloadPackingSlip } from "@/lib/invoicePdf";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -39,6 +41,8 @@ export default function AdminBilling() {
   };
 
   useEffect(() => { load(); }, [status, q]);
+
+  const pagination = usePagination(items, 25, `${status}-${q}`);
 
   const updateStatus = async (paymentId: string, newStatus: string) => {
     try {
@@ -101,7 +105,7 @@ export default function AdminBilling() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((row) => (
+            {pagination.slice.map((row) => (
               <TableRow key={row.id} data-testid={`billing-row-${row.order_no}`}>
                 <TableCell>
                   <Link to={`/admin/orders/${row.order_id}`} className="font-mono-data font-semibold hover:text-orange-600">
@@ -165,6 +169,7 @@ export default function AdminBilling() {
             )}
           </TableBody>
         </Table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
     </div>
   );

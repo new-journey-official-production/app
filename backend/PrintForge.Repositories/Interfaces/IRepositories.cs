@@ -232,3 +232,13 @@ public interface IPermissionRepository
     Task<Dictionary<string, int>> LoadEffectivePermissionsAsync(string userId);
     void InvalidateCache(string? userId = null);
 }
+
+public interface IFinanceRepository
+{
+    Task<List<FinanceEntry>> ListAsync(string? kind = null, int limit = 500);
+    Task<FinanceEntry?> FindByIdAsync(string id);
+    Task InsertAsync(FinanceEntry entry);
+    Task UpdateAsync(string id, Dictionary<string, object?> updates);
+    Task DeleteAsync(string id);
+    Task<Dictionary<string, double>> SummaryAsync();
+}

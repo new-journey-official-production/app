@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -64,6 +66,8 @@ export default function AdminCoupons() {
 
   const del = async (id) => { if (window.confirm("Delete?")) { await api.delete(`/coupons/${id}`); load(); } };
 
+  const pagination = usePagination(items, 25, items.length);
+
   return (
     <div className="p-6 lg:p-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -91,7 +95,7 @@ export default function AdminCoupons() {
         <Table>
           <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Kind</TableHead><TableHead>Value</TableHead><TableHead>Min order</TableHead><TableHead>Max</TableHead><TableHead>Active</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
-            {items.map((c) => (
+            {pagination.slice.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-mono-data font-semibold">{c.code}</TableCell>
                 <TableCell className="text-sm capitalize">{c.kind}</TableCell>
@@ -109,6 +113,7 @@ export default function AdminCoupons() {
             ))}
           </TableBody>
         </Table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
     </div>
   );

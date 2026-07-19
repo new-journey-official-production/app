@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Instagram, Twitter, Youtube, Mail } from "lucide-react";
 import { api, apiError } from "@/lib/api";
 import { CATEGORIES } from "@/lib/constants";
-import { BRAND_NAME, BRAND_SHORT, BRAND_STUDIO, BRAND_EMAIL_HELLO } from "@/lib/brand";
+import { BRAND_NAME, BRAND_SHORT, BRAND_STUDIO, BRAND_EMAIL_HELLO, BRAND_PHONE } from "@/lib/brand";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -37,6 +37,10 @@ export default function Footer() {
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
               Precision-printed everyday objects. Designed thoughtfully, manufactured additively, delivered fast.
             </p>
+            <div className="mt-4 text-sm text-muted-foreground space-y-1">
+              <a href={`tel:${BRAND_PHONE.replace(/\s/g, "")}`} className="block hover:text-foreground">{BRAND_PHONE}</a>
+              <a href={`mailto:${BRAND_EMAIL_HELLO}`} className="block hover:text-foreground">{BRAND_EMAIL_HELLO}</a>
+            </div>
             <form onSubmit={subscribe} className="mt-6 flex gap-2 max-w-md">
               <input
                 data-testid="footer-newsletter-input"

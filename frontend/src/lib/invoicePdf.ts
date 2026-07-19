@@ -209,10 +209,18 @@ export function downloadPackingSlip({ order, payment }: InvoiceData) {
   const items = (order.items || []) as ApiRow[];
   let y = 63;
   doc.setFont("helvetica", "normal");
+  const nameWidth = w - 18;
   items.forEach((it) => {
-    doc.text(String(it.name || "Item").slice(0, 22), 4, y);
-    doc.text(`x${Number(it.quantity || 1)}`, w - 4, y, { align: "right" });
-    y += 4;
+    const name = String(it.name || "Item");
+    const lines = doc.splitTextToSize(name, nameWidth - 12) as string[];
+    lines.forEach((line, idx) => {
+      doc.text(line, 4, y);
+      if (idx === 0) {
+        doc.text(`x${Number(it.quantity || 1)}`, w - 4, y, { align: "right" });
+      }
+      y += 3.5;
+    });
+    y += 1;
   });
 
   doc.line(4, y + 1, w - 4, y + 1);

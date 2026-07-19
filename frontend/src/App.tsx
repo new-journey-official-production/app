@@ -56,6 +56,7 @@ const AdminMedia = lazy(() => import("@/views/admin/Media"));
 const AdminActivityLogs = lazy(() => import("@/views/admin/ActivityLogs"));
 const AdminSettings = lazy(() => import("@/views/admin/Settings"));
 const AdminPermissions = lazy(() => import("@/views/admin/Permissions"));
+const AdminAccounts = lazy(() => import("@/views/admin/Accounts"));
 
 const B2bLanding = lazy(() => import("@/views/b2b/Landing"));
 const B2bCatalog = lazy(() => import("@/views/b2b/Catalog"));
@@ -188,6 +189,11 @@ export default function App() {
                   <Route path="/admin/activity" element={<AdminActivityLogs />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                   <Route path="/admin/permissions" element={<AdminPermissions />} />
+                  <Route path="/admin/accounts" element={<AdminAccounts />} />
+                  <Route path="/admin/accounts/expenses" element={<AdminAccounts />} />
+                  <Route path="/admin/accounts/income" element={<AdminAccounts />} />
+                  <Route path="/admin/accounts/bills" element={<AdminAccounts />} />
+                  <Route path="/admin/accounts/payments" element={<AdminAccounts />} />
                   <Route path="/admin/roles" element={<AdminPermissions />} />
                   <Route path="/admin/users" element={<AdminPermissions />} />
 

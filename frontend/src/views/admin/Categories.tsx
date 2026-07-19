@@ -3,6 +3,8 @@ import { Plus, Edit, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError, API_BASE } from "@/lib/api";
 import type { ApiRow } from "@/types";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -25,6 +27,8 @@ export default function AdminCategories() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const pagination = usePagination(items, 25, items.length);
 
   const openCreate = () => {
     setEditing(null);
@@ -119,7 +123,7 @@ export default function AdminCategories() {
             </tr>
           </thead>
           <tbody>
-            {items.map((c) => (
+            {pagination.slice.map((c) => (
               <tr key={c.id} className="border-b last:border-0">
                 <td className="p-3 font-medium">{c.name}</td>
                 <td className="p-3 font-mono-data text-muted-foreground">{c.slug}</td>
@@ -135,6 +139,7 @@ export default function AdminCategories() {
             )}
           </tbody>
         </table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

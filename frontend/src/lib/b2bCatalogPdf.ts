@@ -21,34 +21,39 @@ const GRAY: [number, number, number] = [82, 82, 91];
 const LIGHT: [number, number, number] = [220, 220, 220];
 const WHITE: [number, number, number] = [255, 255, 255];
 
-/** Resolves relative media URLs and loads images via canvas (works with same-origin API media). */
+/** Resolves relative media URLs and loads images with cookie auth (admin media requires credentials). */
 async function loadImageDataUrl(url: string): Promise<string | null> {
   if (!url?.trim()) return null;
+  const base = API_BASE.replace(/\/api$/, "");
   const fullUrl = url.startsWith("http")
     ? url
-    : `${API_BASE.replace(/\/api$/, "")}${url.startsWith("/") ? "" : "/"}${url}`;
+    : `${base}${url.startsWith("/") ? "" : "/"}${url}`;
 
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth || 400;
-        canvas.height = img.naturalHeight || 400;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) { resolve(null); return; }
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.9));
-      } catch {
-        resolve(null);
-      }
-    };
-    img.onerror = () => resolve(null);
-    img.src = fullUrl;
-  });
+  try {
+    const res = await fetch(fullUrl, { credentials: "include" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : null);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** Picks the first usable image URL from a B2B product row. */
+function productImageUrl(product: ApiRow): string {
+  const hero = String(product.hero_image || "").trim();
+  if (hero) return hero;
+  const gallery = product.gallery;
+  if (Array.isArray(gallery) && gallery.length > 0) return String(gallery[0]);
+  if (typeof gallery === "string" && gallery.trim()) return gallery.trim();
+  const lifestyle = product.lifestyle_images;
+  if (Array.isArray(lifestyle) && lifestyle.length > 0) return String(lifestyle[0]);
+  return "";
 }
 
 /** Loads a QR code PNG for embedding in the PDF. */
@@ -264,7 +269,7 @@ export async function downloadB2bCatalog({
   for (let i = 0; i < products.length; i += 1) {
     doc.addPage();
     const p = products[i];
-    const imgUrl = String(p.hero_image || p.gallery?.[0] || "");
+    const imgUrl = productImageUrl(p);
     const origin = typeof window !== "undefined" ? window.location.origin : BRAND_WEBSITE.replace(/\/$/, "");
     const productUrl = `${origin}/b2b/product/${p.slug || p.id}`;
     const [imageData, qrData] = await Promise.all([

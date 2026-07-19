@@ -174,7 +174,8 @@ public class PermissionService(
             [Modules.B2bDealers] = (int)(CPPermissions.Read | CPPermissions.Update),
             [Modules.B2bAnalytics] = (int)CPPermissions.Read,
             [Modules.B2bSettings] = (int)CPPermissions.Read,
-            [Modules.B2bPortal] = (int)CPPermissions.Read
+            [Modules.B2bPortal] = (int)CPPermissions.Read,
+            [Modules.Accounts] = PermissionHelper.FullCrud
         };
         foreach (var (modId, bits) in staffBits)
             await rbac.UpsertRolePermissionAsync(roleIds["staff"], modId, bits);

@@ -1,17 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import CustomerShell from "./CustomerShell";
 import OrderTimeline from "@/components/OrderTimeline";
 import StatusBadge from "@/components/StatusBadge";
-import { api } from "@/lib/api";
+import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+
+const DELETABLE_STATUSES = new Set(["placed", "cancelled"]);
 
 export default function CustomerOrderDetail() {
   const { id } = useParams();
+  const nav = useNavigate();
   const [o, setO] = useState<ApiRow | null>(null);
   useEffect(() => { api.get(`/orders/${id}`).then((r) => setO(r.data)).catch(() => {}); }, [id]);
+
+  const deleteOrder = async () => {
+    if (!o || !DELETABLE_STATUSES.has(o.status)) {
+      toast.error("This order can no longer be deleted.");
+      return;
+    }
+    if (!window.confirm(`Delete order ${o.order_no}?`)) return;
+    try {
+      await api.delete(`/orders/${id}`);
+      toast.success("Order deleted");
+      nav("/account/orders");
+    } catch (err) { toast.error(apiError(err)); }
+  };
+
   if (!o) return <CustomerShell><div className="h-96 rounded-2xl shimmer" /></CustomerShell>;
 
   return (
@@ -22,7 +41,14 @@ export default function CustomerOrderDetail() {
           <h1 className="font-display text-3xl font-bold tracking-tight">{o.order_no}</h1>
           <div className="text-xs text-muted-foreground mt-1">Placed {o.created_at?.slice(0, 16).replace("T", " ")}</div>
         </div>
-        <StatusBadge status={o.status} />
+        <div className="flex items-center gap-2">
+          <StatusBadge status={o.status} />
+          {DELETABLE_STATUSES.has(o.status) && (
+            <Button variant="destructive" size="sm" onClick={deleteOrder} className="gap-1">
+              <Trash2 className="h-4 w-4" /> Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mt-8 grid lg:grid-cols-[1fr_320px] gap-8">

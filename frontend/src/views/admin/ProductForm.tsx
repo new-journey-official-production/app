@@ -200,7 +200,9 @@ export default function ProductForm() {
               </Button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {(f.images || []).map((img, i) => (
+              {(f.images || []).length === 0 ? (
+                <p className="col-span-full text-xs text-muted-foreground py-2">No images yet — upload photos above.</p>
+              ) : (f.images || []).map((img, i) => (
                 <div key={`${img}-${i}`} className="relative rounded-lg overflow-hidden border border-border bg-white dark:bg-zinc-900">
                   <div className="aspect-square flex items-center justify-center p-1">
                     <img src={img} alt="" className="max-h-full max-w-full object-contain" />

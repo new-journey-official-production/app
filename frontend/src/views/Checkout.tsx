@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { CreditCard, Wallet, Building2, Truck, Plus } from "lucide-react";
+import { CreditCard, Wallet, Building2, Truck, Plus, Loader2, Smartphone } from "lucide-react";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/constants";
+import { BRAND_UPI_ID } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,20 @@ const EMPTY_FORM = {
   full_name: "", phone: "", line1: "", line2: "", city: "", state: "",
   postal_code: "", country: "India", label: "Home", is_default: true,
 };
+
+/** Online UPI app options shown at checkout. */
+const ONLINE_METHODS = [
+  { id: "gpay", label: "Google Pay", icon: Smartphone },
+  { id: "phonepe", label: "PhonePe", icon: Smartphone },
+  { id: "paytm", label: "Paytm", icon: Smartphone },
+  { id: "upi", label: "Other UPI", icon: Wallet },
+] as const;
+
+const ONLINE_IDS = new Set(ONLINE_METHODS.map((m) => m.id));
+
+function isOnlineMethod(method: string) {
+  return ONLINE_IDS.has(method as typeof ONLINE_METHODS[number]["id"]);
+}
 
 /** Normalizes address rows from API (snake_case keys). */
 function normalizeAddresses(raw: unknown): ApiRow[] {
@@ -49,6 +64,9 @@ export default function Checkout() {
   const [showForm, setShowForm] = useState(false);
   const [addrSaving, setAddrSaving] = useState(false);
   const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [payModal, setPayModal] = useState<{ open: boolean; phase: "loading" | "confirm" | "processing" | "done"; orderId?: string }>({
+    open: false, phase: "loading",
+  });
 
   const pickDefaultAddress = (list: ApiRow[]) => {
     const def = list.find((a) => a.is_default) || list[0];
@@ -98,7 +116,6 @@ export default function Checkout() {
         else if (savedId) setAddressId(savedId);
         setShowForm(false);
       } catch {
-        // POST succeeded; keep saved selection even if list refresh fails.
         if (savedId) setAddresses((prev) => prev.length ? prev : [{ ...form, id: savedId, is_default: form.is_default }]);
       }
       toast.success("Address saved");
@@ -106,37 +123,67 @@ export default function Checkout() {
     finally { setAddrSaving(false); }
   };
 
+  /** Submits order to API and returns created order id. */
+  const submitOrder = async () => {
+    const payload = {
+      items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity, variant: i.variant })),
+      address_id: addressId,
+      payment_method: method,
+      coupon_code: coupon || undefined,
+      notes: notes || undefined,
+    };
+    const { data } = await api.post("/orders", payload);
+    return String(data.id);
+  };
+
+  const finishOrder = (orderId: string) => {
+    clear();
+    setPayModal({ open: true, phase: "done", orderId });
+    setTimeout(() => {
+      nav(`/account/orders/${orderId}`);
+    }, 1800);
+  };
+
   const placeOrder = async () => {
     if (!addressId) return toast.error("Add a shipping address");
     setBusy(true);
+
+    if (isOnlineMethod(method)) {
+      setPayModal({ open: true, phase: "loading" });
+      try {
+        // Brief loading screen before showing UPI payment details.
+        await new Promise((r) => setTimeout(r, 1200));
+        setPayModal({ open: true, phase: "confirm" });
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     try {
-      const payload = {
-        items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity, variant: i.variant })),
-        address_id: addressId,
-        payment_method: method,
-        coupon_code: coupon || undefined,
-        notes: notes || undefined,
-      };
-      const { data } = await api.post("/orders", payload);
-      clear();
+      const orderId = await submitOrder();
       toast.success("Order placed!");
-      nav(`/account/orders/${data.id}`);
+      nav(`/account/orders/${orderId}`);
     } catch (err) { toast.error(apiError(err)); }
     finally { setBusy(false); }
   };
 
+  /** User confirms UPI payment — place order after simulated processing. */
+  const confirmUpiPayment = async () => {
+    setPayModal((m) => ({ ...m, phase: "processing" }));
+    try {
+      await new Promise((r) => setTimeout(r, 2500));
+      const orderId = await submitOrder();
+      finishOrder(orderId);
+    } catch (err) {
+      setPayModal({ open: false, phase: "loading" });
+      toast.error(apiError(err));
+    }
+  };
+
   const selectedAddress = addresses.find((a) => String(a.id) === String(addressId));
   const canPlaceOrder = Boolean(addressId);
-
-  /** Online payment methods are disabled until gateway integration. */
-  const onPaymentChange = (value: string) => {
-    if (value !== "cod") {
-      toast.info("Not available yet — please choose Cash on Delivery. Online payment coming soon.");
-      setMethod("cod");
-      return;
-    }
-    setMethod(value);
-  };
+  const onlineLabel = ONLINE_METHODS.find((m) => m.id === method)?.label || "UPI";
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
@@ -187,15 +234,19 @@ export default function Checkout() {
 
           <section className="rounded-2xl border border-border p-6" data-testid="checkout-payment-section">
             <div className="font-display font-semibold text-lg mb-4">Payment method</div>
-            <RadioGroup value={method} onValueChange={onPaymentChange} className="grid sm:grid-cols-2 gap-3">
-              <PaymentTile id="upi" label="UPI" icon={Wallet} checked={method === "upi"} disabled hint="Coming soon" />
-              <PaymentTile id="card" label="Credit / Debit Card" icon={CreditCard} checked={method === "card"} disabled hint="Coming soon" />
-              <PaymentTile id="netbanking" label="Net Banking" icon={Building2} checked={method === "netbanking"} disabled hint="Coming soon" />
+            <RadioGroup value={method} onValueChange={setMethod} className="grid sm:grid-cols-2 gap-3">
+              {ONLINE_METHODS.map(({ id, label, icon: Icon }) => (
+                <PaymentTile key={id} id={id} label={label} icon={Icon} checked={method === id} />
+              ))}
+              <PaymentTile id="card" label="Credit / Debit Card" icon={CreditCard} checked={method === "card"} disabled hint="Soon" />
+              <PaymentTile id="netbanking" label="Net Banking" icon={Building2} checked={method === "netbanking"} disabled hint="Soon" />
               <PaymentTile id="cod" label="Cash on Delivery" icon={Truck} checked={method === "cod"} />
             </RadioGroup>
-            <div className="mt-3 text-xs text-muted-foreground rounded-md bg-muted p-3">
-              Cash on Delivery is available now. UPI, card, and net banking will be enabled when the payment gateway is connected.
-            </div>
+            {isOnlineMethod(method) && (
+              <div className="mt-3 text-xs text-muted-foreground rounded-md bg-muted p-3">
+                Pay via {onlineLabel} to UPI ID <span className="font-mono-data font-semibold text-foreground">{BRAND_UPI_ID}</span> after placing the order.
+              </div>
+            )}
           </section>
 
           <section className="rounded-2xl border border-border p-6">
@@ -235,7 +286,7 @@ export default function Checkout() {
             <div className="font-semibold">Total</div>
             <div className="font-mono-data font-bold text-lg" data-testid="checkout-total">{formatCurrency(totals.total)}</div>
           </div>
-          <Button onClick={placeOrder} disabled={busy || !canPlaceOrder} className="w-full mt-5 rounded-full bg-orange-600 hover:bg-orange-700" data-testid="place-order-btn">
+          <Button onClick={placeOrder} disabled={busy || !canPlaceOrder || payModal.open} className="w-full mt-5 rounded-full bg-orange-600 hover:bg-orange-700" data-testid="place-order-btn">
             {busy ? "Placing order…" : `Place order · ${formatCurrency(totals.total)}`}
           </Button>
           <div className="mt-3 text-[11px] text-muted-foreground text-center">
@@ -243,6 +294,49 @@ export default function Checkout() {
           </div>
         </aside>
       </div>
+
+      {payModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" data-testid="upi-payment-modal">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl text-center">
+            {payModal.phase === "loading" && (
+              <>
+                <Loader2 className="h-10 w-10 animate-spin mx-auto text-orange-600" />
+                <div className="mt-4 font-display font-semibold text-lg">Preparing payment…</div>
+                <p className="mt-2 text-sm text-muted-foreground">Setting up secure {onlineLabel} checkout</p>
+              </>
+            )}
+            {payModal.phase === "confirm" && (
+              <>
+                <div className="font-display font-semibold text-xl">Complete payment</div>
+                <p className="mt-2 text-sm text-muted-foreground">Send <span className="font-mono-data font-bold text-foreground">{formatCurrency(totals.total)}</span> via {onlineLabel}</p>
+                <div className="mt-6 rounded-xl border border-border bg-muted/50 p-4">
+                  <div className="text-xs uppercase tracking-widest text-muted-foreground">UPI ID</div>
+                  <div className="mt-1 font-mono-data text-lg font-bold break-all">{BRAND_UPI_ID}</div>
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground">Open {onlineLabel}, pay the exact amount, then tap the button below.</p>
+                <div className="mt-6 flex gap-2">
+                  <Button variant="outline" className="flex-1" onClick={() => setPayModal({ open: false, phase: "loading" })}>Cancel</Button>
+                  <Button className="flex-1 bg-orange-600 hover:bg-orange-700" onClick={confirmUpiPayment} data-testid="confirm-upi-payment-btn">I have paid</Button>
+                </div>
+              </>
+            )}
+            {payModal.phase === "processing" && (
+              <>
+                <Loader2 className="h-10 w-10 animate-spin mx-auto text-orange-600" />
+                <div className="mt-4 font-display font-semibold text-lg">Verifying payment…</div>
+                <p className="mt-2 text-sm text-muted-foreground">Please wait while we confirm your {onlineLabel} payment</p>
+              </>
+            )}
+            {payModal.phase === "done" && (
+              <>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 text-2xl">✓</div>
+                <div className="mt-4 font-display font-semibold text-xl">Order placed!</div>
+                <p className="mt-2 text-sm text-muted-foreground">Payment received. Redirecting to your order…</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -258,8 +352,8 @@ function Field({ label, value, onChange, className = "", ...rest }) {
 
 function PaymentTile({ id, label, icon: Icon, checked, disabled = false, hint }) {
   return (
-    <label htmlFor={id} className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer ${checked ? "border-zinc-950 dark:border-white bg-zinc-50 dark:bg-zinc-900" : "border-border"} ${disabled ? "opacity-55" : ""}`} data-testid={`pay-${id}`}>
-      <RadioGroupItem value={id} id={id} />
+    <label htmlFor={id} className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer ${checked ? "border-zinc-950 dark:border-white bg-zinc-50 dark:bg-zinc-900" : "border-border"} ${disabled ? "opacity-55 cursor-not-allowed" : ""}`} data-testid={`pay-${id}`}>
+      <RadioGroupItem value={id} id={id} disabled={disabled} />
       <Icon className="h-4 w-4 text-muted-foreground" />
       <span className="text-sm font-medium flex-1">{label}</span>
       {hint && <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{hint}</span>}

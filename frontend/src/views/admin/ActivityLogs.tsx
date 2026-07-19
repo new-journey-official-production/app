@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Activity } from "lucide-react";
 import { api } from "@/lib/api";
 import type { ApiRow } from "@/types";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ACTION_LABEL: Record<string, { label: string; color: string }> = {
@@ -27,6 +29,8 @@ export default function AdminActivityLogs() {
 
   const actions = useMemo(() => Object.keys(ACTION_LABEL), []);
 
+  const pagination = usePagination(logs, 25, filter);
+
   return (
     <div className="p-6 lg:p-8" data-testid="admin-activity-logs">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -51,7 +55,7 @@ export default function AdminActivityLogs() {
       ) : (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <ol className="divide-y divide-border">
-            {logs.map((l) => {
+            {pagination.slice.map((l) => {
               const meta = ACTION_LABEL[l.action] || { label: l.action, color: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800" };
               return (
                 <li key={l.id} className="flex items-start gap-4 p-4 hover:bg-accent/50 transition" data-testid={`activity-${l.id}`}>
@@ -75,6 +79,7 @@ export default function AdminActivityLogs() {
               );
             })}
           </ol>
+          <AdminPagination {...pagination} onPageChange={pagination.setPage} />
         </div>
       )}
     </div>

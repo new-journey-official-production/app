@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { statusLabel } from "@/lib/constants";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,6 +25,8 @@ export default function B2bQuotes() {
   };
 
   useEffect(() => { load(); }, [filter]);
+
+  const pagination = usePagination(items, 25, filter);
 
   const updateStatus = async (id: string, status: string) => {
     try {
@@ -71,7 +75,7 @@ export default function B2bQuotes() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((q) => (
+            {pagination.slice.map((q) => (
               <TableRow key={q.id}>
                 <TableCell>
                   <div className="font-medium">{q.business_name}</div>
@@ -104,6 +108,7 @@ export default function B2bQuotes() {
             )}
           </TableBody>
         </Table>
+        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
       </div>
     </div>
   );
