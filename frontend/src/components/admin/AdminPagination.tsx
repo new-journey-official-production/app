@@ -16,7 +16,7 @@ export default function AdminPagination({ page, totalPages, total, from, to, onP
   if (total === 0) return null;
 
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-border bg-muted/30 text-sm">
+    <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3 border-t border-border bg-card text-sm z-10 shadow-[0_-1px_0_0_hsl(var(--border))]">
       <div className="text-muted-foreground text-xs">
         Showing {from}–{to} of {total}
       </div>

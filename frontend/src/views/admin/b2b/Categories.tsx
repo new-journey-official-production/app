@@ -5,7 +5,7 @@ import {
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -142,7 +142,7 @@ export default function B2bCategories() {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         {tree.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground text-sm">No categories yet. Create your first one.</div>
         ) : (
@@ -162,8 +162,7 @@ export default function B2bCategories() {
             ))}
           </div>
         )}
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">

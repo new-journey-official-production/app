@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -91,7 +91,7 @@ export default function AdminCoupons() {
         </DialogContent>
       </Dialog>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         <Table>
           <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Kind</TableHead><TableHead>Value</TableHead><TableHead>Min order</TableHead><TableHead>Max</TableHead><TableHead>Active</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
@@ -113,8 +113,7 @@ export default function AdminCoupons() {
             ))}
           </TableBody>
         </Table>
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
     </div>
   );
 }

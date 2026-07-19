@@ -520,6 +520,7 @@ public class AdminAccountsController(IFinanceService finance) : ControllerBase
     {
         try { return Ok(await finance.CreateEntryAsync(HttpContext.GetRequiredUser(), payload)); }
         catch (InvalidOperationException ex) { return BadRequest(new { detail = ex.Message }); }
+        catch (Exception ex) { return StatusCode(500, new { detail = $"Accounts save failed: {ex.Message}" }); }
     }
 
     [HttpPatch("entries/{id}")]

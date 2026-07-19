@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -46,7 +46,7 @@ export default function AdminProducts() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -88,8 +88,7 @@ export default function AdminProducts() {
             ))}
           </TableBody>
         </Table>
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
     </div>
   );
 }

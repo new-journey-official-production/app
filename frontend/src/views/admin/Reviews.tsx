@@ -3,7 +3,7 @@ import { Star, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -43,7 +43,7 @@ export default function AdminReviews() {
     <div className="p-6 lg:p-8">
       <h1 className="font-display text-3xl font-bold tracking-tight">Reviews</h1>
       <div className="text-sm text-muted-foreground mb-6">{items.length} customer reviews</div>
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         <div className="divide-y divide-border">
         {pagination.slice.map((r) => (
           <div key={r.id} className="p-5">
@@ -63,8 +63,7 @@ export default function AdminReviews() {
           </div>
         ))}
         </div>
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
 
       <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
         <DialogContent>

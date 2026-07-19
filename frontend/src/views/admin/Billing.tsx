@@ -6,7 +6,7 @@ import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
 import { downloadFullInvoice, downloadPackingSlip } from "@/lib/invoicePdf";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -90,7 +90,7 @@ export default function AdminBilling() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -169,8 +169,7 @@ export default function AdminBilling() {
             )}
           </TableBody>
         </Table>
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
     </div>
   );
 }

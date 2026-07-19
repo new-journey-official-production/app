@@ -1,3 +1,4 @@
+using System.Text.Json;
 using PrintForge.Models;
 using PrintForge.Models.Entities;
 using PrintForge.Repositories.Interfaces;
@@ -61,7 +62,7 @@ public class FinanceService(
             Id = IdHelper.NewId(),
             Kind = kind,
             Title = payload.GetValueOrDefault("title")?.ToString()?.Trim() ?? "Untitled",
-            Amount = Convert.ToDouble(payload.GetValueOrDefault("amount") ?? 0),
+            Amount = ParseDouble(payload.GetValueOrDefault("amount")),
             Category = payload.GetValueOrDefault("category")?.ToString()?.Trim() ?? "",
             Status = status,
             ReferenceId = payload.GetValueOrDefault("reference_id")?.ToString()?.Trim() ?? "",
@@ -102,5 +103,18 @@ public class FinanceService(
         if (await finance.FindByIdAsync(id) is null)
             throw new KeyNotFoundException("Entry not found");
         await finance.DeleteAsync(id);
+    }
+
+    /** Safely coerces JSON body values (JsonElement, number, string) to double. */
+    private static double ParseDouble(object? value)
+    {
+        if (value is null) return 0;
+        if (value is JsonElement je)
+        {
+            if (je.ValueKind == JsonValueKind.Number) return je.GetDouble();
+            if (je.ValueKind == JsonValueKind.String && double.TryParse(je.GetString(), out var parsed)) return parsed;
+            return 0;
+        }
+        return Convert.ToDouble(value);
     }
 }

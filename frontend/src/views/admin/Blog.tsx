@@ -3,7 +3,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -69,7 +69,7 @@ export default function AdminBlog() {
         </Dialog>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {pagination.slice.map((p) => (
           <div key={p.id} className="rounded-xl border border-border bg-card overflow-hidden">
@@ -86,8 +86,7 @@ export default function AdminBlog() {
           </div>
         ))}
         </div>
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
     </div>
   );
 }

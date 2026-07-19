@@ -3,7 +3,7 @@ import { Plus, Edit, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError, API_BASE } from "@/lib/api";
 import type { ApiRow } from "@/types";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -112,7 +112,7 @@ export default function AdminCategories() {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/40">
             <tr>
@@ -139,8 +139,7 @@ export default function AdminCategories() {
             )}
           </tbody>
         </table>
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

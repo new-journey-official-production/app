@@ -26,6 +26,7 @@ export const MODULES = {
   B2B_ANALYTICS: "/admin/b2b/analytics",
   B2B_SETTINGS: "/admin/b2b/settings",
   B2B_PORTAL: "/b2b",
+  ACCOUNTS: "/admin/accounts",
   ACCOUNT: "/account",
   ACCOUNT_ORDERS: "/account/orders",
   ACCOUNT_WISHLIST: "/account/wishlist",

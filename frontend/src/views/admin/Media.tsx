@@ -3,7 +3,7 @@ import { Upload, Copy, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, apiError, API_BASE } from "@/lib/api";
 import type { ApiRow } from "@/types";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 
@@ -75,7 +75,7 @@ export default function AdminMedia() {
       {items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-16 text-center text-muted-foreground">No media yet. Upload something.</div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <AdminPaginatedPanel pagination={pagination}>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4" data-testid="media-grid">
           {pagination.slice.map((m) => {
             const url = `${API_BASE}/admin/media/${m.id}`;
@@ -103,8 +103,7 @@ export default function AdminMedia() {
             );
           })}
           </div>
-          <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-        </div>
+        </AdminPaginatedPanel>
       )}
     </div>
   );

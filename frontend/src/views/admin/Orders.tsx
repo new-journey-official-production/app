@@ -6,7 +6,7 @@ import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency, ORDER_STATUS_STEPS } from "@/lib/constants";
 import StatusBadge from "@/components/StatusBadge";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -61,7 +61,7 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -97,8 +97,7 @@ export default function AdminOrders() {
             ))}
           </TableBody>
         </Table>
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
     </div>
   );
 }

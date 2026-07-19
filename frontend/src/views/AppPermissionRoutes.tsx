@@ -43,6 +43,11 @@ export const ModulesMap: Record<string, ModuleRouteConfig> = {
   "/admin/b2b/dealers": { moduleId: MODULES.B2B_DEALERS, OP: CPPermissions.READ },
   "/admin/b2b/analytics": { moduleId: MODULES.B2B_ANALYTICS, OP: CPPermissions.READ },
   "/admin/b2b/settings": { moduleId: MODULES.B2B_SETTINGS, OP: CPPermissions.READ },
+  "/admin/accounts": { moduleId: MODULES.ACCOUNTS, OP: CPPermissions.READ },
+  "/admin/accounts/expenses": { moduleId: MODULES.ACCOUNTS, OP: CPPermissions.CREATE },
+  "/admin/accounts/income": { moduleId: MODULES.ACCOUNTS, OP: CPPermissions.CREATE },
+  "/admin/accounts/bills": { moduleId: MODULES.ACCOUNTS, OP: CPPermissions.CREATE },
+  "/admin/accounts/payments": { moduleId: MODULES.ACCOUNTS, OP: CPPermissions.READ },
 };
 
 /** Resolve module config for a path (exact or prefix match for nested routes). */

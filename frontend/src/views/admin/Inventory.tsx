@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency, MATERIALS } from "@/lib/constants";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -116,7 +116,7 @@ function InvSection({ title, items, onEdit, onDel }) {
   return (
     <section>
       <div className="font-display font-semibold mb-3">{title}</div>
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <AdminPaginatedPanel pagination={pagination}>
         <Table>
           <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Material</TableHead><TableHead>Color</TableHead><TableHead>Quantity</TableHead><TableHead>Reorder</TableHead><TableHead>Unit cost</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
@@ -138,8 +138,7 @@ function InvSection({ title, items, onEdit, onDel }) {
             ))}
           </TableBody>
         </Table>
-        <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-      </div>
+      </AdminPaginatedPanel>
     </section>
   );
 }

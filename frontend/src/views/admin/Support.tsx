@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Edit } from "lucide-react";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,8 +55,8 @@ export default function AdminSupport() {
       <div className="text-sm text-muted-foreground mb-6">{tickets.length} tickets</div>
 
       <div className="grid md:grid-cols-[300px_1fr] gap-6">
-        <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col max-h-[70vh]">
-          <div className="space-y-2 overflow-y-auto p-2 flex-1">
+        <AdminPaginatedPanel pagination={pagination} maxHeight="70vh">
+          <div className="space-y-2 p-2">
           {pagination.slice.map((t) => (
             <button key={t.id} onClick={() => setActive(t)} className={`w-full text-left rounded-xl border p-4 transition ${active?.id === t.id ? "border-zinc-950 dark:border-white bg-accent" : "border-border hover:bg-accent"}`} data-testid={`admin-ticket-${t.id}`}>
               <div className="flex items-center justify-between gap-2">
@@ -69,8 +69,7 @@ export default function AdminSupport() {
           ))}
           {tickets.length === 0 && <div className="text-sm text-muted-foreground p-6 text-center">No tickets yet</div>}
           </div>
-          <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-        </div>
+        </AdminPaginatedPanel>
 
         <div className="rounded-xl border border-border bg-card p-6 min-h-[400px]">
           {active ? (

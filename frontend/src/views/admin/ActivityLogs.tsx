@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Activity } from "lucide-react";
 import { api } from "@/lib/api";
 import type { ApiRow } from "@/types";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -53,7 +53,7 @@ export default function AdminActivityLogs() {
           No activity yet. Actions from admins will show up here as they happen.
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <AdminPaginatedPanel pagination={pagination}>
           <ol className="divide-y divide-border">
             {pagination.slice.map((l) => {
               const meta = ACTION_LABEL[l.action] || { label: l.action, color: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800" };
@@ -79,8 +79,7 @@ export default function AdminActivityLogs() {
               );
             })}
           </ol>
-          <AdminPagination {...pagination} onPageChange={pagination.setPage} />
-        </div>
+        </AdminPaginatedPanel>
       )}
     </div>
   );

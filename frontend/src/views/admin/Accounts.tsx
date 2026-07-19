@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
-import AdminPagination from "@/components/admin/AdminPagination";
+import AdminPaginatedPanel from "@/components/admin/AdminPaginatedPanel";
 import { usePagination } from "@/hooks/usePagination";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -40,10 +40,12 @@ export default function AdminAccounts() {
   const entryPagination = usePagination(entries, 25, `${tab}-${entries.length}`);
   const payPagination = usePagination(payments, 25, payments.length);
 
-  const loadOverview = () => api.get("/admin/accounts/overview").then((r) => setOverview(r.data)).catch(() => {});
+  const loadOverview = () => api.get("/admin/accounts/overview").then((r) => setOverview(r.data)).catch((err) => toast.error(apiError(err)));
   const loadEntries = (kind?: string) => {
     if (!kind) return;
-    api.get("/admin/accounts/entries", { params: { kind } }).then((r) => setEntries(r.data)).catch(() => setEntries([]));
+    api.get("/admin/accounts/entries", { params: { kind } })
+      .then((r) => setEntries(r.data))
+      .catch((err) => { setEntries([]); toast.error(apiError(err)); });
   };
   const loadPayments = () => api.get("/admin/billing", { params: { limit: 500 } }).then((r) => setPayments(r.data)).catch(() => setPayments([]));
 
@@ -156,7 +158,7 @@ export default function AdminAccounts() {
       )}
 
       {tab === "payments" ? (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <AdminPaginatedPanel pagination={payPagination}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -181,10 +183,9 @@ export default function AdminAccounts() {
               ))}
             </TableBody>
           </Table>
-          <AdminPagination {...payPagination} onPageChange={payPagination.setPage} />
-        </div>
+        </AdminPaginatedPanel>
       ) : tab !== "overview" ? (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <AdminPaginatedPanel pagination={entryPagination}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -216,8 +217,7 @@ export default function AdminAccounts() {
               ))}
             </TableBody>
           </Table>
-          <AdminPagination {...entryPagination} onPageChange={entryPagination.setPage} />
-        </div>
+        </AdminPaginatedPanel>
       ) : null}
     </div>
   );
