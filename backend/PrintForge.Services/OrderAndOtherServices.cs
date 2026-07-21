@@ -91,16 +91,28 @@ public class OrderService(
         foreach (var it in lineItems)
             await products.IncrementStockAsync(it.ProductId, -it.Quantity, it.Quantity);
 
-        var payment = await payments.ChargeAsync(orderId, request.PaymentMethod, totals.Total);
-        if (payment.Status == "paid")
+        // Manual UPI / COD stay pending — only auto-confirmed gateway charges advance order status.
+        var payment = await payments.ChargeAsync(orderId, request.PaymentMethod, totals.Total, orderNo);
+        if (payment.Status is "paid" or "approved")
             order = await AdvanceStatusAsync(orderId, "payment_received", $"Payment via {request.PaymentMethod}") ?? order;
+        else if (BackendConstants.ManualUpiMethods.Contains(request.PaymentMethod))
+            await orders.PushTimelineAsync(orderId, new OrderTimelineEntry
+            {
+                Status = "placed",
+                At = IdHelper.NowIso(),
+                Note = "Payment pending — complete UPI payment to continue"
+            }, "placed");
 
         await email.SendAsync(user.Email, "order_confirmation", new Dictionary<string, object?>
         {
             ["order_no"] = orderNo, ["total"] = totals.Total
         });
 
-        return BsonMapper.ToDict(order);
+        var dict = BsonMapper.ToDict(order);
+        dict["payment"] = BsonMapper.ToDict(payment);
+        dict["requires_payment"] = payment.Status == "pending"
+            && BackendConstants.ManualUpiMethods.Contains(request.PaymentMethod);
+        return dict;
     }
 
     public async Task<List<Dictionary<string, object?>>> GetMyOrdersAsync(string userId)
@@ -114,7 +126,12 @@ public class OrderService(
         Order? o = user.Role == "customer"
             ? await orders.FindByIdForUserAsync(oid, user.Id)
             : await orders.FindByIdAsync(oid);
-        return o is null ? throw new KeyNotFoundException("Not found") : BsonMapper.ToDict(o);
+        if (o is null) throw new KeyNotFoundException("Not found");
+
+        var dict = BsonMapper.ToDict(o);
+        var payment = await paymentRecords.FindByOrderIdAsync(oid);
+        dict["payment"] = payment is null ? null : BsonMapper.ToDict(payment);
+        return dict;
     }
 
     public async Task<List<Dictionary<string, object?>>> AdminListAsync(string? status, string? q, int limit)
@@ -129,6 +146,19 @@ public class OrderService(
             ?? throw new InvalidOperationException("Invalid status");
         if (!BackendConstants.OrderStatuses.Contains(status))
             throw new InvalidOperationException("Invalid status");
+
+        var existing = await orders.FindByIdAsync(oid) ?? throw new KeyNotFoundException("Order not found");
+        var payment = await paymentRecords.FindByOrderIdAsync(oid);
+
+        // Block production movement until UPI payment is approved.
+        if (payment is not null
+            && BackendConstants.ManualUpiMethods.Contains(existing.PaymentMethod)
+            && payment.Status is not ("approved" or "paid")
+            && status is not ("placed" or "cancelled")
+            && BackendConstants.OrderStatuses.ToList().IndexOf(status) > BackendConstants.OrderStatuses.ToList().IndexOf("placed"))
+        {
+            throw new InvalidOperationException("Order is blocked until payment is approved");
+        }
 
         var order = await AdvanceStatusAsync(oid, status, payload.GetValueOrDefault("note")?.ToString() ?? "")
             ?? throw new KeyNotFoundException("Order not found");

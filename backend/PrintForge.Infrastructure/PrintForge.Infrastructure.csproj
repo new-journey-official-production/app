@@ -29,6 +29,7 @@
     <EmbeddedResource Include="Database\Migrations\20260715000000_b2b_catalog.sql" />
     <EmbeddedResource Include="Database\Migrations\20260720000000_storefront_enhancements.sql" />
     <EmbeddedResource Include="Database\Migrations\20260720100000_finance_accounts.sql" />
+    <EmbeddedResource Include="Database\Migrations\20260721120000_upi_payment_system.sql" />
   </ItemGroup>
 
 </Project>

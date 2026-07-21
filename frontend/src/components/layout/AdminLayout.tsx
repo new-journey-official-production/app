@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, ShoppingBag, Users, Ticket, Star, BookOpen, Tag, BarChart3, Boxes, Printer,
   Settings as SettingsIcon, Sun, Moon, LogOut, Image as ImageIcon, Activity, Shield, Receipt,
   Building2, FolderTree, FileText, MessageSquareQuote, Handshake, ChevronDown, Menu, X, FolderOpen,
-  Wallet, Landmark,
+  Wallet, Landmark, BadgeCheck, CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -21,8 +21,13 @@ const OVERVIEW_LINKS: NavLinkDef[] = [
 
 const ORDERS_LINKS: NavLinkDef[] = [
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
+  { to: "/admin/approvals", label: "Approvals", icon: BadgeCheck },
   { to: "/admin/billing", label: "Billing", icon: Receipt },
   { to: "/admin/customers", label: "Customers", icon: Users },
+];
+
+const MASTERS_LINKS: NavLinkDef[] = [
+  { to: "/admin/payment-configuration", label: "Payment Configuration", icon: CreditCard },
 ];
 
 const CATALOG_LINKS: NavLinkDef[] = [
@@ -75,6 +80,7 @@ const SYSTEM_LINKS: NavLinkDef[] = [
 /** Sidebar sections — B2B and Accounts sit right after Operations. */
 const NAV_SECTIONS = [
   { id: "orders", label: "Orders & Sales", links: ORDERS_LINKS },
+  { id: "masters", label: "Masters", links: MASTERS_LINKS },
   { id: "catalog", label: "Catalog", links: CATALOG_LINKS },
   { id: "operations", label: "Operations", links: OPERATIONS_LINKS },
   { id: "b2b", label: "B2B Management", links: B2B_LINKS },
@@ -89,7 +95,7 @@ export default function AdminLayout() {
   const { theme, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    orders: true, catalog: true, b2b: true, accounts: true, analytics: false, operations: false, content: false, system: false,
+    orders: true, masters: true, catalog: true, b2b: true, accounts: true, analytics: false, operations: false, content: false, system: false,
   });
 
   const toggleSection = (id: string) => setOpenSections((s) => ({ ...s, [id]: !s[id] }));

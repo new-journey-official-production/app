@@ -28,6 +28,25 @@ public static class BackendConstants
         "out_for_delivery", "delivered", "completed", "cancelled"
     ];
 
+    /// <summary>Payment transaction statuses — gateway-agnostic verification pipeline.</summary>
+    public static readonly string[] PaymentStatuses =
+    [
+        "pending", "verification_pending", "approved", "rejected", "refunded", "paid", "failed"
+    ];
+
+    public static readonly HashSet<string> ManualUpiMethods =
+        new(StringComparer.OrdinalIgnoreCase) { "upi", "gpay", "phonepe", "paytm" };
+
+    public static readonly string[] PaymentMethodTypes = ["upi", "gateway", "cod"];
+
+    public static readonly string[] PaymentRejectionReasons =
+    [
+        "Payment Not Received",
+        "Wrong Amount",
+        "Invalid Screenshot",
+        "Transaction Failed"
+    ];
+
     public static readonly string[] ProductCsvFields =
     [
         "name", "slug", "category_slug", "material", "price", "discount_price",

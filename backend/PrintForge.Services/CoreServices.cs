@@ -54,27 +54,6 @@ public class EmailService(IEmailLogRepository emailLog, ILogger<EmailService> lo
     }
 }
 
-public class PaymentService(IPaymentRepository payments) : IPaymentService
-{
-    public async Task<Payment> ChargeAsync(string orderId, string method, double amount)
-    {
-        var txnId = $"MOCK-{IdHelper.NewId()[..8].ToUpperInvariant()}";
-        var status = method == "cod" ? "pending" : "paid";
-        var payment = new Payment
-        {
-            Id = IdHelper.NewId(),
-            OrderId = orderId,
-            Method = method,
-            Amount = amount,
-            Status = status,
-            TransactionId = txnId,
-            CreatedAt = IdHelper.NowIso()
-        };
-        await payments.InsertAsync(payment);
-        return payment;
-    }
-}
-
 public class ActivityLogService(IActivityLogRepository logs) : IActivityLogService
 {
     public async Task LogAsync(User? user, string action, string target, Dictionary<string, object?>? meta = null)

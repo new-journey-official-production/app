@@ -32,8 +32,11 @@ public static class Modules
     public const string B2bPortal = "/b2b";
 
     public const string Accounts = "/admin/accounts";
+    public const string PaymentConfiguration = "/admin/payment-configuration";
+    public const string Approvals = "/admin/approvals";
 
     public const string Account = "/account";
+    public const string Payment = "/pay";
     public const string AccountOrders = "/account/orders";
     public const string AccountWishlist = "/account/wishlist";
     public const string AccountProfile = "/account/profile";
@@ -51,7 +54,7 @@ public static class Modules
         Support, Reviews, Blog, Coupons, Analytics, Media, ActivityLogs,
         Settings, Roles, Users,
         B2bDashboard, B2bCategories, B2bProducts, B2bCatalog, B2bQuotes, B2bDealers, B2bAnalytics, B2bSettings,
-        Accounts
+        Accounts, PaymentConfiguration, Approvals
     ];
 
     /// <summary>
@@ -61,7 +64,7 @@ public static class Modules
     public static readonly string[] PublicModules =
     [
         Storefront, Catalog, B2bPortal,
-        Account, AccountOrders, AccountWishlist, AccountProfile, AccountSupport, Checkout
+        Account, AccountOrders, AccountWishlist, AccountProfile, AccountSupport, Checkout, Payment
     ];
 
     public static readonly ModuleDefinition[] AllModules =
@@ -92,12 +95,15 @@ public static class Modules
         new(B2bAnalytics, "B2B Analytics", "B2B catalog analytics", "admin"),
         new(B2bSettings, "B2B Settings", "B2B module settings", "admin"),
         new(Accounts, "Accounts", "Company finance and ledger", "admin"),
+        new(PaymentConfiguration, "Payment Configuration", "Payment method master configuration", "admin"),
+        new(Approvals, "Approvals", "Customer payment verification approvals", "admin"),
         new(Account, "Account", "Customer account dashboard", "customer"),
         new(AccountOrders, "My Orders", "Customer order history", "customer"),
         new(AccountWishlist, "Wishlist", "Customer wishlist", "customer"),
         new(AccountProfile, "Profile", "Customer profile", "customer"),
         new(AccountSupport, "Customer Support", "Customer support tickets", "customer"),
         new(Checkout, "Checkout", "Place orders", "customer"),
+        new(Payment, "Payment", "Customer UPI payment page", "customer"),
         new(Storefront, "Storefront", "Public storefront", "public"),
         new(Catalog, "Catalog", "Product catalog browsing", "public"),
         new(B2bPortal, "B2B Portal", "Public B2B wholesale catalog", "public")

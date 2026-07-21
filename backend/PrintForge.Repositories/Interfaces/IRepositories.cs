@@ -181,9 +181,22 @@ public interface IPaymentRepository
     Task InsertAsync(Payment payment);
     Task<Payment?> FindByIdAsync(string id);
     Task<Payment?> FindByOrderIdAsync(string orderId);
-    Task<List<BillingRow>> AdminListAsync(string? status, string? q, int limit);
+    Task<List<BillingRow>> AdminListAsync(string? status, string? q, int limit, string? method = null, string? fromDate = null, string? toDate = null);
     Task UpdateStatusAsync(string id, string status);
+    Task UpdateAsync(string id, Dictionary<string, object?> updates);
     Task DeleteByOrderIdAsync(string orderId);
+    Task<Dictionary<string, object?>> GetApprovalSummaryAsync();
+    Task<Dictionary<string, object?>> GetPaymentAnalyticsAsync(string? status, string? method, string? fromDate, string? toDate);
+}
+
+public interface IPaymentConfigurationRepository
+{
+    Task<List<PaymentConfiguration>> ListAsync(bool activeOnly = false);
+    Task<PaymentConfiguration?> FindByIdAsync(string id);
+    Task<PaymentConfiguration?> FindActiveByTypeAsync(string paymentMethodType);
+    Task InsertAsync(PaymentConfiguration config);
+    Task UpdateAsync(string id, Dictionary<string, object?> updates);
+    Task DeleteAsync(string id);
 }
 
 public interface IPasswordResetRepository

@@ -20,6 +20,7 @@ const Blog = lazy(() => import("@/views/Blog"));
 const BlogPost = lazy(() => import("@/views/BlogPost"));
 const Cart = lazy(() => import("@/views/Cart"));
 const Checkout = lazy(() => import("@/views/Checkout"));
+const PaymentPage = lazy(() => import("@/views/Payment"));
 const Login = lazy(() => import("@/views/Login"));
 const Register = lazy(() => import("@/views/Register"));
 const ForgotPassword = lazy(() => import("@/views/ForgotPassword"));
@@ -57,6 +58,8 @@ const AdminActivityLogs = lazy(() => import("@/views/admin/ActivityLogs"));
 const AdminSettings = lazy(() => import("@/views/admin/Settings"));
 const AdminPermissions = lazy(() => import("@/views/admin/Permissions"));
 const AdminAccounts = lazy(() => import("@/views/admin/Accounts"));
+const AdminPaymentConfiguration = lazy(() => import("@/views/admin/PaymentConfiguration"));
+const AdminApprovals = lazy(() => import("@/views/admin/Approvals"));
 
 const B2bLanding = lazy(() => import("@/views/b2b/Landing"));
 const B2bCatalog = lazy(() => import("@/views/b2b/Catalog"));
@@ -141,6 +144,7 @@ export default function App() {
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                  <Route path="/pay/:orderId" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -176,6 +180,8 @@ export default function App() {
                   <Route path="/admin/categories" element={<AdminCategories />} />
                   <Route path="/admin/orders" element={<AdminOrders />} />
                   <Route path="/admin/billing" element={<AdminBilling />} />
+                  <Route path="/admin/approvals" element={<AdminApprovals />} />
+                  <Route path="/admin/payment-configuration" element={<AdminPaymentConfiguration />} />
                   <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
                   <Route path="/admin/inventory" element={<AdminInventory />} />
                   <Route path="/admin/printers" element={<AdminPrinters />} />

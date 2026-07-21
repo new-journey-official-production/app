@@ -307,6 +307,10 @@ public class ActivityLog
     public string CreatedAt { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Payment transaction record (table: payments / view: payment_transactions).
+/// Gateway-agnostic — method + gateway_provider support UPI manual, Razorpay, Cashfree, COD.
+/// </summary>
 public class Payment
 {
     public string Id { get; set; } = string.Empty;
@@ -316,20 +320,59 @@ public class Payment
     public double Amount { get; set; }
     public string Status { get; set; } = string.Empty;
     public string TransactionId { get; set; } = string.Empty;
+    public string UpiTransactionId { get; set; } = string.Empty;
+    public string ScreenshotUrl { get; set; } = string.Empty;
+    public string PaymentNote { get; set; } = string.Empty;
+    public string VerifiedBy { get; set; } = string.Empty;
+    public string VerifiedDate { get; set; } = string.Empty;
+    public string RejectionReason { get; set; } = string.Empty;
+    public string SubmittedAt { get; set; } = string.Empty;
+    public string QrPayload { get; set; } = string.Empty;
+    public string GatewayProvider { get; set; } = string.Empty;
     public string CreatedAt { get; set; } = string.Empty;
+    public string UpdatedAt { get; set; } = string.Empty;
 }
 
-/// <summary>Payment row joined with order fields for admin billing list.</summary>
+/// <summary>Admin-managed payment method configuration (UPI / future gateways / COD).</summary>
+public class PaymentConfiguration
+{
+    public string Id { get; set; } = string.Empty;
+    public string PaymentMethodName { get; set; } = string.Empty;
+    public string PaymentMethodType { get; set; } = "upi";
+    public string Status { get; set; } = "active";
+    public string MerchantName { get; set; } = string.Empty;
+    public string BusinessName { get; set; } = string.Empty;
+    public string UpiId { get; set; } = string.Empty;
+    public string QrType { get; set; } = "dynamic";
+    public string StaticQrUrl { get; set; } = string.Empty;
+    public string Instructions { get; set; } = string.Empty;
+    public double? MinAmount { get; set; }
+    public double? MaxAmount { get; set; }
+    public int DisplayOrder { get; set; }
+    public string GatewayProvider { get; set; } = string.Empty;
+    public string CreatedAt { get; set; } = string.Empty;
+    public string UpdatedAt { get; set; } = string.Empty;
+}
+
+/// <summary>Payment row joined with order fields for admin billing / approvals lists.</summary>
 public class BillingRow
 {
     public string Id { get; set; } = string.Empty;
     public string OrderId { get; set; } = string.Empty;
     public string OrderNo { get; set; } = string.Empty;
     public string UserEmail { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
     public string Method { get; set; } = string.Empty;
     public double Amount { get; set; }
     public string Status { get; set; } = string.Empty;
     public string TransactionId { get; set; } = string.Empty;
+    public string UpiTransactionId { get; set; } = string.Empty;
+    public string ScreenshotUrl { get; set; } = string.Empty;
+    public string PaymentNote { get; set; } = string.Empty;
+    public string VerifiedBy { get; set; } = string.Empty;
+    public string VerifiedDate { get; set; } = string.Empty;
+    public string RejectionReason { get; set; } = string.Empty;
+    public string SubmittedAt { get; set; } = string.Empty;
     public string OrderStatus { get; set; } = string.Empty;
     public string CreatedAt { get; set; } = string.Empty;
 }

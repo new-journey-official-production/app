@@ -33,14 +33,29 @@ public interface IEmailService
 
 public interface IPaymentService
 {
-    Task<Payment> ChargeAsync(string orderId, string method, double amount);
+    Task<Payment> ChargeAsync(string orderId, string method, double amount, string? orderNo = null);
+}
+
+public interface IPaymentConfigurationService
+{
+    Task<List<Dictionary<string, object?>>> ListAsync(bool activeOnly = false);
+    Task<Dictionary<string, object?>> GetAsync(string id);
+    Task<Dictionary<string, object?>> GetActiveUpiAsync();
+    Task<Dictionary<string, object?>> CreateAsync(User user, PaymentConfigurationRequest request);
+    Task<Dictionary<string, object?>> UpdateAsync(User user, string id, PaymentConfigurationRequest request);
+    Task DeleteAsync(User user, string id);
 }
 
 public interface IBillingService
 {
-    Task<List<Dictionary<string, object?>>> AdminListAsync(string? status, string? q, int limit);
+    Task<List<Dictionary<string, object?>>> AdminListAsync(string? status, string? q, int limit, string? method = null, string? fromDate = null, string? toDate = null);
     Task<Dictionary<string, object?>> UpdateStatusAsync(User user, string paymentId, string status);
     Task<Dictionary<string, object?>> GetOrderBillingAsync(string orderId);
+    Task<Dictionary<string, object?>> GetApprovalSummaryAsync();
+    Task<Dictionary<string, object?>> GetPaymentAnalyticsAsync(string? status, string? method, string? fromDate, string? toDate);
+    Task<Dictionary<string, object?>> SubmitProofAsync(User user, string orderId, SubmitPaymentProofRequest request);
+    Task<Dictionary<string, object?>> ApproveAsync(User user, string paymentId);
+    Task<Dictionary<string, object?>> RejectAsync(User user, string paymentId, RejectPaymentRequest request);
 }
 
 public interface IActivityLogService

@@ -2,13 +2,20 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { api, apiError } from "@/lib/api";
+import { api, apiError, API_BASE } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency, ORDER_STATUS_STEPS } from "@/lib/constants";
+import { paymentStatusLabel } from "@/lib/upi";
 import OrderTimeline from "@/components/OrderTimeline";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+function mediaSrc(url?: string) {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${API_BASE.replace(/\/api$/, "")}${url.startsWith("/") ? url : `/${url}`}`;
+}
 
 export default function AdminOrderDetail() {
   const { id } = useParams();
@@ -26,6 +33,8 @@ export default function AdminOrderDetail() {
     load();
     api.get("/printers").then((r) => setPrinters(r.data));
   }, [id]);
+
+  const payment = o?.payment as ApiRow | undefined;
 
   const updateStatus = async () => {
     if (!newStatus) return;
@@ -93,8 +102,37 @@ export default function AdminOrderDetail() {
           </section>
 
           <section className="rounded-xl border border-border bg-card p-6">
+            <div className="font-display font-semibold mb-4">Payment information</div>
+            {payment ? (
+              <div className="space-y-2 text-sm">
+                <Row k="Payment Method" v={String(payment.method || o.payment_method || "—").toUpperCase()} />
+                <Row k="Payment Status" v={paymentStatusLabel(String(payment.status))} />
+                <Row k="UPI Transaction ID" v={String(payment.upi_transaction_id || payment.transaction_id || "—")} />
+                <Row k="Verified By" v={String(payment.verified_by || "—")} />
+                <Row k="Verified Date" v={String(payment.verified_date || "—").slice(0, 16).replace("T", " ") || "—"} />
+                {payment.rejection_reason && <Row k="Rejection Reason" v={String(payment.rejection_reason)} />}
+                {payment.screenshot_url && (
+                  <div className="pt-2">
+                    <div className="text-xs text-muted-foreground mb-2">Payment Screenshot</div>
+                    <a href={mediaSrc(String(payment.screenshot_url))} target="_blank" rel="noreferrer">
+                      <img src={mediaSrc(String(payment.screenshot_url))} alt="Payment proof" className="max-h-56 rounded-lg border object-contain bg-zinc-50 dark:bg-zinc-900" />
+                    </a>
+                  </div>
+                )}
+                {payment.status === "verification_pending" && (
+                  <Button asChild className="mt-3 bg-orange-600 hover:bg-orange-700">
+                    <Link to="/admin/approvals">Open Approvals</Link>
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No payment record for this order.</div>
+            )}
+          </section>
+
+          <section className="rounded-xl border border-border bg-card p-6">
             <div className="font-display font-semibold mb-4">Timeline</div>
-            <OrderTimeline status={o.status} timeline={o.timeline} />
+            <OrderTimeline status={o.status} timeline={o.timeline} paymentStatus={payment?.status ? String(payment.status) : null} />
           </section>
         </div>
 

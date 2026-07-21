@@ -8,6 +8,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { api, apiError } from "@/lib/api";
 import type { ApiRow } from "@/types";
 import { formatCurrency } from "@/lib/constants";
+import { paymentStatusLabel } from "@/lib/upi";
 import { Button } from "@/components/ui/button";
 
 const DELETABLE_STATUSES = new Set(["placed", "cancelled"]);
@@ -17,6 +18,7 @@ export default function CustomerOrderDetail() {
   const nav = useNavigate();
   const [o, setO] = useState<ApiRow | null>(null);
   useEffect(() => { api.get(`/orders/${id}`).then((r) => setO(r.data)).catch(() => {}); }, [id]);
+  const payment = o?.payment as ApiRow | undefined;
 
   const deleteOrder = async () => {
     if (!o || !DELETABLE_STATUSES.has(o.status)) {
@@ -73,7 +75,15 @@ export default function CustomerOrderDetail() {
 
           <section className="rounded-2xl border border-border p-6">
             <div className="font-display font-semibold text-lg mb-4">Timeline</div>
-            <OrderTimeline status={o.status} timeline={o.timeline} />
+            <OrderTimeline
+              status={o.status}
+              timeline={o.timeline}
+              paymentStatus={
+                payment && ["upi", "gpay", "phonepe", "paytm"].includes(String(payment.method || o.payment_method || "").toLowerCase())
+                  ? String(payment.status)
+                  : null
+              }
+            />
           </section>
         </div>
 
@@ -86,7 +96,18 @@ export default function CustomerOrderDetail() {
               <Row k="GST" v={formatCurrency(o.gst)} />
               <Row k="Shipping" v={o.shipping === 0 ? "Free" : formatCurrency(o.shipping)} />
               <div className="border-t border-border pt-2 mt-2 flex items-center justify-between font-semibold"><span>Total</span><span className="font-mono-data">{formatCurrency(o.total)}</span></div>
-              <div className="text-xs text-muted-foreground mt-2">Payment: {o.payment_method?.toUpperCase()}</div>
+              <div className="text-xs text-muted-foreground mt-2">Payment: {(payment?.method || o.payment_method)?.toString().toUpperCase()}</div>
+              {payment?.status && (
+                <div className="text-xs mt-1">Status: {paymentStatusLabel(String(payment.status))}</div>
+              )}
+              {payment?.status === "pending" && String(payment.method || o.payment_method) === "upi" && (
+                <Button asChild className="w-full mt-3 rounded-full bg-orange-600 hover:bg-orange-700">
+                  <Link to={`/pay/${o.id}`}>Complete payment</Link>
+                </Button>
+              )}
+              {payment?.status === "rejected" && (
+                <div className="mt-2 text-xs text-red-600">Payment Failed{payment.rejection_reason ? ` — ${payment.rejection_reason}` : ""}</div>
+              )}
             </div>
           </section>
           <section className="rounded-2xl border border-border p-6 text-sm">

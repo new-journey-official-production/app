@@ -93,8 +93,14 @@ public class AdminBillingController(IBillingService billing) : ControllerBase
 {
     [HttpGet]
     [AdminAuthorize]
-    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? q, [FromQuery] int limit = 200) =>
-        Ok(await billing.AdminListAsync(status, q, limit));
+    public async Task<IActionResult> List(
+        [FromQuery] string? status,
+        [FromQuery] string? q,
+        [FromQuery] int limit = 200,
+        [FromQuery] string? method = null,
+        [FromQuery] string? from = null,
+        [FromQuery] string? to = null) =>
+        Ok(await billing.AdminListAsync(status, q, limit, method, from, to));
 
     [HttpGet("order/{orderId}")]
     [AdminAuthorize]
@@ -103,6 +109,15 @@ public class AdminBillingController(IBillingService billing) : ControllerBase
         try { return Ok(await billing.GetOrderBillingAsync(orderId)); }
         catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
     }
+
+    [HttpGet("analytics")]
+    [AdminAuthorize]
+    public async Task<IActionResult> Analytics(
+        [FromQuery] string? status,
+        [FromQuery] string? method,
+        [FromQuery] string? from,
+        [FromQuery] string? to) =>
+        Ok(await billing.GetPaymentAnalyticsAsync(status, method, from, to));
 
     [HttpPatch("{paymentId}/status")]
     [AdminAuthorize]

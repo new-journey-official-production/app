@@ -367,3 +367,64 @@ public class CategoryRequest
     public string? Icon { get; set; }
     public string? Image { get; set; }
 }
+
+public class PaymentConfigurationRequest
+{
+    [JsonPropertyName("payment_method_name")]
+    [Required, MinLength(1), MaxLength(120)]
+    public string PaymentMethodName { get; set; } = string.Empty;
+
+    [JsonPropertyName("payment_method_type")]
+    public string PaymentMethodType { get; set; } = "upi";
+
+    public string Status { get; set; } = "active";
+
+    [JsonPropertyName("merchant_name")]
+    public string MerchantName { get; set; } = string.Empty;
+
+    [JsonPropertyName("business_name")]
+    public string BusinessName { get; set; } = string.Empty;
+
+    [JsonPropertyName("upi_id")]
+    public string UpiId { get; set; } = string.Empty;
+
+    [JsonPropertyName("qr_type")]
+    public string QrType { get; set; } = "dynamic";
+
+    [JsonPropertyName("static_qr_url")]
+    public string StaticQrUrl { get; set; } = string.Empty;
+
+    public string Instructions { get; set; } = string.Empty;
+
+    [JsonPropertyName("min_amount")]
+    public double? MinAmount { get; set; }
+
+    [JsonPropertyName("max_amount")]
+    public double? MaxAmount { get; set; }
+
+    [JsonPropertyName("display_order")]
+    public int DisplayOrder { get; set; }
+
+    [JsonPropertyName("gateway_provider")]
+    public string GatewayProvider { get; set; } = string.Empty;
+}
+
+public class SubmitPaymentProofRequest
+{
+    [JsonPropertyName("upi_transaction_id")]
+    [Required, MinLength(4), MaxLength(80)]
+    public string UpiTransactionId { get; set; } = string.Empty;
+
+    [JsonPropertyName("payment_note")]
+    public string? PaymentNote { get; set; }
+
+    [JsonPropertyName("screenshot_url")]
+    [Required, MinLength(1)]
+    public string ScreenshotUrl { get; set; } = string.Empty;
+}
+
+public class RejectPaymentRequest
+{
+    [Required, MinLength(1)]
+    public string Reason { get; set; } = string.Empty;
+}

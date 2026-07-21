@@ -641,7 +641,17 @@ public class PaymentRepository(PostgresDb db) : IPaymentRepository
           amount as Amount,
           status as Status,
           transaction_id as TransactionId,
-          created_at::text as CreatedAt
+          coalesce(upi_transaction_id, '') as UpiTransactionId,
+          coalesce(screenshot_url, '') as ScreenshotUrl,
+          coalesce(payment_note, '') as PaymentNote,
+          coalesce(verified_by, '') as VerifiedBy,
+          coalesce(verified_date, '') as VerifiedDate,
+          coalesce(rejection_reason, '') as RejectionReason,
+          coalesce(submitted_at, '') as SubmittedAt,
+          coalesce(qr_payload, '') as QrPayload,
+          coalesce(gateway_provider, '') as GatewayProvider,
+          created_at::text as CreatedAt,
+          coalesce(updated_at::text, created_at::text) as UpdatedAt
         from payments
         """;
 
@@ -650,11 +660,16 @@ public class PaymentRepository(PostgresDb db) : IPaymentRepository
         await using var conn = await db.OpenConnectionAsync();
         const string sql = """
             insert into payments (
-                id, order_id, method, amount, status, transaction_id, created_at
+                id, order_id, method, amount, status, transaction_id,
+                upi_transaction_id, screenshot_url, payment_note, verified_by, verified_date,
+                rejection_reason, submitted_at, qr_payload, gateway_provider, created_at, updated_at
             )
             values (
                 @Id, @OrderId, @Method, @Amount, @Status, @TransactionId,
-                coalesce(nullif(@CreatedAt, '')::timestamptz, now())
+                @UpiTransactionId, @ScreenshotUrl, @PaymentNote, @VerifiedBy, @VerifiedDate,
+                @RejectionReason, @SubmittedAt, @QrPayload, @GatewayProvider,
+                coalesce(nullif(@CreatedAt, '')::timestamptz, now()),
+                coalesce(nullif(@UpdatedAt, '')::timestamptz, now())
             );
             """;
         await conn.ExecuteAsync(sql, payment);
@@ -674,7 +689,7 @@ public class PaymentRepository(PostgresDb db) : IPaymentRepository
         return await conn.QuerySingleOrDefaultAsync<Payment>(sql, new { OrderId = orderId });
     }
 
-    public async Task<List<BillingRow>> AdminListAsync(string? status, string? q, int limit)
+    public async Task<List<BillingRow>> AdminListAsync(string? status, string? q, int limit, string? method = null, string? fromDate = null, string? toDate = null)
     {
         const string sql = """
             select
@@ -682,34 +697,69 @@ public class PaymentRepository(PostgresDb db) : IPaymentRepository
               p.order_id as OrderId,
               o.order_no as OrderNo,
               o.user_email as UserEmail,
+              coalesce(o.address->>'full_name', '') as CustomerName,
               p.method as Method,
               p.amount as Amount,
               p.status as Status,
               p.transaction_id as TransactionId,
+              coalesce(p.upi_transaction_id, '') as UpiTransactionId,
+              coalesce(p.screenshot_url, '') as ScreenshotUrl,
+              coalesce(p.payment_note, '') as PaymentNote,
+              coalesce(p.verified_by, '') as VerifiedBy,
+              coalesce(p.verified_date, '') as VerifiedDate,
+              coalesce(p.rejection_reason, '') as RejectionReason,
+              coalesce(p.submitted_at, '') as SubmittedAt,
               o.status as OrderStatus,
               p.created_at::text as CreatedAt
             from payments p
             inner join orders o on o.id = p.order_id
             where (@Status is null or p.status = @Status)
+              and (@Method is null or p.method = @Method)
+              and (@FromDate is null or p.created_at::date >= @FromDate::date)
+              and (@ToDate is null or p.created_at::date <= @ToDate::date)
               and (
                     @Query is null
                     or o.order_no ilike ('%' || @Query || '%')
                     or o.user_email ilike ('%' || @Query || '%')
                     or p.transaction_id ilike ('%' || @Query || '%')
+                    or coalesce(p.upi_transaction_id, '') ilike ('%' || @Query || '%')
+                    or coalesce(o.address->>'full_name', '') ilike ('%' || @Query || '%')
                   )
-            order by p.created_at desc
+            order by
+              case when p.status = 'verification_pending' then 0 else 1 end,
+              coalesce(nullif(p.submitted_at, '')::timestamptz, p.created_at) desc
             limit @Limit;
             """;
         await using var conn = await db.OpenConnectionAsync();
-        var items = await conn.QueryAsync<BillingRow>(sql, new { Status = status, Query = q, Limit = limit });
+        var items = await conn.QueryAsync<BillingRow>(sql, new
+        {
+            Status = status,
+            Query = q,
+            Limit = limit,
+            Method = method,
+            FromDate = fromDate,
+            ToDate = toDate
+        });
         return items.ToList();
     }
 
     public async Task UpdateStatusAsync(string id, string status)
     {
-        const string sql = "update payments set status = @Status where id = @Id;";
+        const string sql = "update payments set status = @Status, updated_at = now() where id = @Id;";
         await using var conn = await db.OpenConnectionAsync();
         await conn.ExecuteAsync(sql, new { Id = id, Status = status });
+    }
+
+    public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
+    {
+        if (updates.Count == 0) return;
+        updates["updated_at"] = DateTime.UtcNow.ToString("O");
+        await using var conn = await db.OpenConnectionAsync();
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, setParameters) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update payments set {setClause} where id = @id;";
+        await conn.ExecuteAsync(sql, setParameters);
     }
 
     public async Task DeleteByOrderIdAsync(string orderId)
@@ -717,6 +767,148 @@ public class PaymentRepository(PostgresDb db) : IPaymentRepository
         const string sql = "delete from payments where order_id = @OrderId;";
         await using var conn = await db.OpenConnectionAsync();
         await conn.ExecuteAsync(sql, new { OrderId = orderId });
+    }
+
+    public async Task<Dictionary<string, object?>> GetApprovalSummaryAsync()
+    {
+        const string sql = """
+            select
+              count(*) filter (where status = 'verification_pending') as pending_count,
+              count(*) filter (where status = 'approved' and nullif(verified_date, '')::date = current_date) as approved_today,
+              count(*) filter (where status = 'rejected' and nullif(verified_date, '')::date = current_date) as rejected_today,
+              coalesce(sum(amount) filter (where status = 'verification_pending'), 0) as pending_revenue,
+              coalesce(sum(amount) filter (where status = 'approved' and nullif(verified_date, '')::date = current_date), 0) as approved_revenue
+            from payments;
+            """;
+        await using var conn = await db.OpenConnectionAsync();
+        var row = await conn.QuerySingleAsync<(long pending_count, long approved_today, long rejected_today, double pending_revenue, double approved_revenue)>(sql);
+        return new Dictionary<string, object?>
+        {
+            ["pending_count"] = row.pending_count,
+            ["approved_today"] = row.approved_today,
+            ["rejected_today"] = row.rejected_today,
+            ["pending_revenue"] = row.pending_revenue,
+            ["approved_revenue"] = row.approved_revenue,
+        };
+    }
+
+    public async Task<Dictionary<string, object?>> GetPaymentAnalyticsAsync(string? status, string? method, string? fromDate, string? toDate)
+    {
+        const string sql = """
+            select
+              count(*) as total_orders,
+              coalesce(sum(amount), 0) as total_payment_amount,
+              coalesce(sum(amount) filter (where status = 'verification_pending'), 0) as pending_verification_amount,
+              coalesce(sum(amount) filter (where status in ('approved', 'paid')), 0) as approved_revenue,
+              count(*) filter (where status = 'rejected') as rejected_payments
+            from payments
+            where (@Status is null or status = @Status)
+              and (@Method is null or method = @Method)
+              and (@FromDate is null or created_at::date >= @FromDate::date)
+              and (@ToDate is null or created_at::date <= @ToDate::date);
+            """;
+        await using var conn = await db.OpenConnectionAsync();
+        var row = await conn.QuerySingleAsync<(long total_orders, double total_payment_amount, double pending_verification_amount, double approved_revenue, long rejected_payments)>(sql, new
+        {
+            Status = status,
+            Method = method,
+            FromDate = fromDate,
+            ToDate = toDate
+        });
+        return new Dictionary<string, object?>
+        {
+            ["total_orders"] = row.total_orders,
+            ["total_payment_amount"] = row.total_payment_amount,
+            ["pending_verification_amount"] = row.pending_verification_amount,
+            ["approved_revenue"] = row.approved_revenue,
+            ["rejected_payments"] = row.rejected_payments,
+        };
+    }
+}
+
+/// <summary>Admin payment method configuration repository.</summary>
+public class PaymentConfigurationRepository(PostgresDb db) : IPaymentConfigurationRepository
+{
+    private const string SelectSql = """
+        select
+          id as Id,
+          payment_method_name as PaymentMethodName,
+          payment_method_type as PaymentMethodType,
+          status as Status,
+          merchant_name as MerchantName,
+          business_name as BusinessName,
+          upi_id as UpiId,
+          qr_type as QrType,
+          static_qr_url as StaticQrUrl,
+          instructions as Instructions,
+          min_amount as MinAmount,
+          max_amount as MaxAmount,
+          display_order as DisplayOrder,
+          coalesce(gateway_provider, '') as GatewayProvider,
+          created_at::text as CreatedAt,
+          updated_at::text as UpdatedAt
+        from payment_configurations
+        """;
+
+    public async Task<List<PaymentConfiguration>> ListAsync(bool activeOnly = false)
+    {
+        var sql = activeOnly
+            ? $"{SelectSql} where status = 'active' order by display_order asc, created_at asc;"
+            : $"{SelectSql} order by display_order asc, created_at asc;";
+        await using var conn = await db.OpenConnectionAsync();
+        return (await conn.QueryAsync<PaymentConfiguration>(sql)).ToList();
+    }
+
+    public async Task<PaymentConfiguration?> FindByIdAsync(string id)
+    {
+        var sql = $"{SelectSql} where id = @Id limit 1;";
+        await using var conn = await db.OpenConnectionAsync();
+        return await conn.QuerySingleOrDefaultAsync<PaymentConfiguration>(sql, new { Id = id });
+    }
+
+    public async Task<PaymentConfiguration?> FindActiveByTypeAsync(string paymentMethodType)
+    {
+        var sql = $"{SelectSql} where payment_method_type = @Type and status = 'active' order by display_order asc limit 1;";
+        await using var conn = await db.OpenConnectionAsync();
+        return await conn.QuerySingleOrDefaultAsync<PaymentConfiguration>(sql, new { Type = paymentMethodType });
+    }
+
+    public async Task InsertAsync(PaymentConfiguration config)
+    {
+        const string sql = """
+            insert into payment_configurations (
+                id, payment_method_name, payment_method_type, status, merchant_name, business_name,
+                upi_id, qr_type, static_qr_url, instructions, min_amount, max_amount,
+                display_order, gateway_provider, created_at, updated_at
+            ) values (
+                @Id, @PaymentMethodName, @PaymentMethodType, @Status, @MerchantName, @BusinessName,
+                @UpiId, @QrType, @StaticQrUrl, @Instructions, @MinAmount, @MaxAmount,
+                @DisplayOrder, @GatewayProvider,
+                coalesce(nullif(@CreatedAt, '')::timestamptz, now()),
+                coalesce(nullif(@UpdatedAt, '')::timestamptz, now())
+            );
+            """;
+        await using var conn = await db.OpenConnectionAsync();
+        await conn.ExecuteAsync(sql, config);
+    }
+
+    public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
+    {
+        if (updates.Count == 0) return;
+        updates["updated_at"] = DateTime.UtcNow.ToString("O");
+        await using var conn = await db.OpenConnectionAsync();
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, setParameters) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update payment_configurations set {setClause} where id = @id;";
+        await conn.ExecuteAsync(sql, setParameters);
+    }
+
+    public async Task DeleteAsync(string id)
+    {
+        const string sql = "delete from payment_configurations where id = @Id;";
+        await using var conn = await db.OpenConnectionAsync();
+        await conn.ExecuteAsync(sql, new { Id = id });
     }
 }
 

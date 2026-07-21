@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMediaRepository, MediaRepository>();
         services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IPaymentConfigurationRepository, PaymentConfigurationRepository>();
         services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
         services.AddScoped<IRbacRepository, RbacRepository>();
         services.AddScoped<IEmailLogRepository, EmailLogRepository>();
@@ -45,6 +46,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IPaymentConfigurationService, PaymentConfigurationService>();
         services.AddScoped<IBillingService, BillingService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
         services.AddScoped<IProductService, ProductService>();
