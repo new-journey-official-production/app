@@ -28,6 +28,7 @@ export const MODULES = {
   B2B_PORTAL: "/b2b",
   ACCOUNTS: "/admin/accounts",
   PAYMENT_CONFIGURATION: "/admin/payment-configuration",
+  NOTIFICATION_CONFIGURATION: "/admin/notification-configuration",
   APPROVALS: "/admin/approvals",
   ACCOUNT: "/account",
   ACCOUNT_ORDERS: "/account/orders",

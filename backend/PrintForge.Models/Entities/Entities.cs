@@ -267,6 +267,24 @@ public class Notification
     public string CreatedAt { get; set; } = string.Empty;
 }
 
+/// <summary>Admin rule for when / how to notify customers (email, in-app, SMS).</summary>
+public class NotificationConfiguration
+{
+    public string Id { get; set; } = string.Empty;
+    public string EventKey { get; set; } = string.Empty;
+    public string EventName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public bool Enabled { get; set; } = true;
+    public bool ChannelEmail { get; set; } = true;
+    public bool ChannelInApp { get; set; } = true;
+    public bool ChannelSms { get; set; }
+    public string TitleTemplate { get; set; } = string.Empty;
+    public string BodyTemplate { get; set; } = string.Empty;
+    public int DisplayOrder { get; set; }
+    public string CreatedAt { get; set; } = string.Empty;
+    public string UpdatedAt { get; set; } = string.Empty;
+}
+
 public class BlogPost
 {
     public string Id { get; set; } = string.Empty;

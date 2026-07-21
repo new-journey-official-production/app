@@ -411,9 +411,10 @@ public class PaymentConfigurationRequest
 
 public class SubmitPaymentProofRequest
 {
+    /// <summary>Optional UPI reference — screenshot is the required proof.</summary>
     [JsonPropertyName("upi_transaction_id")]
-    [Required, MinLength(4), MaxLength(80)]
-    public string UpiTransactionId { get; set; } = string.Empty;
+    [MaxLength(80)]
+    public string? UpiTransactionId { get; set; }
 
     [JsonPropertyName("payment_note")]
     public string? PaymentNote { get; set; }
@@ -427,4 +428,35 @@ public class RejectPaymentRequest
 {
     [Required, MinLength(1)]
     public string Reason { get; set; } = string.Empty;
+}
+
+public class NotificationConfigurationRequest
+{
+    [JsonPropertyName("event_name")]
+    [Required, MinLength(1), MaxLength(120)]
+    public string EventName { get; set; } = string.Empty;
+
+    public string Description { get; set; } = string.Empty;
+
+    public bool Enabled { get; set; } = true;
+
+    [JsonPropertyName("channel_email")]
+    public bool ChannelEmail { get; set; } = true;
+
+    [JsonPropertyName("channel_in_app")]
+    public bool ChannelInApp { get; set; } = true;
+
+    [JsonPropertyName("channel_sms")]
+    public bool ChannelSms { get; set; }
+
+    [JsonPropertyName("title_template")]
+    [Required, MinLength(1)]
+    public string TitleTemplate { get; set; } = string.Empty;
+
+    [JsonPropertyName("body_template")]
+    [Required, MinLength(1)]
+    public string BodyTemplate { get; set; } = string.Empty;
+
+    [JsonPropertyName("display_order")]
+    public int DisplayOrder { get; set; }
 }

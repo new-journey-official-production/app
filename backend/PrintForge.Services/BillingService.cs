@@ -16,7 +16,7 @@ public class BillingService(
     IOrderRepository orders,
     IProductRepository products,
     IActivityLogService activity,
-    INotificationRepository notifications) : IBillingService
+    INotificationDispatchService notificationDispatch) : IBillingService
 {
     private static readonly HashSet<string> AllowedStatuses =
         new(BackendConstants.PaymentStatuses, StringComparer.OrdinalIgnoreCase);
@@ -81,16 +81,20 @@ public class BillingService(
         if (payment.Status == "verification_pending")
             throw new InvalidOperationException("Payment proof already submitted and awaiting verification");
 
+        if (string.IsNullOrWhiteSpace(request.ScreenshotUrl))
+            throw new InvalidOperationException("Payment screenshot is required");
+
+        var upiTxn = request.UpiTransactionId?.Trim() ?? "";
         var now = IdHelper.NowIso();
         await payments.UpdateAsync(payment.Id, new Dictionary<string, object?>
         {
-            ["upi_transaction_id"] = request.UpiTransactionId.Trim(),
+            ["upi_transaction_id"] = upiTxn,
             ["screenshot_url"] = request.ScreenshotUrl.Trim(),
             ["payment_note"] = request.PaymentNote?.Trim() ?? "",
             ["submitted_at"] = now,
             ["status"] = "verification_pending",
             ["rejection_reason"] = "",
-            ["transaction_id"] = request.UpiTransactionId.Trim(),
+            ["transaction_id"] = upiTxn,
         });
 
         await orders.PushTimelineAsync(orderId, new OrderTimelineEntry
@@ -104,8 +108,10 @@ public class BillingService(
         {
             ["order_id"] = orderId,
             ["order_no"] = order.OrderNo,
-            ["upi_transaction_id"] = request.UpiTransactionId.Trim()
+            ["upi_transaction_id"] = upiTxn
         });
+
+        await notificationDispatch.DispatchAsync("payment_verification_pending", order);
 
         var updated = await payments.FindByIdAsync(payment.Id) ?? payment;
         return BsonMapper.ToDict(updated);
@@ -149,17 +155,15 @@ public class BillingService(
             }, "accepted");
         }
 
-        await notifications.InsertAsync(new Notification
+        await notificationDispatch.DispatchAsync("payment_approved", order, new Dictionary<string, object?>
         {
-            Id = IdHelper.NewId(),
-            UserId = order.UserId,
-            Title = "Payment approved",
-            Message = $"Payment for order {order.OrderNo} has been verified. Production will begin shortly.",
-            Kind = "payment",
-            RefId = order.Id,
-            Read = false,
-            CreatedAt = now
+            ["amount"] = payment.Amount
         });
+
+        // Auto-accept after approval also triggers the "accepted" rule when enabled.
+        var fresh = await orders.FindByIdAsync(order.Id);
+        if (fresh is not null && fresh.Status == "accepted")
+            await notificationDispatch.DispatchAsync("accepted", fresh);
 
         await activity.LogAsync(user, "payment.approve", paymentId, new Dictionary<string, object?>
         {
@@ -209,16 +213,9 @@ public class BillingService(
             Note = $"Payment rejected: {request.Reason.Trim()}"
         }, "cancelled");
 
-        await notifications.InsertAsync(new Notification
+        await notificationDispatch.DispatchAsync("payment_rejected", order, new Dictionary<string, object?>
         {
-            Id = IdHelper.NewId(),
-            UserId = order.UserId,
-            Title = "Payment failed",
-            Message = $"Payment for order {order.OrderNo} was rejected. Reason: {request.Reason.Trim()}",
-            Kind = "payment",
-            RefId = order.Id,
-            Read = false,
-            CreatedAt = now
+            ["reason"] = request.Reason.Trim()
         });
 
         await activity.LogAsync(user, "payment.reject", paymentId, new Dictionary<string, object?>

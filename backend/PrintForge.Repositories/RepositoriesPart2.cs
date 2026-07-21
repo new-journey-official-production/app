@@ -912,6 +912,61 @@ public class PaymentConfigurationRepository(PostgresDb db) : IPaymentConfigurati
     }
 }
 
+/// <summary>Admin notification rule repository.</summary>
+public class NotificationConfigurationRepository(PostgresDb db) : INotificationConfigurationRepository
+{
+    private const string SelectSql = """
+        select
+          id as Id,
+          event_key as EventKey,
+          event_name as EventName,
+          description as Description,
+          enabled as Enabled,
+          channel_email as ChannelEmail,
+          channel_in_app as ChannelInApp,
+          channel_sms as ChannelSms,
+          title_template as TitleTemplate,
+          body_template as BodyTemplate,
+          display_order as DisplayOrder,
+          created_at::text as CreatedAt,
+          updated_at::text as UpdatedAt
+        from notification_configurations
+        """;
+
+    public async Task<List<NotificationConfiguration>> ListAsync()
+    {
+        var sql = $"{SelectSql} order by display_order asc, event_name asc;";
+        await using var conn = await db.OpenConnectionAsync();
+        return (await conn.QueryAsync<NotificationConfiguration>(sql)).ToList();
+    }
+
+    public async Task<NotificationConfiguration?> FindByIdAsync(string id)
+    {
+        var sql = $"{SelectSql} where id = @Id limit 1;";
+        await using var conn = await db.OpenConnectionAsync();
+        return await conn.QuerySingleOrDefaultAsync<NotificationConfiguration>(sql, new { Id = id });
+    }
+
+    public async Task<NotificationConfiguration?> FindByEventKeyAsync(string eventKey)
+    {
+        var sql = $"{SelectSql} where event_key = @Key limit 1;";
+        await using var conn = await db.OpenConnectionAsync();
+        return await conn.QuerySingleOrDefaultAsync<NotificationConfiguration>(sql, new { Key = eventKey });
+    }
+
+    public async Task UpdateAsync(string id, Dictionary<string, object?> updates)
+    {
+        if (updates.Count == 0) return;
+        updates["updated_at"] = DateTime.UtcNow.ToString("O");
+        await using var conn = await db.OpenConnectionAsync();
+        var parameters = new DynamicParameters();
+        parameters.Add("id", id);
+        var (setClause, setParameters) = PostgresSqlHelper.BuildSetClause(updates, parameters);
+        var sql = $"update notification_configurations set {setClause} where id = @id;";
+        await conn.ExecuteAsync(sql, setParameters);
+    }
+}
+
 /// <summary>Postgres-backed password reset repository.</summary>
 public class PasswordResetRepository(PostgresDb db) : IPasswordResetRepository
 {

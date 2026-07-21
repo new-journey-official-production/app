@@ -121,17 +121,17 @@ export default function Checkout() {
       };
       const { data } = await api.post("/orders", payload);
       const orderId = String(data.id);
-      clear();
+      // Online UPI: clear cart and jump straight to payment page.
       if (method === "upi" || data.requires_payment) {
-        toast.success("Order created — complete UPI payment");
-        nav(`/pay/${orderId}`);
-      } else {
-        toast.success("Order placed!");
-        nav(`/account/orders/${orderId}`);
+        clear();
+        nav(`/pay/${orderId}`, { replace: true });
+        return;
       }
+      clear();
+      toast.success("Order placed!");
+      nav(`/account/orders/${orderId}`, { replace: true });
     } catch (err) {
       toast.error(apiError(err));
-    } finally {
       setBusy(false);
     }
   };

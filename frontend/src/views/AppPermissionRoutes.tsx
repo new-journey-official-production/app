@@ -23,6 +23,7 @@ export const ModulesMap: Record<string, ModuleRouteConfig> = {
   "/admin/billing": { moduleId: MODULES.BILLING, OP: CPPermissions.READ },
   "/admin/approvals": { moduleId: MODULES.APPROVALS, OP: CPPermissions.READ },
   "/admin/payment-configuration": { moduleId: MODULES.PAYMENT_CONFIGURATION, OP: CPPermissions.READ },
+  "/admin/notification-configuration": { moduleId: MODULES.NOTIFICATION_CONFIGURATION, OP: CPPermissions.READ },
   "/admin/inventory": { moduleId: MODULES.INVENTORY, OP: CPPermissions.READ },
   "/admin/printers": { moduleId: MODULES.PRINTERS, OP: CPPermissions.READ },
   "/admin/customers": { moduleId: MODULES.CUSTOMERS, OP: CPPermissions.READ },

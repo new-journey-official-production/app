@@ -17,6 +17,7 @@ public class OrderService(
     IEmailService email,
     IUserRepository users,
     INotificationRepository notifications,
+    INotificationDispatchService notificationDispatch,
     IActivityLogService activity) : IOrderService
 {
     public async Task<Dictionary<string, object?>> CreateAsync(User user, OrderCreateRequest request)
@@ -229,6 +230,49 @@ public class OrderService(
         });
     }
 
+    /// <summary>
+    /// Soft-cancel unpaid / pre-production orders from the payment page.
+    /// Restores stock and marks the linked payment as rejected.
+    /// </summary>
+    public async Task<Dictionary<string, object?>> UserCancelAsync(User user, string oid)
+    {
+        var order = await orders.FindByIdForUserAsync(oid, user.Id)
+            ?? throw new KeyNotFoundException("Order not found");
+
+        if (order.Status == "cancelled")
+            return BsonMapper.ToDict(order);
+
+        if (order.Status != "placed")
+            throw new InvalidOperationException("Order can only be cancelled before production starts");
+
+        var payment = await paymentRecords.FindByOrderIdAsync(oid);
+        if (payment is not null && payment.Status is "approved" or "paid")
+            throw new InvalidOperationException("Paid orders cannot be cancelled from the payment page");
+
+        foreach (var it in order.Items)
+            await products.IncrementStockAsync(it.ProductId, it.Quantity);
+
+        if (payment is not null)
+        {
+            await paymentRecords.UpdateAsync(payment.Id, new Dictionary<string, object?>
+            {
+                ["status"] = "rejected",
+                ["rejection_reason"] = "Cancelled by customer",
+                ["verified_by"] = user.Email,
+                ["verified_date"] = IdHelper.NowIso(),
+            });
+        }
+
+        var updated = await AdvanceStatusAsync(oid, "cancelled", "Cancelled by customer during payment")
+            ?? throw new KeyNotFoundException("Order not found");
+
+        await activity.LogAsync(user, "order.cancel.self", oid, new Dictionary<string, object?>
+        {
+            ["order_no"] = order.OrderNo,
+        });
+        return BsonMapper.ToDict(updated);
+    }
+
     private async Task<Order?> AdvanceStatusAsync(string orderId, string newStatus, string note)
     {
         var order = await orders.FindByIdAsync(orderId);
@@ -243,6 +287,18 @@ public class OrderService(
 
     private async Task DispatchOrderEventAsync(Order order, string eventStatus)
     {
+        // Prefer admin-configured notification rules; fall back for unconfigured events.
+        var ruleDriven = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "accepted", "printing_started", "shipped", "out_for_delivery",
+            "delivered", "cancelled", "payment_received", "packed", "completed"
+        };
+        if (ruleDriven.Contains(eventStatus))
+        {
+            await notificationDispatch.DispatchAsync(eventStatus, order);
+            return;
+        }
+
         var user = await users.FindByIdAsync(order.UserId);
         if (user is null) return;
 

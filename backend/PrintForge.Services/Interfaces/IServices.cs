@@ -63,6 +63,13 @@ public interface IActivityLogService
     Task LogAsync(User? user, string action, string target, Dictionary<string, object?>? meta = null);
 }
 
+public interface INotificationDispatchService
+{
+    Task DispatchAsync(string eventKey, Order order, Dictionary<string, object?>? extra = null);
+    Task<List<Dictionary<string, object?>>> ListConfigsAsync();
+    Task<Dictionary<string, object?>> UpdateConfigAsync(User admin, string id, NotificationConfigurationRequest request);
+}
+
 public interface IProductService
 {
     Task<object> ListAsync(string? category, string? q, string? material, double? minPrice, double? maxPrice, bool? featured, string? sort, int limit, int skip);
@@ -86,6 +93,7 @@ public interface IOrderService
     Task<Dictionary<string, object?>> AdminUpdateAsync(string oid, Dictionary<string, object?> payload);
     Task AdminDeleteAsync(User user, string oid);
     Task UserDeleteAsync(User user, string oid);
+    Task<Dictionary<string, object?>> UserCancelAsync(User user, string oid);
 }
 
 public record CouponValidationResult(Dictionary<string, object?> Coupon, double Discount);

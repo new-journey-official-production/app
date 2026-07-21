@@ -199,6 +199,14 @@ public interface IPaymentConfigurationRepository
     Task DeleteAsync(string id);
 }
 
+public interface INotificationConfigurationRepository
+{
+    Task<List<NotificationConfiguration>> ListAsync();
+    Task<NotificationConfiguration?> FindByIdAsync(string id);
+    Task<NotificationConfiguration?> FindByEventKeyAsync(string eventKey);
+    Task UpdateAsync(string id, Dictionary<string, object?> updates);
+}
+
 public interface IPasswordResetRepository
 {
     Task<PasswordReset?> FindValidTokenAsync(string token);

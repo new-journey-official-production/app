@@ -46,6 +46,15 @@ public class OrdersController(IOrderService orders) : ControllerBase
         catch (KeyNotFoundException) { return NotFound(new { detail = "Order not found" }); }
         catch (InvalidOperationException ex) { return BadRequest(new { detail = ex.Message }); }
     }
+
+    [HttpPost("{oid}/cancel")]
+    [UserAuthorize]
+    public async Task<IActionResult> Cancel(string oid)
+    {
+        try { return Ok(await orders.UserCancelAsync(HttpContext.GetRequiredUser(), oid)); }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Order not found" }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { detail = ex.Message }); }
+    }
 }
 
 [ApiController]

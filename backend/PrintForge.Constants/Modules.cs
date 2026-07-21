@@ -33,6 +33,7 @@ public static class Modules
 
     public const string Accounts = "/admin/accounts";
     public const string PaymentConfiguration = "/admin/payment-configuration";
+    public const string NotificationConfiguration = "/admin/notification-configuration";
     public const string Approvals = "/admin/approvals";
 
     public const string Account = "/account";
@@ -54,7 +55,7 @@ public static class Modules
         Support, Reviews, Blog, Coupons, Analytics, Media, ActivityLogs,
         Settings, Roles, Users,
         B2bDashboard, B2bCategories, B2bProducts, B2bCatalog, B2bQuotes, B2bDealers, B2bAnalytics, B2bSettings,
-        Accounts, PaymentConfiguration, Approvals
+        Accounts, PaymentConfiguration, NotificationConfiguration, Approvals
     ];
 
     /// <summary>
@@ -96,6 +97,7 @@ public static class Modules
         new(B2bSettings, "B2B Settings", "B2B module settings", "admin"),
         new(Accounts, "Accounts", "Company finance and ledger", "admin"),
         new(PaymentConfiguration, "Payment Configuration", "Payment method master configuration", "admin"),
+        new(NotificationConfiguration, "Notification Configuration", "Customer notification rules and channels", "admin"),
         new(Approvals, "Approvals", "Customer payment verification approvals", "admin"),
         new(Account, "Account", "Customer account dashboard", "customer"),
         new(AccountOrders, "My Orders", "Customer order history", "customer"),

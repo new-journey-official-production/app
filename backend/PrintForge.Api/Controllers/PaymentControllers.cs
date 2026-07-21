@@ -106,6 +106,26 @@ public class AdminApprovalsController(IBillingService billing) : ControllerBase
     }
 }
 
+/// <summary>Admin notification configuration master.</summary>
+[ApiController]
+[Route("api/admin/notification-configurations")]
+public class AdminNotificationConfigurationController(INotificationDispatchService notifications) : ControllerBase
+{
+    [HttpGet]
+    [AdminAuthorize]
+    public async Task<IActionResult> List() =>
+        Ok(await notifications.ListConfigsAsync());
+
+    [HttpPut("{id}")]
+    [AdminAuthorize]
+    public async Task<IActionResult> Update(string id, [FromBody] NotificationConfigurationRequest request)
+    {
+        try { return Ok(await notifications.UpdateConfigAsync(HttpContext.GetRequiredUser(), id, request)); }
+        catch (KeyNotFoundException) { return NotFound(new { detail = "Not found" }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { detail = ex.Message }); }
+    }
+}
+
 /// <summary>Customer payment page + proof submission APIs.</summary>
 [ApiController]
 [Route("api/payments")]

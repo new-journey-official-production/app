@@ -55,8 +55,15 @@ export default function ProductDetail() {
 
   const p = data.product as ApiRow;
   const priceNow = p.discount_price || p.price;
-  const gallery = (p.images || []) as string[];
-  const heroImage = p.hero_image || gallery[imgIdx] || gallery[0];
+  // Prefer gallery order so thumbnail selection updates the main image (hero alone used to short-circuit).
+  const gallery = (() => {
+    const imgs = ((p.images || []) as string[]).filter(Boolean);
+    const hero = p.hero_image ? String(p.hero_image) : "";
+    if (hero && !imgs.includes(hero)) return [hero, ...imgs];
+    if (imgs.length) return imgs;
+    return hero ? [hero] : [];
+  })();
+  const heroImage = gallery[imgIdx] || gallery[0] || "";
   const colorOptions: ApiRow[] = (p.colors as ApiRow[])?.length
     ? (p.colors as ApiRow[])
     : (p.color_variants || []).map((name: string) => ({ name, hex: "#888888" }));

@@ -32,7 +32,7 @@ const EMPTY: FormState = {
   qr_type: "dynamic",
   static_qr_url: "",
   instructions:
-    "Scan QR using any UPI application.\nComplete payment.\nUpload payment screenshot.\nYour order will be verified shortly.",
+    "Scan QR using any UPI application.\nComplete payment.\nUpload payment screenshot (required).\nUPI transaction ID is optional.\nYour order will be verified shortly.",
   min_amount: "",
   max_amount: "",
   display_order: "1",

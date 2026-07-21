@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Loader2, ShieldCheck, Upload, CheckCircle2 } from "lucide-react";
+import { Loader2, ShieldCheck, Upload, CheckCircle2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { api, apiError, API_BASE } from "@/lib/api";
@@ -31,6 +31,7 @@ export default function PaymentPage() {
   const [screenshotUrl, setScreenshotUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const load = async () => {
     if (!orderId) return;
@@ -124,15 +125,29 @@ export default function PaymentPage() {
     }
   };
 
+  const cancelPayment = async () => {
+    if (!orderId) return;
+    if (!window.confirm("Cancel this order and payment? Stock will be released.")) return;
+    setCancelling(true);
+    try {
+      await api.post(`/orders/${orderId}/cancel`);
+      toast.success("Order cancelled");
+      nav("/cart", { replace: true });
+    } catch (err) {
+      toast.error(apiError(err));
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const submitProof = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderId) return;
     if (!screenshotUrl) return toast.error("Upload a payment screenshot");
-    if (!upiTxnId.trim()) return toast.error("UPI Transaction ID is required");
     setSubmitting(true);
     try {
       const { data } = await api.post(`/payments/order/${orderId}/proof`, {
-        upi_transaction_id: upiTxnId.trim(),
+        upi_transaction_id: upiTxnId.trim() || undefined,
         screenshot_url: screenshotUrl,
         payment_note: note || undefined,
       });
@@ -160,11 +175,27 @@ export default function PaymentPage() {
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-orange-700 dark:text-orange-400 mb-3">
             <ShieldCheck className="h-3.5 w-3.5" /> Secure checkout
           </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Complete Your Payment</h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Order <span className="font-mono-data text-foreground">{order.order_no}</span> ·{" "}
-            <span className="font-mono-data text-foreground">{formatCurrency(order.total)}</span>
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="font-display text-3xl font-bold tracking-tight">Complete Your Payment</h1>
+              <p className="text-sm text-muted-foreground mt-2">
+                Order <span className="font-mono-data text-foreground">{order.order_no}</span> ·{" "}
+                <span className="font-mono-data text-foreground">{formatCurrency(order.total)}</span>
+              </p>
+            </div>
+            {!submitted && !rejected && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1 shrink-0 text-destructive border-destructive/40 hover:bg-destructive/10"
+                disabled={cancelling}
+                onClick={cancelPayment}
+              >
+                <X className="h-3.5 w-3.5" /> {cancelling ? "Cancelling…" : "Cancel"}
+              </Button>
+            )}
+          </div>
         </motion.div>
 
         <motion.section
@@ -222,7 +253,7 @@ export default function PaymentPage() {
           <ol className="mt-5 space-y-2 text-sm text-muted-foreground list-decimal list-inside">
             {(instructions.length
               ? instructions
-              : ["Scan QR code", "Complete payment", "Upload payment proof", "Wait for confirmation"]
+              : ["Scan QR code", "Complete payment", "Upload payment screenshot", "Wait for confirmation"]
             ).map((line) => (
               <li key={line}>{line}</li>
             ))}
@@ -291,9 +322,8 @@ export default function PaymentPage() {
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">UPI Transaction ID *</label>
+              <label className="text-xs text-muted-foreground block mb-1">UPI Transaction ID (optional)</label>
               <input
-                required
                 value={upiTxnId}
                 onChange={(e) => setUpiTxnId(e.target.value)}
                 placeholder="e.g. 123456789012"
@@ -311,8 +341,17 @@ export default function PaymentPage() {
               />
             </div>
 
-            <Button type="submit" disabled={submitting} className="w-full rounded-full bg-orange-600 hover:bg-orange-700 h-11">
+            <Button type="submit" disabled={submitting || cancelling} className="w-full rounded-full bg-orange-600 hover:bg-orange-700 h-11">
               {submitting ? "Submitting…" : "Submit Payment"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={submitting || cancelling}
+              className="w-full text-muted-foreground"
+              onClick={cancelPayment}
+            >
+              Cancel order
             </Button>
           </motion.form>
         )}

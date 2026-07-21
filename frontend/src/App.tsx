@@ -59,6 +59,7 @@ const AdminSettings = lazy(() => import("@/views/admin/Settings"));
 const AdminPermissions = lazy(() => import("@/views/admin/Permissions"));
 const AdminAccounts = lazy(() => import("@/views/admin/Accounts"));
 const AdminPaymentConfiguration = lazy(() => import("@/views/admin/PaymentConfiguration"));
+const AdminNotificationConfiguration = lazy(() => import("@/views/admin/NotificationConfiguration"));
 const AdminApprovals = lazy(() => import("@/views/admin/Approvals"));
 
 const B2bLanding = lazy(() => import("@/views/b2b/Landing"));
@@ -182,6 +183,7 @@ export default function App() {
                   <Route path="/admin/billing" element={<AdminBilling />} />
                   <Route path="/admin/approvals" element={<AdminApprovals />} />
                   <Route path="/admin/payment-configuration" element={<AdminPaymentConfiguration />} />
+                  <Route path="/admin/notification-configuration" element={<AdminNotificationConfiguration />} />
                   <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
                   <Route path="/admin/inventory" element={<AdminInventory />} />
                   <Route path="/admin/printers" element={<AdminPrinters />} />

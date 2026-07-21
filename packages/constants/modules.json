@@ -26,6 +26,7 @@
   { "module_id": "/admin/b2b/settings", "name": "B2B Settings", "group": "admin" },
   { "module_id": "/admin/accounts", "name": "Accounts", "group": "admin" },
   { "module_id": "/admin/payment-configuration", "name": "Payment Configuration", "group": "admin" },
+  { "module_id": "/admin/notification-configuration", "name": "Notification Configuration", "group": "admin" },
   { "module_id": "/admin/approvals", "name": "Approvals", "group": "admin" },
   { "module_id": "/account", "name": "Account", "group": "customer" },
   { "module_id": "/account/orders", "name": "My Orders", "group": "customer" },

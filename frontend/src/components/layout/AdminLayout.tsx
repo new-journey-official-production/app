@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, ShoppingBag, Users, Ticket, Star, BookOpen, Tag, BarChart3, Boxes, Printer,
   Settings as SettingsIcon, Sun, Moon, LogOut, Image as ImageIcon, Activity, Shield, Receipt,
   Building2, FolderTree, FileText, MessageSquareQuote, Handshake, ChevronDown, Menu, X, FolderOpen,
-  Wallet, Landmark, BadgeCheck, CreditCard,
+  Wallet, Landmark, BadgeCheck, CreditCard, Bell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -28,6 +28,7 @@ const ORDERS_LINKS: NavLinkDef[] = [
 
 const MASTERS_LINKS: NavLinkDef[] = [
   { to: "/admin/payment-configuration", label: "Payment Configuration", icon: CreditCard },
+  { to: "/admin/notification-configuration", label: "Notification Configuration", icon: Bell },
 ];
 
 const CATALOG_LINKS: NavLinkDef[] = [
